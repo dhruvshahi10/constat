@@ -137,6 +137,9 @@ class GeminiDrafter:
         # rolling alias: survives Google retiring dated models for new accounts
         self.model_version = model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
         self.retriever = retriever
+        # free tier is ~10 req/min: self-pace instead of hammering into 429s
+        self.min_interval = float(os.environ.get("GEMINI_MIN_INTERVAL", "6.5"))
+        self._last_call = 0.0
 
     def _generate(self, user_msg: str) -> str:
         url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
@@ -151,7 +154,11 @@ class GeminiDrafter:
         }).encode()
         req = urllib.request.Request(url, data=body, headers={
             "Content-Type": "application/json", "x-goog-api-key": self.api_key})
+        wait = self._last_call + self.min_interval - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
         for attempt in range(5):
+            self._last_call = time.monotonic()
             try:
                 with urllib.request.urlopen(req, timeout=120) as resp:
                     payload = json.loads(resp.read().decode())
@@ -159,7 +166,7 @@ class GeminiDrafter:
             except urllib.error.HTTPError as e:
                 # free-tier RPM limits surface as 429; back off and retry
                 if e.code in (429, 500, 503) and attempt < 4:
-                    time.sleep(min(60, 15 * (attempt + 1)))
+                    time.sleep(min(90, 20 * (attempt + 1)))
                     continue
                 raise
         parts = payload["candidates"][0]["content"]["parts"]
@@ -179,8 +186,17 @@ class GeminiDrafter:
             f"location={h.chunk.location}]\n{h.chunk.text}"
             for h in hits
         )
-        raw = self._generate(
-            f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{evidence_block}")
+        try:
+            raw = self._generate(
+                f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{evidence_block}")
+        except OSError as exc:
+            # transport failure (rate limit exhausted, network down): the run
+            # must degrade to an abstention, never crash and never fabricate
+            d.abstained = True
+            d.gaps.append(f"Live drafter unavailable ({type(exc).__name__}) — "
+                          "fail-closed abstention; retry later or answer via SME.")
+            d.gate_flags.append("DRAFTER_UNAVAILABLE")
+            return d
         try:
             obj = json.loads(raw.strip().removeprefix("```json").removesuffix("```").strip())
         except (json.JSONDecodeError, KeyError, IndexError):
