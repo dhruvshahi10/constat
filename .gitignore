@@ -1,0 +1,9 @@
+runs/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.venv/
+.DS_Store
+.claude/
+trustops-v0.zip
