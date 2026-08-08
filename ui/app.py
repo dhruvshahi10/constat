@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from trustops.drafter import make_drafter                     # noqa: E402
+from trustops.envfile import load_env                         # noqa: E402
 from trustops.evidence import EvidenceStore                   # noqa: E402
 from trustops.gates import post_gate, pre_gate                # noqa: E402
 from trustops.models import Draft, Question                   # noqa: E402
@@ -45,6 +46,7 @@ DEMO_QUESTIONS = [
 
 
 def drafter_options() -> list[dict]:
+    load_env(ROOT)  # pick up freshly pasted keys on every page refresh
     return [
         {"id": "mock", "label": "Offline (deterministic)", "available": True},
         {"id": "gemini", "label": "Gemini (free tier)",
@@ -263,6 +265,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length", 0))
         try:
+            load_env(ROOT)
             body = json.loads(self.rfile.read(length) or b"{}")
             if self.path == "/api/ask":
                 self._json(answer_one(body["question"], body.get("drafter", "mock")))

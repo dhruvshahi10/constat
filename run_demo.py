@@ -11,10 +11,12 @@ import json
 from datetime import date, datetime
 from pathlib import Path
 
+from trustops.envfile import load_env
 from trustops.pipeline import run
 from trustops.report import write_report
 
 ROOT = Path(__file__).resolve().parent
+load_env(ROOT)
 
 
 def main() -> None:
