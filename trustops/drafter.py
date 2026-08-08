@@ -5,11 +5,14 @@ MockDrafter      deterministic, retrieval-grounded, zero-dependency. Used for
                  CI, the eval suite, and offline demo runs.
 AnthropicDrafter live LLM drafting under the Appendix B system contract, with
                  JSON-only structured output. Requires ANTHROPIC_API_KEY.
+GeminiDrafter    same contract over the Gemini REST API via stdlib urllib —
+                 no SDK install; free-tier friendly. Requires GEMINI_API_KEY.
 """
 from __future__ import annotations
 
 import json
 import os
+import urllib.request
 
 from .models import Citation, Coverage, Draft, Question, Risk
 from .retrieve import Retriever
@@ -119,9 +122,79 @@ class AnthropicDrafter:
         return d
 
 
+class GeminiDrafter:
+    """Live drafting on Google's free tier. Same retrieval, same contract, same
+    gates; plain REST via stdlib so live mode needs no extra install."""
+
+    name = "gemini"
+
+    def __init__(self, retriever: Retriever, model: str | None = None):
+        self.api_key = os.environ.get("GEMINI_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("GEMINI_API_KEY not set (free key: aistudio.google.com)")
+        self.model_version = model or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        self.retriever = retriever
+
+    def _generate(self, user_msg: str) -> str:
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{self.model_version}:generateContent")
+        body = json.dumps({
+            "system_instruction": {"parts": [{"text": SYSTEM_CONTRACT}]},
+            "contents": [{"parts": [{"text": user_msg}]}],
+            "generationConfig": {"responseMimeType": "application/json",
+                                 "maxOutputTokens": 800},
+        }).encode()
+        req = urllib.request.Request(url, data=body, headers={
+            "Content-Type": "application/json", "x-goog-api-key": self.api_key})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            payload = json.loads(resp.read().decode())
+        parts = payload["candidates"][0]["content"]["parts"]
+        return "".join(p.get("text", "") for p in parts)
+
+    def draft(self, q: Question, tenant: str) -> Draft:
+        hits = self.retriever.search(q.text, tenant=tenant, k=4)
+        d = Draft(question_id=q.question_id, answer=None, drafter=self.name,
+                  model_version=self.model_version, prompt_version=PROMPT_VERSION)
+        if not hits:
+            d.abstained = True
+            d.gaps.append("Retrieval found no relevant approved evidence.")
+            return d
+        evidence_block = "\n\n".join(
+            f"[source_id={h.chunk.source_id} version="
+            f"{self.retriever.store.sources[h.chunk.source_id].version} "
+            f"location={h.chunk.location}]\n{h.chunk.text}"
+            for h in hits
+        )
+        raw = self._generate(
+            f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{evidence_block}")
+        try:
+            obj = json.loads(raw.strip().removeprefix("```json").removesuffix("```").strip())
+        except (json.JSONDecodeError, KeyError, IndexError):
+            d.abstained = True
+            d.gaps.append("Drafter returned non-contract output; treated as abstention (fail-closed).")
+            d.gate_flags.append("CONTRACT_PARSE_FAILURE")
+            return d
+        d.answer = obj.get("answer")
+        d.abstained = bool(obj.get("abstained", d.answer is None))
+        d.gaps.extend(obj.get("gaps", []))
+        d.risk = Risk(obj.get("risk", "medium"))
+        for c in obj.get("citations", []):
+            sid = c.get("source_id", "")
+            src = self.retriever.store.sources.get(sid)
+            d.citations.append(Citation(
+                source_id=sid,
+                version=src.version if src else "?",
+                location=c.get("location", "?"),
+                excerpt=c.get("excerpt", "")[:280],
+            ))
+        return d
+
+
 def make_drafter(kind: str, retriever: Retriever):
     if kind == "mock":
         return MockDrafter(retriever)
     if kind == "anthropic":
         return AnthropicDrafter(retriever)
+    if kind == "gemini":
+        return GeminiDrafter(retriever)
     raise ValueError(f"unknown drafter '{kind}'")

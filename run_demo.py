@@ -1,6 +1,7 @@
 """TrustOps demo runner.
 
   python3 run_demo.py                       # offline deterministic run
+  python3 run_demo.py --drafter gemini      # live LLM run, $0 (needs GEMINI_API_KEY)
   python3 run_demo.py --drafter anthropic   # live LLM run (needs ANTHROPIC_API_KEY)
 """
 from __future__ import annotations
@@ -19,7 +20,7 @@ ROOT = Path(__file__).resolve().parent
 def main() -> None:
     ap = argparse.ArgumentParser(description="TrustOps v0 — evidence-gated questionnaire engine")
     ap.add_argument("--tenant", default="acme")
-    ap.add_argument("--drafter", default="mock", choices=["mock", "anthropic"])
+    ap.add_argument("--drafter", default="mock", choices=["mock", "anthropic", "gemini"])
     ap.add_argument("--questionnaire",
                     default=str(ROOT / "data/questionnaires/acme_security_questionnaire.xlsx"))
     ap.add_argument("--today", default=None, help="YYYY-MM-DD (defaults to system date)")

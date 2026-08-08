@@ -1,5 +1,7 @@
 # TrustOps v0 — Evidence-Gated Security Questionnaire Engine
 
+[![evals](https://github.com/dhruvshahi10/trustops/actions/workflows/ci.yml/badge.svg)](https://github.com/dhruvshahi10/trustops/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-1E6B47.svg)](LICENSE)
+
 **Every answer cited to a versioned, approved source — or refused.** A working demonstration of applied AI inside a GRC control plane: grounded generation, deterministic guardrails, abstention-by-design, tamper-evident audit trail, and an adversarial eval suite that blocks release on any unsupported claim.
 
 Built as v0 of TrustOps Desk (managed customer assurance for B2B SaaS). All data is synthetic.
@@ -40,17 +42,30 @@ RECEIVED → CLASSIFIED → DRAFTED → [EXCEPTION | GRC_REVIEW] → DELIVERED
       └────────── hash-chained append-only audit log ──────────┘
 ```
 
-Key design decision: **the gates do not trust the drafter.** Swapping the deterministic `MockDrafter` for the live `AnthropicDrafter` changes fluency, not safety posture. Tenant isolation, forbidden claims, staleness, and approval are enforced in code, not prompt.
+Key design decision: **the gates do not trust the drafter.** Swapping the deterministic `MockDrafter` for a live model (`GeminiDrafter`, `AnthropicDrafter`) changes fluency, not safety posture. Tenant isolation, forbidden claims, staleness, and approval are enforced in code, not prompt.
+
+## Client console
+
+![TrustOps console](docs/ui.png)
+
+A zero-dependency web UI ([ui/app.py](ui/app.py), Python stdlib only — no framework, no build step). Ask a single security question through the full gate path — refusals render as first-class outcomes with the gap named — or run the whole 24-question workbook and download the audit working paper, the DELIVERED workbook, and the hash-chained audit log. Sample outputs live in [examples/](examples/).
 
 ## Run it
 
 ```bash
-python3 data/make_questionnaire.py        # regenerate source questionnaire
-python3 run_demo.py --today 2026-08-08    # offline deterministic run
-python3 -m pytest tests/ -q               # adversarial eval suite (11 tests)
+# one-time setup (Python 3.10+; only pytest + openpyxl are installed)
+python3 -m venv .venv && .venv/bin/pip install pytest openpyxl
 
-export ANTHROPIC_API_KEY=...              # live LLM drafting under the
-python3 run_demo.py --drafter anthropic   # Appendix-B system contract
+.venv/bin/python -m pytest tests/ -q              # adversarial eval suite (11 tests)
+.venv/bin/python data/make_questionnaire.py       # regenerate source questionnaire
+.venv/bin/python run_demo.py                      # offline deterministic run
+.venv/bin/python ui/app.py                        # web console → http://localhost:8787
+
+export GEMINI_API_KEY=...                         # free key: aistudio.google.com
+.venv/bin/python run_demo.py --drafter gemini     # live LLM run at $0 (stdlib REST, no SDK)
+
+export ANTHROPIC_API_KEY=...                      # default model: Haiku 4.5 —
+.venv/bin/python run_demo.py --drafter anthropic  # gates make the cheap model safe
 ```
 
 Outputs per run (`runs/<stamp>/`): `run_report.html` (audit working paper), `<name>__DELIVERED.xlsx`, `contracts.json` (machine-readable answer contracts), `metrics.json`, `audit_log.jsonl`.
