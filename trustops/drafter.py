@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 
 from .models import Citation, Coverage, Draft, Question, Risk
@@ -132,7 +134,8 @@ class GeminiDrafter:
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             raise RuntimeError("GEMINI_API_KEY not set (free key: aistudio.google.com)")
-        self.model_version = model or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        # rolling alias: survives Google retiring dated models for new accounts
+        self.model_version = model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
         self.retriever = retriever
 
     def _generate(self, user_msg: str) -> str:
@@ -141,13 +144,24 @@ class GeminiDrafter:
         body = json.dumps({
             "system_instruction": {"parts": [{"text": SYSTEM_CONTRACT}]},
             "contents": [{"parts": [{"text": user_msg}]}],
+            # low thinking: the gates do the verification, not the model
             "generationConfig": {"responseMimeType": "application/json",
-                                 "maxOutputTokens": 800},
+                                 "maxOutputTokens": 2048,
+                                 "thinkingConfig": {"thinkingLevel": "low"}},
         }).encode()
         req = urllib.request.Request(url, data=body, headers={
             "Content-Type": "application/json", "x-goog-api-key": self.api_key})
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            payload = json.loads(resp.read().decode())
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    payload = json.loads(resp.read().decode())
+                break
+            except urllib.error.HTTPError as e:
+                # free-tier RPM limits surface as 429; back off and retry
+                if e.code in (429, 500, 503) and attempt < 4:
+                    time.sleep(min(60, 15 * (attempt + 1)))
+                    continue
+                raise
         parts = payload["candidates"][0]["content"]["parts"]
         return "".join(p.get("text", "") for p in parts)
 
