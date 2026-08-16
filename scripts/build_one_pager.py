@@ -11,6 +11,13 @@ This script fixes both. The stylesheet comes from brand.stylesheet(), so the
 sheet cannot drift from the product, and PRINT_CSS sets print-color-adjust on
 html, body and .sheet so the ink survives the print pipeline.
 
+The PDF is printed here too. It used to be produced by hand, which meant the
+committed binary went stale the moment the HTML changed: the rename to Pramana
+found a PDF still carrying the old brand in its glyphs, where no text search
+could see it. Printing it in the same script that writes the HTML removes that
+class of drift. Playwright is optional; without it the HTML is still written
+and the PDF step reports that it was skipped.
+
     .venv/bin/python scripts/build_one_pager.py
 """
 from __future__ import annotations
@@ -193,9 +200,38 @@ def build() -> Path:
     return dest
 
 
+def build_pdf(src: Path) -> Path | None:
+    """Print the sheet to A4. Returns None when Playwright is not installed."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return None
+    dest = ROOT / "marketing" / "Pramana-one-pager.pdf"
+    # Playwright's default here is the headless shell, which this image does not
+    # ship; the full Chromium it does ship is the one the capture scripts use.
+    chrome = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
+    launch = {"executable_path": str(chrome)} if chrome.exists() else {}
+    with sync_playwright() as p:
+        browser = p.chromium.launch(**launch)
+        page = browser.new_page()
+        page.goto(src.as_uri())
+        page.emulate_media(media="print")
+        # PRINT_CSS already sets @page size and margin; print_background carries
+        # the ink that print-color-adjust asks the browser to keep.
+        page.pdf(path=str(dest), format="A4", print_background=True,
+                 margin={"top": "0", "right": "0", "bottom": "0", "left": "0"})
+        browser.close()
+    return dest
+
+
 def main() -> None:
     dest = build()
     print(f"wrote {dest.relative_to(ROOT)} ({dest.stat().st_size // 1024}KB)")
+    pdf = build_pdf(dest)
+    if pdf is None:
+        print("skipped the PDF, playwright is not installed")
+    else:
+        print(f"wrote {pdf.relative_to(ROOT)} ({pdf.stat().st_size // 1024}KB)")
 
 
 if __name__ == "__main__":
