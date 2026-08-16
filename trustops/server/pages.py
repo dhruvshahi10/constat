@@ -279,12 +279,12 @@ changes is whose API key drafts your answers, and therefore whose terms your tex
 </div>
 <p class="sub" style="margin-top:16px">BYOK and Managed are not built yet. Say which one you need
 and it moves up the queue.
-<a class="filelink" href="mailto:dhruv.shahi07@gmail.com?subject=TrustOps%20tier">Tell us</a></p>
+<a class="filelink" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Tell me on LinkedIn</a></p>
 
 <footer>TrustOps hosted demo / public evidence only on this tier / data deleted after 14 days /
 <a class="filelink" href="/site/legal/terms.html">Terms</a> /
 <a class="filelink" href="/site/legal/privacy.html">Privacy and data handling</a> /
-<a class="filelink" href="mailto:dhruv.shahi07@gmail.com?subject=TrustOps%20pilot">book a pilot</a></footer>
+<a class="filelink" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">talk about a pilot</a></footer>
 """
     js = """
 <script>

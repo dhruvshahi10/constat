@@ -227,6 +227,29 @@ background:transparent;color:var(--text-primary);cursor:pointer}
 .icopy:hover{border-color:var(--line-signal);color:var(--signal)}
 .icopy[data-done="1"]{color:var(--status-ok);border-color:var(--status-ok)}
 
+
+body{padding-bottom:80px}
+.legalwrap{max-width:760px}
+.draftnote{background:var(--status-warn-wash);border:1px solid var(--line-1);
+border-left:2px solid var(--status-warn);border-radius:var(--radius-2);padding:16px 18px;
+margin:26px 0;font-size:13.5px;line-height:1.65;color:var(--text-primary)}
+.draftnote b{color:var(--status-warn);font-weight:400;font-family:var(--font-mono);
+font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;display:block;margin-bottom:7px}
+.ph{font-family:var(--font-mono);font-size:0.92em;color:var(--status-warn);
+background:var(--status-warn-wash);padding:1px 5px;border-radius:var(--radius-1)}
+h2{margin-top:44px}
+h3{font-size:18px;margin-top:26px;margin-bottom:6px}
+.legalwrap p{font-size:14.5px;line-height:1.72;color:var(--text-secondary);margin-top:10px;
+max-width:74ch}
+.legalwrap li{font-size:14.5px;line-height:1.72;color:var(--text-secondary);margin-top:8px}
+.legalwrap ul{margin:8px 0 0 20px}
+.legalwrap strong{color:var(--text-primary);font-weight:500}
+.tbl{margin-top:16px;overflow-x:auto}
+.tbl table{min-width:520px}
+.updated{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;
+text-transform:uppercase;color:var(--text-tertiary);margin-top:14px}
+.navback{margin-top:26px;font-family:var(--font-mono);font-size:11px}
+
 /* reveal-on-scroll */
 .js .rv{opacity:0;transform:translateY(14px);
 transition:opacity 480ms var(--ease-out),transform 480ms var(--ease-out)}
@@ -541,47 +564,16 @@ footer .ph{color:var(--status-warn)}
 
 <section id="signup">
   <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
-  <h2 class="rv">Two ways in, both free</h2>
-  <p class="sub rv">Create a workspace and either seed our synthetic sample pack, which uploads
-  nothing of yours, or add your own public evidence. Ten answered or refused questions in about
-  two minutes. Three runs per workspace, deleted after 14 days. No card, no call.</p>
-  <div class="signup rv">
-    <form id="signupform" novalidate>
-      <label for="org">Organization</label>
-      <input id="org" name="org" type="text" required maxlength="80" placeholder="Acme Corp">
-      <label for="email">Email for your workspace link</label>
-      <input id="email" name="email" type="email" required placeholder="you@acme.com">
-      <p class="legalline">We do not send you the link. It appears on this page after you submit,
-      and it is the only key to the workspace, so copy it before you leave.</p>
-      <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"></div>
-      <label class="consent" for="consent">
-        <input type="checkbox" id="consent" name="consent" required>
-        <span>I have read the <a href="/site/legal/terms.html">terms</a> and
-        <a href="/site/legal/privacy.html">what happens to my documents</a>, and I understand this
-        demo drafts with Google Gemini on its free tier, so I will upload public evidence only.</span>
-      </label>
-      <button type="submit" id="gobtn">Create my workspace</button>
-      <button type="button" class="alt" id="samplebtn">Run it on the sample pack, no upload</button>
-      <p class="legalline"><a href="/site/legal/privacy.html">Read what happens to your documents</a>
-      before you upload anything.</p>
-      <div class="err" id="sgerr" role="alert"></div>
-      <div class="wslink" id="wslink" tabindex="-1" role="group" aria-labelledby="wshead">
-        <h3 id="wshead">Workspace ready</h3>
-        <p class="legalline" id="wsstate">Copy this link now.</p>
-        <label for="wsurl">Your workspace link</label>
-        <input id="wsurl" type="text" readonly spellcheck="false">
-        <div class="wsacts">
-          <button type="button" id="copybtn">Copy link</button>
-          <a class="open" id="wsopen" href="#">Open my workspace</a>
-          <span class="copied" id="copied" aria-live="polite"></span>
-        </div>
-        <p class="sayonce">This link is the only key to the workspace. There is no password, no
-        reset, and we do not email it to you. Save it in your password manager before you close
-        this tab.</p>
-      </div>
-    </form>
-  </div>
+  <h2 class="rv">The interactive workspace is not live yet</h2>
+  <p class="sub rv">Everything above is a real recorded run of the engine, replayed unchanged.
+  The part that is not yet public is the workspace where you upload your own evidence and run the
+  ten questions against it. It is built and tested; it needs a server, and it will have one
+  shortly. Until then the fastest way in is a message.</p>
+  <p class="sub rv">If you want to run it today, the whole engine is open source and runs on your
+  own machine in two commands.
+  <a href="https://github.com/dhruvshahi10/trustops">See the repository</a>.</p>
 </section>
+
 
 <section id="contact">
   <div class="seclabel rv"><span class="idx">07</span><span class="label">Get in touch</span><span class="rule"></span></div>
@@ -616,12 +608,213 @@ footer .ph{color:var(--status-warn)}
   deletion, can also go to <a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>.</p>
 </section>
 
+<section id="terms"><div class="seclabel rv"><span class="idx">08</span><span class="label">Terms</span><span class="rule"></span></div><h2 class="rv">Terms of use</h2><div class="legalwrap"><div class="draftnote"><b>Founder drafted, pending legal review</b>
+This document was written by the founder, not by a lawyer, and has not been through legal
+review. It is published in this state deliberately: a pre-launch demo that collects documents
+should say what it does with them from the first day rather than from the day it can afford
+counsel. Where it is wrong it will be corrected, and material changes will be dated here.
+If anything below matters to your decision, ask and you will get a straight answer in
+writing.</div>
+<h2>1. Who you are contracting with</h2>
+<p>The service at this address is <strong>TrustOps, operated by Dhruv Shahi</strong>, an
+individual operator based in India. There is no company entity behind it yet. Governing law and
+the venue for any dispute are the laws of <strong>India</strong>. This document was drafted by the
+operator rather than by counsel, so if you need contractual certainty, ask before you rely on
+this service, and expect a reviewed agreement before any paid tier is sold to you.</p>
+
+<h2>2. This is a demo, and it is sold as one</h2>
+<p>TrustOps is pre-launch. It is provided <strong>as is and as available</strong>, with
+<strong>no warranty</strong> of any kind, express or implied, including any warranty of
+merchantability, fitness for a particular purpose, accuracy or non infringement. There is
+<strong>no service level agreement</strong>, no uptime commitment, no support commitment and no
+guarantee of continuity. The service may change, break or be withdrawn without notice, and a
+workspace may be deleted early if the demo is being abused or if it costs more to run than the
+operator can carry.</p>
+<p>Nothing this service outputs is legal, audit or compliance advice. Every answer it drafts is
+a draft. The whole design of the product is that a named human reviews before anything is
+released, and that design assumes you actually do the reviewing. If you send a TrustOps answer
+to a customer without reading it, that is your representation to your customer, not ours.</p>
+
+<h2>3. What you may upload</h2>
+<p>On the free demo tier, drafting runs on <strong>Google Gemini's free tier</strong>, whose
+terms permit Google to use submitted content to improve their services. So the rule for this
+tier is simple and you agree to it by uploading:</p>
+<ul>
+<li><strong>Upload public evidence only.</strong> A published SOC 2 report, an ISO certificate,
+trust-center policies, anything you would be comfortable seeing outside your company.</li>
+<li><strong>Do not upload confidential, personal or regulated data.</strong> No customer data,
+no personal data of third parties, no secrets, no material non-public information.</li>
+<li>Do not upload anything you do not have the right to upload.</li>
+<li>Do not use the service to break the law, to attack it or anyone else, or to generate
+misleading claims about your security posture.</li>
+</ul>
+<p>If you need to run TrustOps over confidential evidence, that is the BYOK tier, where you
+supply your own provider key and your text travels under your contract with that provider. Ask
+for it. It is not built yet, and saying so is more useful to you than a checkbox that pretends
+otherwise.</p>
+
+<h2>4. Your material stays yours</h2>
+<p>You keep all right, title and interest in the documents you upload and in the answers
+produced from them. <strong>We claim no ownership of your intellectual property and no licence
+to it beyond what is technically required to run the service you asked for</strong>: storing the
+document in your workspace, indexing it so it can be retrieved, sending a question and the
+retrieved excerpts to the drafting model, and generating your report and workbook. We do not
+sell, licence or share your documents. We do not use them to train anything of ours; note that
+this is a statement about us and not about Google, whose free-tier terms are described above and
+on the <a href="#privacy">privacy page</a>.</p>
+
+<h2>5. Limits on the free tier</h2>
+<ul>
+<li>Three runs per workspace.</li>
+<li>Twenty documents per workspace, five megabytes per file.</li>
+<li>Three signups per network per day.</li>
+<li>The workspace and everything in it is hard deleted fourteen days after signup.</li>
+</ul>
+<p>Your workspace link is the only credential. There is no password and no reset. If you lose
+the link you lose the workspace, and we cannot recover it for you, because the link is the
+capability and we store only a hash of it.</p>
+
+<h2>6. Liability</h2>
+<p>To the maximum extent the law allows, the operator is not liable for indirect, incidental,
+special, consequential or punitive damages, or for lost profits, lost revenue, lost data or
+business interruption, arising from your use of this demo. Total aggregate liability for any
+claim relating to the free tier is limited to the amount you paid for it, which is nothing.
+Some jurisdictions do not allow these exclusions, in which case they apply only as far as that
+jurisdiction permits.</p>
+
+<h2>7. Ending it</h2>
+<p>You can stop using the service at any time, and you can ask for your workspace to be deleted
+immediately rather than waiting for the fourteen day sweep. The operator may suspend or delete a
+workspace that breaks section 3, that threatens the service, or that makes the demo
+unaffordable to run.</p>
+
+<h2>8. Changes and contact</h2>
+<p>These terms will change, because the product is early. Material changes will be dated at the
+top of this page. The fastest way to reach the operator is a
+<a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">LinkedIn
+message</a>. Formal requests, including corrections and deletions, can also go to
+<a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>, and are answered by a
+person.</p>
+</div></section><section id="privacy"><div class="seclabel rv"><span class="idx">09</span><span class="label">Privacy</span><span class="rule"></span></div><h2 class="rv">Privacy and data handling</h2><div class="legalwrap"><div class="draftnote"><b>Founder drafted, pending legal review</b>
+This document was written by the founder, not by a lawyer, and has not been through legal
+review. It is published in this state deliberately: a pre-launch demo that collects documents
+should say what it does with them from the first day rather than from the day it can afford
+counsel. Where it is wrong it will be corrected, and material changes will be dated here.
+If anything below matters to your decision, ask and you will get a straight answer in
+writing.</div>
+<p>Short version, because the long version below only exists so this one is checkable: we
+collect your organization name, an email address, your IP address and whatever text is in the
+documents you upload. We keep uploads for fourteen days and then hard delete them. Two
+sub-processors, Google and Render, and no others. One cookie, which logs you in and does
+nothing else. No analytics, no trackers, no advertising pixels, on any page of this site.</p>
+
+<h2 id="data-handling">Data handling</h2>
+
+<h3>What we collect, and why</h3>
+<div class="tbl"><table>
+<tr><th>What</th><th>Why</th><th>How long</th></tr>
+<tr><td><strong>Organization name</strong></td><td>Names your workspace and titles the
+generated questionnaire and report.</td><td>Kept after workspace deletion, in the signup
+record.</td></tr>
+<tr><td><strong>Email address</strong></td><td>Identifies the signup, lets us contact you about
+the demo, and is offered as the default document owner on the upload form. We do not send the
+workspace link by email and we do not run a mailing list.</td><td>Kept after workspace deletion,
+in the signup record.</td></tr>
+<tr><td><strong>IP address</strong></td><td>Rate limiting only. Three signups per network per
+day is the only thing standing between this demo and an unpaid API bill.</td><td>Deleted after
+seven days.</td></tr>
+<tr><td><strong>Uploaded documents and their extracted text</strong></td><td>Retrieval and
+drafting. This is the product.</td><td><strong>Hard deleted fourteen days after
+signup</strong>, with the whole workspace directory.</td></tr>
+<tr><td><strong>Run outputs</strong> (report, workbook, audit log)</td><td>The deliverables you
+came for.</td><td>Deleted with the workspace at fourteen days; older run directories are pruned
+sooner, keeping the newest five.</td></tr>
+<tr><td><strong>Reviewer name and note</strong></td><td>Named review is the point of the audit
+chain. You type the name yourself; in the demo it is self attested and unverified.</td>
+<td>Stored in the approvals record, which is not swept with the workspace.</td></tr>
+<tr><td><strong>Run metadata</strong> (identifiers, timings, counts, error text)</td>
+<td>Operating the queue and debugging failures.</td><td>Retained.</td></tr>
+<tr><td><strong>Server logs</strong></td><td>Written to the host's log stream for operations.
+They contain request lines and client addresses.</td><td>Held by the host under its own
+retention.</td></tr>
+</table></div>
+<p>We do not ask for and do not want special category personal data, payment details or
+credentials. If you upload them by mistake, email us and we will delete the workspace
+immediately rather than waiting for the sweep.</p>
+
+<h3>The free tier reality, in one sentence</h3>
+<p><strong>Drafting on this demo runs on Google Gemini's free tier, whose terms allow Google to
+use submitted content to improve their services, which is why this tier asks you to upload
+public evidence only and why we make no no-training claim on your behalf.</strong></p>
+<p>We used to write "never used for training" on the landing page. It was true of us and
+misleading about the stack, so it is gone. What is accurate: <em>we</em> do not train on your
+documents, and on this tier we cannot make that promise for the model provider. The BYOK tier
+exists so that promise comes from the provider you already have a contract with, and the Managed
+tier exists so it comes from a paid tier that carries it in writing.</p>
+
+<h3>Sub-processors</h3>
+<div class="tbl"><table>
+<tr><th>Who</th><th>What they do</th><th>What they receive</th></tr>
+<tr><td><strong>Google</strong> (Gemini API)</td><td>Drafts each answer.</td><td>One question
+and the excerpts retrieved for it, per answer. Never your full documents, never your document
+list, never another tenant's material.</td></tr>
+<tr><td><strong>Render</strong></td><td>Hosts the server and the disk your workspace sits
+on.</td><td>Everything stored, as any host does, plus request logs.</td></tr>
+</table></div>
+<p><strong>There are no other sub-processors.</strong> No analytics vendor, no error tracking
+vendor, no CDN, no email service provider, no third party retrieval or indexing service. If that
+list ever grows, it grows on this page first.</p>
+
+<h3>Where processing happens</h3>
+<p>Retrieval, indexing, the gates, the audit chain and every generated file are produced on our
+own server. The only outbound call in a run is the drafting call to Google. Tenants are
+structurally isolated: each workspace has its own directory and its own index, and the retrieval
+layer is rooted inside it rather than filtered after the fact.</p>
+
+<h3>Cookies</h3>
+<p>One cookie, <span class="ph">tt_&lt;workspace&gt;</span>, set the first time you open your
+workspace link. It is strictly necessary: it is what keeps you signed in to that workspace. It
+is HttpOnly, SameSite=Lax, Secure, scoped to your workspace path, and expires after fourteen
+days. <strong>There are no analytics cookies, no advertising cookies and no third party scripts
+of any kind on this site</strong>, which is why you were never shown a cookie banner. That is a
+deliberate product decision and a difference worth noticing when you compare this to the other
+tools in this category.</p>
+
+<h3>Your rights</h3>
+<p>Whatever framework applies to you, the practical answer is the same and does not require a
+form:</p>
+<ul>
+<li><strong>Access</strong>: ask and we will tell you exactly what is stored against your
+workspace.</li>
+<li><strong>Deletion</strong>: ask and the workspace and all its files are deleted immediately.
+Otherwise it happens automatically at fourteen days.</li>
+<li><strong>Correction</strong>: ask, or just re-upload.</li>
+<li><strong>Objection and portability</strong>: your documents are your documents; everything
+the run produced is downloadable from your workspace while it exists.</li>
+<li><strong>Complaint</strong>: the operator is in India, so the Digital Personal Data
+Protection Act 2023 governs and the Data Protection Board of India is the body to complain to.
+If you are in the EU or UK, the GDPR rights above apply to you as well and you may complain to
+your own national supervisory authority instead.</li>
+</ul>
+<p>Requests go to <a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>, or by
+<a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">LinkedIn message</a> if that is easier. They
+are read by one person, which in practice means a same week answer, not a ticket number.</p>
+
+<h3>Children</h3>
+<p>This is a business tool and is not directed at anyone under 16.</p>
+
+<h3>Security, honestly</h3>
+<p>Your workspace link is a bearer capability: anyone holding it holds the workspace. We store
+only a hash of it. There is no password, no multi-factor authentication and no session
+management beyond that cookie, because this is a demo. Treat the link like a password, and do
+not put evidence in this tier that would hurt you if the link leaked.</p>
+</div></section>
 <footer>
   <span>TrustOps / evidence gated answers for security questionnaires<br>
   synthetic demo data on this page / public evidence only on the free tier<br>
   your uploads deleted after 14 days / sub-processors: Google Gemini, Render<br>
-  <a href="/site/legal/terms.html">Terms</a> /
-  <a href="/site/legal/privacy.html">Privacy and data handling</a></span>
+  <a href="#terms">Terms</a> /
+  <a href="#privacy">Privacy and data handling</a></span>
   <span><a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Message Dhruv on LinkedIn</a><br>
   <a href="#contact">pick a message to send</a><br>
   <a href="https://github.com/dhruvshahi10/trustops">how the gates work</a></span>
@@ -733,76 +926,6 @@ document.querySelectorAll(".icopy").forEach(b=>{
   };
 });
 
-/* ── signup ───────────────────────────────────────────────────────────────
-   No timed redirect. The link is the only key to the workspace, so it stays
-   on screen, selectable and copyable, until the user chooses to leave. */
-let created=false;
-function fail(msg){
-  $("sgerr").textContent=msg;
-  $("gobtn").disabled=false;$("samplebtn").disabled=false;
-  $("gobtn").textContent="Create my workspace";
-  $("samplebtn").textContent="Run it on the sample pack, no upload";
-}
-function showPanel(path,seeded){
-  const url=location.origin+path;
-  $("wsurl").value=url;
-  $("wsopen").href=path;
-  $("wsstate").textContent=seeded
-    ?"Workspace created and the sample pack is loaded. Copy this link, then open it and press Run."
-    :"Workspace created. Copy this link, then open it and add your public evidence.";
-  $("wslink").classList.add("on");
-  $("wslink").focus();
-}
-$("wsurl").addEventListener("focus",e=>e.target.select());
-$("copybtn").onclick=async()=>{
-  const el=$("wsurl");el.focus();el.select();
-  let ok=false;
-  try{await navigator.clipboard.writeText(el.value);ok=true}
-  catch(err){try{ok=document.execCommand("copy")}catch(e2){ok=false}}
-  $("copied").textContent=ok?"Copied":"Press Ctrl+C or Cmd+C to copy";
-  $("copybtn").textContent=ok?"Copied":"Copy link";
-  setTimeout(()=>{$("copybtn").textContent="Copy link";$("copied").textContent=""},4000);
-};
-
-async function createWorkspace(seed){
-  if(created)return;
-  const form=$("signupform");
-  if(!form.checkValidity()){form.reportValidity();return}
-  $("sgerr").textContent="";
-  $("gobtn").disabled=true;$("samplebtn").disabled=true;
-  (seed?$("samplebtn"):$("gobtn")).textContent="Creating";
-  let data;
-  try{
-    const r=await fetch("/api/signup",{method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({org:$("org").value.trim(),email:$("email").value.trim(),
-        consent:$("consent").checked,
-        website:$("website").value})});
-    data=await r.json();
-  }catch(err){fail("Could not reach the server. Try again.");return}
-  if(data.error){fail(data.error);return}
-  created=true;
-  let seeded=false;
-  if(seed){
-    /* the seed route already exists server-side; the fresh token authenticates
-       it, so the no-upload path is one extra call, not a new surface */
-    try{
-      const qs=data.workspace.slice(data.workspace.indexOf("?"));
-      const res=await fetch(`/t/${data.slug}/api/seed${qs}`,{method:"POST"});
-      const sd=await res.json();
-      seeded=!sd.error&&sd.count>0;
-    }catch(err){seeded=false}
-  }
-  $("gobtn").textContent="Workspace created";
-  $("samplebtn").textContent=seeded?"Sample pack loaded":"Run it on the sample pack, no upload";
-  $("samplebtn").disabled=true;
-  showPanel(data.workspace,seeded);
-}
-$("signupform").onsubmit=e=>{e.preventDefault();createWorkspace(false)};
-$("samplebtn").onclick=()=>createWorkspace(true);
-$("samplecta").addEventListener("click",()=>{
-  setTimeout(()=>{if(!created)$("org").focus()},400);
-});
 </script>
 </body>
 </html>

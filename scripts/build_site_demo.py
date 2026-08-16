@@ -114,9 +114,18 @@ CHIP_CLASS = {"ok": "chip c-ok", "legal": "chip c-sig", "rev": "chip c-rev"}
 # --- legal pages -------------------------------------------------------------
 # site/legal/*.html are built here rather than hand-maintained, for the same
 # reason the landing page is: they use brand.stylesheet(), so they cannot drift
-# from the product's palette, type or focus rules. Two placeholders are left
-# deliberately visible for the founder to fill: [JURISDICTION] and, on the
-# landing page, [CALENDAR_LINK].
+# from the product's palette, type or focus rules. Jurisdiction and contact are
+# module constants below rather than placeholders; both were resolved from the
+# founder's own portfolio rather than asked of him again.
+
+# The operator's real jurisdiction. It was a placeholder for one round because I
+# asked the founder a legal-sounding question he had no way to answer; it is in
+# fact a fact, stated in his own portfolio (Bengaluru and Delhi NCR).
+JURISDICTION = "India"
+LINKEDIN = "https://www.linkedin.com/in/dhruvshahi-/"
+# A data subject exercising a DPDP or GDPR right cannot be told their only
+# channel is a social DM, so the rights address stays an email.
+RIGHTS_EMAIL = "dhruv.shahi07@gmail.com"
 
 LEGAL_CSS = """
 body{padding-bottom:80px}
@@ -168,19 +177,19 @@ def _legal_page(title: str, heading: str, eyebrow: str, body: str) -> str:
         '<a href="/site/legal/terms.html">Terms</a> / '
         '<a href="/site/legal/privacy.html">Privacy and data handling</a></p>'
         "<footer>TrustOps, operated by Dhruv Shahi / "
-        "governing law and venue: <span class=\"ph\">[JURISDICTION]</span> / "
-        '<a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a></footer>'
+        f"governing law and venue: {JURISDICTION} / "
+        f'<a href="{LINKEDIN}" target="_blank" rel="noopener">message on LinkedIn</a>'
+        f' / <a href="mailto:{RIGHTS_EMAIL}">{RIGHTS_EMAIL}</a></footer>'
         "</div></body></html>")
 
 
 TERMS_BODY = """
 <h2>1. Who you are contracting with</h2>
 <p>The service at this address is <strong>TrustOps, operated by Dhruv Shahi</strong>, an
-individual operator. There is no company entity behind it yet. Governing law and the venue for
-any dispute are <span class="ph">[JURISDICTION]</span>, to be completed by the operator before
-any paid tier is sold. Until that placeholder is filled, treat the arrangement as governed by
-the law of your own place of business for anything you would otherwise need certainty about,
-and ask before you rely on this service for anything contractual.</p>
+individual operator based in India. There is no company entity behind it yet. Governing law and
+the venue for any dispute are the laws of <strong>India</strong>. This document was drafted by the
+operator rather than by counsel, so if you need contractual certainty, ask before you rely on
+this service, and expect a reviewed agreement before any paid tier is sold to you.</p>
 
 <h2>2. This is a demo, and it is sold as one</h2>
 <p>TrustOps is pre-launch. It is provided <strong>as is and as available</strong>, with
@@ -250,8 +259,10 @@ unaffordable to run.</p>
 
 <h2>8. Changes and contact</h2>
 <p>These terms will change, because the product is early. Material changes will be dated at the
-top of this page. Questions, corrections and deletion requests go to
-<a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a> and are answered by a
+top of this page. The fastest way to reach the operator is a
+<a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">LinkedIn
+message</a>. Formal requests, including corrections and deletions, can also go to
+<a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>, and are answered by a
 person.</p>
 """
 
@@ -345,11 +356,14 @@ Otherwise it happens automatically at fourteen days.</li>
 <li><strong>Correction</strong>: ask, or just re-upload.</li>
 <li><strong>Objection and portability</strong>: your documents are your documents; everything
 the run produced is downloadable from your workspace while it exists.</li>
-<li><strong>Complaint</strong>: you may complain to the supervisory authority in
-<span class="ph">[JURISDICTION]</span> once the operator has completed that placeholder.</li>
+<li><strong>Complaint</strong>: the operator is in India, so the Digital Personal Data
+Protection Act 2023 governs and the Data Protection Board of India is the body to complain to.
+If you are in the EU or UK, the GDPR rights above apply to you as well and you may complain to
+your own national supervisory authority instead.</li>
 </ul>
-<p>Requests go to <a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>. They are
-read by one person, which in practice means a same week answer, not a ticket number.</p>
+<p>Requests go to <a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>, or by
+<a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">LinkedIn message</a> if that is easier. They
+are read by one person, which in practice means a same week answer, not a ticket number.</p>
 
 <h3>Children</h3>
 <p>This is a business tool and is not directed at anyone under 16.</p>
@@ -403,6 +417,77 @@ def chips_html(out: dict) -> str:
         for k, v in out.items())
 
 
+
+# --- static, single-file variant ---------------------------------------------
+# The hosted page depends on a backend for exactly two things: POST /api/signup
+# and the seed call that follows it. Everything else, including the whole demo,
+# is inlined and works offline.
+#
+# The legal pages cannot simply be linked from a static build. Their hrefs are
+# absolute (/site/legal/...), so publishing site/ as the web root puts index.html
+# at / but 404s every legal link, while publishing the repo root fixes the links
+# and buries the page at /site/index.html. And a published artifact is a single
+# file, where a separate legal/terms.html cannot exist at all. Inlining both
+# documents as #terms and #privacy sections resolves every one of those cases at
+# once, from the same TERMS_BODY and PRIVACY_BODY the hosted pages use, so there
+# is still one source of truth.
+
+STATIC_SIGNUP = """<section id="signup">
+  <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
+  <h2 class="rv">The interactive workspace is not live yet</h2>
+  <p class="sub rv">Everything above is a real recorded run of the engine, replayed unchanged.
+  The part that is not yet public is the workspace where you upload your own evidence and run the
+  ten questions against it. It is built and tested; it needs a server, and it will have one
+  shortly. Until then the fastest way in is a message.</p>
+  <p class="sub rv">If you want to run it today, the whole engine is open source and runs on your
+  own machine in two commands.
+  <a href="https://github.com/dhruvshahi10/trustops">See the repository</a>.</p>
+</section>
+"""
+
+
+def _static_legal_section(anchor, idx, label, heading, body):
+    return (f'<section id="{anchor}">'
+            f'<div class="seclabel rv"><span class="idx">{idx}</span>'
+            f'<span class="label">{label}</span><span class="rule"></span></div>'
+            f'<h2 class="rv">{heading}</h2>'
+            f'<div class="legalwrap">{DRAFT_NOTE}{body}</div></section>')
+
+
+def build_static(page: str) -> str:
+    """Turn the hosted page into a self-contained, backend-free one."""
+    import re as _re
+
+    # 1. replace the signup section (from its opening tag to its closing tag)
+    start = page.index('<section id="signup">')
+    end = page.index("</section>", start) + len("</section>")
+    page = page[:start] + STATIC_SIGNUP + page[end:]
+
+    # 2. inline both legal documents as sections, before the footer
+    legal = (_static_legal_section("terms", "08", "Terms", "Terms of use", TERMS_BODY)
+             + _static_legal_section("privacy", "09", "Privacy",
+                                     "Privacy and data handling", PRIVACY_BODY))
+    page = page.replace("<footer>", legal + "\n<footer>", 1)
+
+    # 3. point every legal link at those sections
+    page = page.replace('href="/site/legal/terms.html"', 'href="#terms"')
+    page = page.replace('href="/site/legal/privacy.html"', 'href="#privacy"')
+
+    # 4. drop the JS that talks to the backend. The signup handlers reference
+    #    elements that no longer exist, so leaving them throws on load.
+    # the block is delimited by its box-drawing comment and runs to </script>
+    start_js = page.index("/* \u2500\u2500 signup \u2500")
+    end_js = page.index("</script>", start_js)
+    page = page[:start_js] + page[end_js:]
+
+    # 5. add the legal typography the hosted legal pages carry in LEGAL_CSS
+    page = page.replace("/* reveal-on-scroll */", LEGAL_CSS + "\n/* reveal-on-scroll */", 1)
+
+    for banned in ("/api/signup", "/site/legal/", "[CALENDAR_LINK]", "[JURISDICTION]"):
+        if banned in page:
+            raise SystemExit(f"static build still contains {banned!r}")
+    return page
+
 def main() -> None:
     store = EvidenceStore("acme", ROOT / "data" / "evidence")
     retriever = Retriever(store)
@@ -443,6 +528,12 @@ def main() -> None:
 
     for p in build_legal(ROOT):
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size // 1024}KB)")
+
+    static = build_static(page)
+    static_path = ROOT / "site" / "static" / "index.html"
+    static_path.parent.mkdir(parents=True, exist_ok=True)
+    static_path.write_text(static, encoding="utf-8")
+    print(f"wrote site/static/index.html ({len(static) // 1024}KB, no backend)")
 
 
 if __name__ == "__main__":

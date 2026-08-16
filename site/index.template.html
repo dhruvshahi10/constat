@@ -87,6 +87,20 @@ border-left:2px solid var(--status-ok);padding-left:9px;margin-top:12px}
 .d-prov.warn{border-left-color:var(--status-warn)}
 .d-gap{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--status-warn);margin-top:10px}
 
+/* contact intents */
+.intents{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:30px}
+.intent{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:20px;display:flex;flex-direction:column;gap:12px}
+.intent h3{font-size:17px;line-height:1.25}
+.imsg{font-size:13.5px;line-height:1.6;color:var(--text-secondary);background:var(--surface-sunken);
+border-radius:var(--radius-1);padding:12px 14px;user-select:all}
+.irow{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;align-items:center}
+.icopy{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;
+padding:11px 15px;border:1px solid var(--line-2);border-radius:var(--radius-1);
+background:transparent;color:var(--text-primary);cursor:pointer}
+.icopy:hover{border-color:var(--line-signal);color:var(--signal)}
+.icopy[data-done="1"]{color:var(--status-ok);border-color:var(--status-ok)}
+
 /* reveal-on-scroll */
 .js .rv{opacity:0;transform:translateY(14px);
 transition:opacity 480ms var(--ease-out),transform 480ms var(--ease-out)}
@@ -443,15 +457,47 @@ footer .ph{color:var(--status-warn)}
   </div>
 </section>
 
+<section id="contact">
+  <div class="seclabel rv"><span class="idx">07</span><span class="label">Get in touch</span><span class="rule"></span></div>
+  <h2 class="rv">Tell me which one you are</h2>
+  <p class="sub rv">LinkedIn cannot prefill a message from a link, so pick the line that fits,
+  copy it, and paste it into the message. It tells me what you need before I reply, which is the
+  whole point of asking.</p>
+  <div class="intents">
+    <div class="intent rv">
+      <h3>Run our own questionnaire</h3>
+      <p class="imsg" id="msg-run">Hi Dhruv, I found TrustOps. We answer security questionnaires
+      and I want to try it on ours. Can we talk about a pilot?</p>
+      <div class="irow"><button type="button" class="icopy" data-msg="msg-run">Copy message</button>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Open LinkedIn</a></div>
+    </div>
+    <div class="intent rv">
+      <h3>Question about data handling</h3>
+      <p class="imsg" id="msg-data">Hi Dhruv, I read the TrustOps data handling page. I have a
+      question about where evidence goes and what the BYOK tier would look like for us.</p>
+      <div class="irow"><button type="button" class="icopy" data-msg="msg-data">Copy message</button>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Open LinkedIn</a></div>
+    </div>
+    <div class="intent rv">
+      <h3>Just curious how it works</h3>
+      <p class="imsg" id="msg-curious">Hi Dhruv, I tried the TrustOps demo. I am interested in how
+      the gates and the audit chain work rather than buying anything right now.</p>
+      <div class="irow"><button type="button" class="icopy" data-msg="msg-curious">Copy message</button>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Open LinkedIn</a></div>
+    </div>
+  </div>
+  <p class="sub rv" style="margin-top:22px">Formal data requests, including correction and
+  deletion, can also go to <a href="mailto:dhruv.shahi07@gmail.com">dhruv.shahi07@gmail.com</a>.</p>
+</section>
+
 <footer>
   <span>TrustOps / evidence gated answers for security questionnaires<br>
   synthetic demo data on this page / public evidence only on the free tier<br>
   your uploads deleted after 14 days / sub-processors: Google Gemini, Render<br>
   <a href="/site/legal/terms.html">Terms</a> /
   <a href="/site/legal/privacy.html">Privacy and data handling</a></span>
-  <span><a href="[CALENDAR_LINK]">Book a pilot call</a>
-  <span class="ph">([CALENDAR_LINK] to be filled in by the founder)</span><br>
-  <a href="mailto:dhruv.shahi07@gmail.com?subject=TrustOps%20pilot">or email dhruv.shahi07@gmail.com</a><br>
+  <span><a href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Message Dhruv on LinkedIn</a><br>
+  <a href="#contact">pick a message to send</a><br>
   <a href="https://github.com/dhruvshahi10/trustops">how the gates work</a></span>
 </footer>
 
@@ -542,6 +588,24 @@ if(!reduced){
   frame.addEventListener("focusout",()=>{paused=false;scheduleAdvance()});
   scheduleAdvance();
 }
+
+/* contact: copy the message, then LinkedIn. If the clipboard is blocked the
+   text is still selectable (user-select:all) so the flow never dead-ends. */
+document.querySelectorAll(".icopy").forEach(b=>{
+  b.onclick=async()=>{
+    const el=document.getElementById(b.dataset.msg);
+    const text=el.textContent.replace(/\s+/g," ").trim();
+    try{
+      await navigator.clipboard.writeText(text);
+      b.textContent="Copied";b.dataset.done="1";
+    }catch(e){
+      const r=document.createRange();r.selectNodeContents(el);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+      b.textContent="Selected, press copy";b.dataset.done="1";
+    }
+    setTimeout(()=>{b.textContent="Copy message";delete b.dataset.done},2600);
+  };
+});
 
 /* ── signup ───────────────────────────────────────────────────────────────
    No timed redirect. The link is the only key to the workspace, so it stays
