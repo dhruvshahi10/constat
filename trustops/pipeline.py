@@ -51,6 +51,23 @@ class AuditLog:
             f.write(json.dumps({**event, "hash": event_hash}, ensure_ascii=False) + "\n")
         self.prev = event_hash
 
+    @classmethod
+    def resume(cls, path: Path) -> "AuditLog":
+        """Reopen an existing log to append without truncating.
+
+        Refuses to continue a broken chain: appending to a tampered log would
+        launder the tampering behind fresh valid links.
+        """
+        if not cls.verify_chain(path):
+            raise ValueError(f"{path.name}: audit chain invalid; refusing to append")
+        log = cls.__new__(cls)
+        log.path = path
+        log.prev = GENESIS
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if lines:
+            log.prev = json.loads(lines[-1])["hash"]
+        return log
+
     @staticmethod
     def verify_chain(path: Path) -> bool:
         prev = GENESIS
@@ -80,14 +97,25 @@ class RunResult:
 
 def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         drafter_kind: str = "mock", today: date | None = None,
-        reviewer: str = "demo-grc-reviewer (simulated)") -> RunResult:
+        reviewer: str = "demo-grc-reviewer (simulated)",
+        approval_mode: str = "simulated",
+        retriever=None) -> RunResult:
+    """approval_mode: "simulated" auto-approves gate-clean complete drafts with a
+    labeled stand-in reviewer (demo/CLI). "human" approves nothing: clean drafts
+    rest at GRC_REVIEW until a named reviewer acts via trustops.server.review.
+
+    retriever: injectable Retriever-compatible instance (e.g. SemanticRetriever);
+    defaults to the lexical Retriever over the same store.
+    """
+    if approval_mode not in ("simulated", "human"):
+        raise ValueError(f"unknown approval_mode '{approval_mode}'")
     today = today or date.today()
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
 
     audit = AuditLog(out_dir / "audit_log.jsonl")
     store = EvidenceStore(tenant, evidence_root)
-    retriever = Retriever(store)
+    retriever = retriever or Retriever(store)
     drafter = make_drafter(drafter_kind, retriever)
 
     # RECEIVED — checksum the artifact before anything touches it
@@ -137,8 +165,10 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                          {"citations": [c.source_id for c in d.citations],
                           "coverage": d.evidence_coverage.value})
 
-        # simulated named-reviewer approval — only for clean, complete drafts
-        if (q.state == QState.GRC_REVIEW and d.evidence_coverage == Coverage.COMPLETE
+        # simulated named-reviewer approval — only for clean, complete drafts,
+        # and only in demo mode; hosted ("human") runs approve nothing here
+        if (approval_mode == "simulated"
+                and q.state == QState.GRC_REVIEW and d.evidence_coverage == Coverage.COMPLETE
                 and not d.requires_human):
             q.state = QState.DELIVERED
             audit.append(reviewer, "APPROVED", q.question_id,
@@ -180,6 +210,17 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                    ensure_ascii=False),
         encoding="utf-8",
     )
+    # rehydration record for post-run review (trustops.server.review)
+    (out_dir / "state.json").write_text(json.dumps({
+        "tenant": tenant,
+        "drafter": drafter_kind,
+        "approval_mode": approval_mode,
+        "questionnaire": questionnaire.name,
+        "run_date": today.isoformat(),
+        "questions": [{"question_id": q.question_id, "row": q.row,
+                       "domain": q.domain, "text": q.text, "state": q.state.value}
+                      for q in questions],
+    }, indent=2, ensure_ascii=False), encoding="utf-8")
     audit.append("system", "RUN_COMPLETE", tenant, metrics)
 
     return RunResult(tenant=tenant, questions=questions, drafts=drafts,

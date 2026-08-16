@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: trustops
+    runtime: docker
+    plan: starter
+    numInstances: 1  # global run queue + SQLite are single-process by design
+    healthCheckPath: /healthz
+    disk:
+      name: trustops-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TRUSTOPS_SECRET
+        generateValue: true
+      - key: TRUSTOPS_DATA
+        value: /data

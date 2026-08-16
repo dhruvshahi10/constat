@@ -109,6 +109,15 @@ class Draft:
         d["risk"] = self.risk.value
         return d
 
+    @classmethod
+    def from_contract(cls, d: dict) -> "Draft":
+        """Inverse of to_contract(): rehydrate a Draft from contracts.json."""
+        data = dict(d)
+        data["citations"] = [Citation(**c) for c in data.get("citations", [])]
+        data["evidence_coverage"] = Coverage(data["evidence_coverage"])
+        data["risk"] = Risk(data["risk"])
+        return cls(**data)
+
 
 @dataclass
 class Approval:
