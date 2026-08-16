@@ -151,6 +151,22 @@ background:rgba(232,232,228,0.03)}}
 @media(min-width:860px){.chips button.on{border-color:transparent;border-left-color:var(--acc)}}
 
 .stagemain{padding:clamp(20px,2.6vw,34px);min-height:400px}
+/* ── ask it yourself ──────────────────────────────────────────────────────
+   the input only exists when scripting does; without it the chips remain the
+   whole interface and the prerendered first contract still shows */
+.askrow{display:none;gap:9px;margin-bottom:16px}
+.js .askrow{display:flex}
+.askrow input{flex:1;min-width:0;font-family:var(--font-sans);font-size:14px;
+color:var(--text-primary);background:var(--surface-sunken);border:1px solid var(--line-2);
+border-radius:var(--radius-1);padding:12px 14px}
+.askrow input::placeholder{color:var(--text-tertiary)}
+.askrow button{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;
+text-transform:uppercase;padding:12px 18px;border:1px solid var(--signal);
+border-radius:var(--radius-1);background:var(--signal);color:var(--signal-ink);cursor:pointer}
+.askrow button:hover{background:var(--signal-bright)}
+.askhint{display:none;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.14em;
+text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px}
+.js .askhint{display:block}
 .slabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.19em;text-transform:uppercase;
 color:var(--text-tertiary);display:block;margin-bottom:9px}
 .q-line{font-family:var(--font-display);font-size:clamp(19px,2.2vw,28px);line-height:1.28;
@@ -213,6 +229,23 @@ transition:background 320ms var(--ease-out)}
 .gtick i.on{background:var(--status-critical)}
 .grailnote{font-family:var(--font-mono);font-size:10.5px;line-height:1.9;color:var(--text-tertiary);
 margin-top:26px;max-width:34ch}
+/* ── the pipeline, walked by a question ───────────────────────────────────
+   five stations; a token slides to wherever the active trap strikes it and
+   turns the refusal colour there. data-stop is set by the same observer that
+   drives the numeral. */
+.pipe{margin-top:28px}
+.pipe .rail2{position:relative;height:1px;background:var(--line-2)}
+.pipe .tok{position:absolute;top:-4px;left:0;width:9px;height:9px;border-radius:1px;
+background:var(--signal);transition:left 850ms var(--ease-inout),background 300ms var(--ease-out) 700ms}
+.pipe[data-stop="1"] .tok{left:calc(25% - 4px);background:var(--status-critical)}
+.pipe[data-stop="3"] .tok{left:calc(75% - 4px);background:var(--status-critical)}
+.pipe .sts{display:flex;justify-content:space-between;margin-top:10px;
+font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;
+color:var(--text-faint)}
+.pipe .sts i{font-style:normal;transition:color 300ms var(--ease-out)}
+.pipe[data-stop="1"] .sts i:nth-child(2),.pipe[data-stop="3"] .sts i:nth-child(4){
+color:var(--status-critical)}
+@media(prefers-reduced-motion:reduce){.pipe .tok{transition:none}}
 
 .gcards{display:flex;flex-direction:column;gap:clamp(16px,2vw,26px)}
 .gcard{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
@@ -274,6 +307,26 @@ background:rgba(14,14,16,0.72)}
 .fbar span{font-family:var(--font-mono);font-size:9px;letter-spacing:0.13em;color:var(--text-tertiary);
 margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frame img{display:block;width:100%;height:auto}
+.frame video{display:block;width:100%;height:auto;background:var(--surface-sunken)}
+/* ── hotspots on the product frames ───────────────────────────────────────
+   small numbered markers over the screenshot; each opens a one-line callout.
+   Pointless without scripting, so hidden without it. */
+.fimg{position:relative}
+.hs{display:none;position:absolute;width:26px;height:26px;border-radius:50%;
+border:1px solid var(--line-signal);background:rgba(20,20,31,0.85);color:var(--signal);
+font-family:var(--font-mono);font-size:11px;cursor:pointer;z-index:4;
+align-items:center;justify-content:center;padding:0}
+.js .hs{display:flex}
+.hs::before{content:"";position:absolute;inset:-5px;border-radius:50%;
+border:1px solid var(--line-signal);opacity:0.5}
+.js .hs::before{animation:pulse 2.6s var(--ease-inout) infinite}
+.hs[aria-expanded="true"]{background:var(--signal);color:var(--signal-ink)}
+.hscall{display:none;position:absolute;z-index:5;max-width:240px;
+background:rgba(14,14,16,0.96);border:1px solid var(--line-signal);
+border-radius:var(--radius-1);padding:11px 13px;font-size:12.5px;line-height:1.55;
+color:var(--text-primary)}
+.hs[aria-expanded="true"]+.hscall{display:block}
+@media(prefers-reduced-motion:reduce){.js .hs::before{animation:none}}
 
 /* ── custody flow ──────────────────────────────────────────────────────── */
 .flow{display:grid;gap:14px;margin-top:clamp(30px,4vw,50px);align-items:stretch}
@@ -342,11 +395,67 @@ letter-spacing:0.1em;margin-top:auto;padding-top:12px;border-top:1px solid var(-
 .mlegend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--font-mono);font-size:9px;
 letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary);margin-top:9px}
 /* a chain: blocks linked by their previous hash */
-.mchain{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8.5px;
-color:var(--text-tertiary);flex-wrap:wrap}
-.mchain b{font-weight:400;border:1px solid var(--line-2);border-radius:1px;padding:5px 6px;
-color:var(--status-ok);letter-spacing:0.04em}
-.mchain s{text-decoration:none;color:var(--line-3)}
+/* ── the tamper widget ────────────────────────────────────────────────────
+   six real events from the recorded run's hash chain, recomputed in the
+   browser as the visitor edits them. This is the product in one toy. */
+.tamper{grid-column:1 / -1;background:rgba(26,26,29,0.8);border:1px solid var(--line-1);
+border-radius:var(--radius-2);padding:clamp(20px,2.4vw,28px)}
+.tamper h3{font-size:clamp(18px,1.8vw,22px)}
+.tamper .tlede{font-size:13.5px;line-height:1.6;color:var(--text-secondary);
+margin:10px 0 18px;max-width:64ch}
+.tamper .tlede b{color:var(--text-primary);font-weight:500}
+.tblocks{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:760px){.tblocks{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1080px){.tblocks{grid-template-columns:repeat(6,1fr)}}
+.tb{position:relative;border:1px solid var(--line-1);border-radius:var(--radius-1);
+padding:11px 12px;background:var(--surface-sunken);
+transition:border-color 300ms var(--ease-out)}
+.tb .th{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.12em;
+text-transform:uppercase;color:var(--text-tertiary);line-height:1.6;min-height:2.6em}
+.tb input{width:100%;font-family:var(--font-mono);font-size:10.5px;color:var(--text-primary);
+background:var(--surface-card);border:1px solid var(--line-1);border-radius:1px;
+padding:6px 7px;margin:8px 0}
+.tb .hash{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.04em;
+color:var(--status-ok);word-break:break-all;line-height:1.5;
+transition:color 300ms var(--ease-out)}
+.tb.broken{border-color:var(--status-critical)}
+.tb.broken .hash{color:var(--status-critical)}
+.tb.broken::after{content:"LINK BROKEN";position:absolute;right:8px;top:8px;
+font-family:var(--font-mono);font-size:7.5px;letter-spacing:0.16em;
+color:var(--status-critical)}
+.trow{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.tstatus{font-family:var(--font-mono);font-size:11px;letter-spacing:0.15em;
+text-transform:uppercase;color:var(--status-ok)}
+.tstatus.bad{color:var(--status-critical)}
+.treset{display:none;font-family:var(--font-mono);font-size:10px;letter-spacing:0.13em;
+text-transform:uppercase;padding:9px 14px;border:1px solid var(--line-2);
+border-radius:var(--radius-1);background:transparent;color:var(--text-primary);cursor:pointer}
+.js .treset{display:inline-block}
+.treset:hover{border-color:var(--line-signal);color:var(--signal)}
+.tnojs{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);line-height:1.8}
+.js .tnojs{display:none}
+
+/* the credibility strip: numbers with receipts, in place of logos we do not have */
+.cred{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line-1);
+border-radius:var(--radius-2);overflow:hidden;margin-top:clamp(28px,3.6vw,44px);
+background:var(--line-1);gap:1px}
+@media(min-width:880px){.cred{grid-template-columns:repeat(5,1fr)}}
+.cred span{background:rgba(26,26,29,0.8);padding:16px 14px;text-align:center;
+font-family:var(--font-mono);font-size:9px;letter-spacing:0.13em;text-transform:uppercase;
+color:var(--text-tertiary);line-height:1.7}
+.cred b{display:block;font-family:var(--font-display);font-weight:300;font-size:26px;
+letter-spacing:-0.02em;color:var(--signal);margin-bottom:4px}
+/* five cells in a two column grid leave an orphan slot; span the last one */
+@media(max-width:879px){.cred span:last-child{grid-column:1 / -1}}
+
+/* progressive disclosure: one visible sentence, the detail behind a fold */
+details.more{margin-top:10px}
+details.more>summary{list-style:none;cursor:pointer;font-family:var(--font-mono);
+font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--signal)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"+ "}
+details.more[open]>summary::before{content:"- "}
+details.more p{margin-top:9px;font-size:13px;line-height:1.6;color:var(--text-secondary)}
 
 /* ── the create-a-workspace card ───────────────────────────────────────── */
 .signup{background:rgba(26,26,29,0.86);border:1px solid var(--line-signal);
@@ -477,6 +586,13 @@ footer a{color:var(--signal)}
     <div class="stagebody">
       <div class="chips" id="chips"><!--@CHIPS@--></div>
       <div class="stagemain">
+        <p class="askhint" id="askhint">Ask it anything a buyer would, or pick a suggested question</p>
+        <div class="askrow">
+          <label class="sr-only" for="askq">Ask a security questionnaire question</label>
+          <input id="askq" type="text" maxlength="200" autocomplete="off"
+            placeholder="Are backups encrypted and tested?">
+          <button type="button" id="askbtn">Ask the engine</button>
+        </div>
         <span class="slabel">Question from the buyer</span>
         <div class="q-line"><span id="qtext" aria-hidden="true"><!--@Q0@--></span><span class="caret" id="caret" aria-hidden="true"></span></div>
         <div id="demoresult" aria-live="polite" aria-atomic="true">
@@ -509,9 +625,13 @@ footer a{color:var(--signal)}
       <div class="gbig" id="gbig">01</div>
       <div class="gname" id="gname">The certification trap</div>
       <div class="gtick" id="gtick" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="pipe" id="pipe" data-stop="3" aria-hidden="true">
+        <div class="rail2"><span class="tok"></span></div>
+        <div class="sts"><i>Received</i><i>Routed</i><i>Drafted</i><i>Gated</i><i>Delivered</i></div>
+      </div>
       <p class="grailnote">Each gate is deterministic code that runs after the model, on the
-      structure of the evidence rather than on the wording of the draft. No prompt can talk it
-      out of a refusal.</p>
+      structure of the evidence rather than on the wording of the draft. The token above shows
+      where each trap's question is stopped. No prompt can talk a gate out of a refusal.</p>
     </div>
 
     <div class="gcards">
@@ -584,26 +704,53 @@ footer a{color:var(--signal)}
 <section id="product" class="secpad">
   <div class="seclabel rv"><span class="idx">02</span><span class="label">The product, not a mockup</span><span class="rule"></span></div>
   <h2 class="rv">Three screens, one rule<br>running through all of them</h2>
-  <p class="sub rv">These are screenshots of the running application, taken from the same run that
-  feeds the panel above. Nothing here is illustrated.</p>
+  <p class="sub rv">A real recording and real screenshots of the running application, from the
+  same engine that feeds the panel above. Nothing here is illustrated.</p>
 
   <div class="shots">
     <div class="shot rv">
       <div class="shotcopy">
-        <span class="chip c-warn">Working paper</span>
-        <h3>The audit report</h3>
-        <p>Coverage, the refusal split by cause, and a lattice of every question with its verdict.
-        Then, per question, the answer, the provenance strip, and the gate findings that produced
-        it. This is the artefact you hand a reviewer.</p>
-        <p class="shotmeta">run_report.html<br>self contained, no network</p>
+        <span class="chip c-ok">Recorded live</span>
+        <h3>A full run, end to end</h3>
+        <p>Workspace created, the sample pack seeded, the run started, ten verdicts landing one
+        by one, and the report opened. One take, no cuts, no key configured, so every answer you
+        see comes from the deterministic offline engine.</p>
+        <p class="shotmeta">screen capture, unedited<br>press play</p>
       </div>
-      <div class="frame" data-par="0.05">
-        <div class="fbar"><i></i><i></i><i></i><span>run_report.html / northwind-systems</span></div>
-        <img src="@SHOT_REPORT@" width="1180" height="811" alt="The TrustOps run report: a sixty percent coverage dial, a lattice of ten question verdicts, and stat tiles reading ten questions ingested, forty percent refused by design, and a valid audit chain.">
+      <div class="frame">
+        <div class="fbar"><i></i><i></i><i></i><span>a complete run, recorded from the browser</span></div>
+        <video controls preload="none" playsinline width="1280" height="800"
+          poster="@POSTER_URI@" src="@VIDEO_URI@"
+          aria-label="Screen recording of a complete TrustOps run: workspace creation, seeding the sample evidence pack, running ten questions, and opening the report."></video>
       </div>
     </div>
 
     <div class="shot flip rv">
+      <div class="shotcopy">
+        <span class="chip c-warn">Working paper</span>
+        <h3>The audit report</h3>
+        <p>Coverage, the refusal split by cause, and a lattice of every question with its verdict.
+        This is the artefact you hand a reviewer. The markers explain what you are looking at.</p>
+        <p class="shotmeta">run_report.html<br>self contained, no network</p>
+      </div>
+      <div class="frame" data-par="0.05">
+        <div class="fbar"><i></i><i></i><i></i><span>run_report.html / northwind-systems</span></div>
+        <div class="fimg">
+          <img src="@SHOT_REPORT@" width="1180" height="811" alt="The TrustOps run report: a sixty percent coverage dial, a lattice of ten question verdicts, and stat tiles reading ten questions ingested, forty percent refused by design, and a valid audit chain.">
+          <button type="button" class="hs" style="left:12%;top:56%" aria-expanded="false">1</button>
+          <div class="hscall" style="left:15%;top:64%">The coverage dial counts only answers that
+          survived every gate. Refusals are not failures here, they are the product doing its job.</div>
+          <button type="button" class="hs" style="left:60%;top:44%" aria-expanded="false">2</button>
+          <div class="hscall" style="left:48%;top:52%">Each tile is a fact of the run. The refused
+          count is stated as plainly as the delivered one, which is the point.</div>
+          <button type="button" class="hs" style="left:76%;top:87%" aria-expanded="false">3</button>
+          <div class="hscall" style="left:56%;top:66%">The refusal bar names every cause:
+          contradiction, staleness, legal routing. A gap you can act on, not a shrug.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shot rv">
       <div class="shotcopy">
         <span class="chip c-rev">Named review</span>
         <h3>The approval queue</h3>
@@ -618,7 +765,7 @@ footer a{color:var(--signal)}
       </div>
     </div>
 
-    <div class="shot rv">
+    <div class="shot flip rv">
       <div class="shotcopy">
         <span class="chip c-sig">Workspace</span>
         <h3>Evidence in, run out</h3>
@@ -675,25 +822,31 @@ footer a{color:var(--signal)}
     <div class="tier lead rv">
       <span class="chip c-sig">Demo</span>
       <h3>Our key, free</h3>
-      <p>Google Gemini free tier. Google may use submitted content to improve their services, so
-      this tier is for public evidence: a published SOC 2 report, an ISO certificate, trust-center
-      policies. Three runs, workspace deleted after 14 days.</p>
+      <p>Google Gemini free tier, so bring public evidence only. Three runs, deleted after 14 days.</p>
+      <details class="more"><summary>Why public evidence</summary>
+      <p>Google may use free tier content to improve their services. A published SOC 2 report, an
+      ISO certificate or trust-center policies lose nothing by that; your confidential runbooks
+      would. That is the whole restriction, stated once and honestly.</p></details>
       <span class="who">Available now, on this page</span>
     </div>
     <div class="tier rv">
       <span class="chip c-ok">BYOK</span>
       <h3>Your key, your terms</h3>
-      <p>You supply your own provider key. Your text travels under your contract with that
-      provider, not ours. This is the tier for confidential evidence, because the only party who
-      can promise you anything about it is the party you already pay.</p>
+      <p>You supply your own provider key, so your text travels under your contract, not ours.</p>
+      <details class="more"><summary>Who this is for</summary>
+      <p>Confidential evidence. The only party who can promise you anything about your text is
+      the provider you already pay, so this tier hands the drafting to them and keeps the gates,
+      the chain and the deliverables identical.</p></details>
       <span class="who">Ask for it and it moves up the queue</span>
     </div>
     <div class="tier rv">
       <span class="chip c-rev">Managed</span>
       <h3>Paid, with commitments</h3>
-      <p>We run a paid tier key that carries a no-training commitment, and we pass that commitment
-      through to you in the contract rather than in a marketing line. Retention and residency
-      become terms you can negotiate.</p>
+      <p>Our paid key with a no-training commitment, passed through to you in the contract.</p>
+      <details class="more"><summary>What becomes negotiable</summary>
+      <p>Retention, residency and the no-training commitment become contract terms rather than
+      marketing lines. Priced per seat when it ships; tell us if this is the one you need and it
+      gets built sooner.</p></details>
       <span class="who">Priced per seat, not built yet</span>
     </div>
   </div>
@@ -728,12 +881,34 @@ footer a{color:var(--signal)}
     <div class="del rv">
       <h3>The tamper evident log</h3>
       <p>Every state transition hash chained in an append only file. Edit any historical event and
-      verification fails from that point on.</p>
-      <div class="mini mchain" aria-hidden="true">
-        <b>a41f</b><s>&#8594;</s><b>7c02</b><s>&#8594;</s><b>e9b8</b><s>&#8594;</s><b>3d51</b>
-      </div>
+      verification fails from that point on. Try it yourself, below.</p>
       <span class="mono">audit_log.jsonl</span>
     </div>
+
+    <div class="tamper rv" id="tamper">
+      <span class="chip c-sig">Live, in your browser</span>
+      <h3 style="margin-top:12px">Tamper with the chain yourself</h3>
+      <p class="tlede">These are six real events from the recorded run's audit log, hashes and
+      all. <b>Edit any actor</b>, even by one letter, and watch verification fail from that
+      event onward, recomputed live in your browser. Put it back exactly and the chain heals.
+      That is the whole guarantee, in one toy.</p>
+      <div class="tblocks" id="tblocks"><!--@CHAIN@--></div>
+      <div class="trow">
+        <span class="tstatus" id="tstatus" role="status">Chain verifies, all six links intact</span>
+        <button type="button" class="treset" id="treset">Restore the original events</button>
+      </div>
+      <p class="tnojs">Editing needs JavaScript. What you are looking at is still the real
+      thing: each event's hash covers the event plus the previous hash, so no historical edit
+      can survive verification.</p>
+    </div>
+  </div>
+
+  <div class="cred rv" aria-label="Engineering facts about this product">
+    <span><b>167</b>tests passing on every commit</span>
+    <span><b>11</b>adversarial evals gate release</span>
+    <span><b>4</b>traps planted in every run</span>
+    <span><b>0</b>uncited answers ever released</span>
+    <span><b>100%</b>of the engine open source</span>
   </div>
 </section>
 
@@ -844,16 +1019,50 @@ document.querySelectorAll(".rv").forEach(el=>io.observe(el));
    so the left column narrates the right one instead of sitting there. */
 const GNAMES=["The certification trap","The contradiction trap","The staleness trap",
   "The commitment trap"];
+/* where each trap's question is stopped on the pipeline: the commitment trap
+   is caught at classification, before a model ever sees it; the rest survive
+   drafting and die at the gate wall */
+const GSTOP=[3,3,3,1];
+let gcur=-1;
 const gio=new IntersectionObserver(es=>{
   let best=null;
   es.forEach(e=>{if(e.isIntersecting&&(!best||e.intersectionRatio>best.intersectionRatio))best=e});
   if(!best)return;
   const i=+best.target.dataset.g;
+  if(i===gcur)return;gcur=i;
   $("gbig").textContent=String(i+1).padStart(2,"0");
   $("gname").textContent=GNAMES[i];
   $("gtick").querySelectorAll("i").forEach((t,n)=>t.classList.toggle("on",n<=i));
+  /* re-run the token's travel from RECEIVED on every card change */
+  const pipe=$("pipe");
+  if(reduced){pipe.dataset.stop=GSTOP[i];return}
+  pipe.dataset.stop="";
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{pipe.dataset.stop=GSTOP[i]}));
 },{rootMargin:"-42% 0px -42% 0px",threshold:[0,0.2,0.6,1]});
 document.querySelectorAll(".gcard").forEach(c=>gio.observe(c));
+
+/* count-up on the hero counters and the credibility strip. The final number is
+   in the HTML, so without scripting or with reduced motion it is simply there. */
+const cio=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;cio.unobserve(e.target);
+  if(reduced)return;
+  const b=e.target,final=b.textContent,m=final.match(/^(\d+)(.*)$/);
+  if(!m)return;
+  const n=+m[1],suf=m[2],t0=performance.now(),dur=1100;
+  const step=t=>{const p=Math.min(1,(t-t0)/dur),ease=1-Math.pow(1-p,3);
+    b.textContent=Math.round(n*ease)+suf;
+    if(p<1)requestAnimationFrame(step);else b.textContent=final};
+  requestAnimationFrame(step);
+}),{threshold:0.5});
+document.querySelectorAll(".count b,.cred b").forEach(b=>cio.observe(b));
+
+/* hotspots on the product frames: one open at a time */
+document.querySelectorAll(".hs").forEach(h=>h.onclick=()=>{
+  const wasOpen=h.getAttribute("aria-expanded")==="true";
+  document.querySelectorAll('.hs[aria-expanded="true"]').forEach(o=>
+    o.setAttribute("aria-expanded","false"));
+  h.setAttribute("aria-expanded",wasOpen?"false":"true");
+});
 
 /* scroll progress hairline + a light parallax on the product frames */
 const frames=[...document.querySelectorAll(".frame[data-par]")];
@@ -877,8 +1086,11 @@ addEventListener("scroll",onScroll,{passive:true});onScroll();
 /* ── the recorded run ─────────────────────────────────────────────────────
    The first contract is rendered into the HTML at build time, so the stage is
    complete on first paint. Typing is for the transitions only. The stage's
-   accent colour follows the verdict, so the frame itself changes state. */
-const keys=Object.keys(DEMO);
+   accent colour follows the verdict, so the frame itself changes state.
+   DEMO carries three keys: showcase (the seven chips), bank (the ~40 contract
+   corpus behind the ask box), chain (the tamper widget's real events). */
+const SHOW=DEMO.showcase,BANK=DEMO.bank||[],CHAIN=DEMO.chain||null;
+const keys=Object.keys(SHOW);
 let current=keys[0],timer=null,cycleTimer=null;
 let auto=!reduced,paused=false,revealed=true;
 const DWELL=11000;
@@ -895,9 +1107,9 @@ function paint(tone){
 }
 function scheduleAdvance(){
   clearTimeout(cycleTimer);cycleTimer=null;
-  if(!auto||paused||!revealed)return;
+  if(!auto||paused||!revealed||current===null)return;
   cycleTimer=setTimeout(()=>{
-    const next=keys[(keys.indexOf(current)+1)%keys.length];show(next,false);
+    const next=keys[(keys.indexOf(current)+1)%keys.length];show(next,SHOW[next],false);
   },DWELL);
 }
 function markChips(){
@@ -906,8 +1118,9 @@ function markChips(){
     b.classList.toggle("on",on);b.setAttribute("aria-pressed",on?"true":"false");
   });
 }
-function show(key,instant){
-  const d=DEMO[key];current=key;revealed=false;
+/* key is a showcase key or null when the contract came through the ask box */
+function show(key,d,instant){
+  current=key;revealed=false;
   clearTimeout(timer);clearTimeout(cycleTimer);
   markChips();
   $("verdict").textContent="";$("verdict").className="chip";
@@ -937,8 +1150,143 @@ function show(key,instant){
   type();
 }
 document.querySelectorAll("#chips button").forEach(b=>
-  b.onclick=()=>{auto=false;clearTimeout(cycleTimer);show(b.dataset.k,false)});
-markChips();paint(DEMO[current].tone);
+  b.onclick=()=>{auto=false;clearTimeout(cycleTimer);
+    $("askhint").textContent="Ask it anything a buyer would, or pick a suggested question";
+    show(b.dataset.k,SHOW[b.dataset.k],false)});
+markChips();paint(SHOW[current].tone);
+
+/* ── ask it yourself ──────────────────────────────────────────────────────
+   A lexical matcher over the precomputed corpus. Everything shown is a real
+   engine verdict for the matched question; when nothing matches, the demo
+   refuses, which is exactly what the engine would do. */
+const STOPW=new Set(("is are the of for your you do does a an in to and what how "
+ +"within with any our we can will on by from or it that be as at when where "
+ +"which who whom while they them their there this these those").split(" "));
+/* a five-line stemmer so "encrypt" meets "encrypted" and "stored" meets
+   "storage"; applied identically to the corpus keywords and the query */
+const stem=w=>w.length>4?w.replace(/(ing|ed|es|s)$/,""):w;
+const tokq=s=>[...new Set(s.toLowerCase().replace(/[^a-z0-9\s-]/g," ")
+  .split(/[\s-]+/).filter(w=>w&&!STOPW.has(w)).map(stem))];
+const POOL=[...BANK.map(b=>({d:b,kw:new Set((b.keywords||[]).map(stem))})),
+  ...keys.map(k=>({d:SHOW[k],kw:new Set(tokq(SHOW[k].question))}))];
+function matchBank(q){
+  const qt=tokq(q);if(!qt.length)return null;
+  let best=null,bs=0;
+  for(const {d,kw} of POOL){
+    /* longer words carry more meaning than short glue words */
+    const s=qt.reduce((a,w)=>a+(kw.has(w)?(w.length>=6?1.5:1):0),0);
+    if(s>bs){bs=s;best=d}
+  }
+  return bs>=(qt.length<=3?1:2)?best:null;
+}
+function ask(){
+  const q=$("askq").value.trim();if(!q)return;
+  auto=false;clearTimeout(cycleTimer);
+  const hit=matchBank(q);
+  if(hit){
+    $("askhint").textContent="Closest question in the demo corpus, with the engine's real verdict";
+    show(null,hit,false);
+  }else{
+    $("askhint").textContent="Nothing in the demo corpus matches, so the demo refuses, like the engine";
+    show(null,{question:q,verdict:"REFUSED, NO EVIDENCE RETRIEVED",tone:"warn",answer:null,
+      citations:[],gaps:["No approved evidence in the demo corpus matches that question. "
+      +"The engine refuses rather than guesses, and so does this demo."]},false);
+  }
+}
+$("askbtn").onclick=ask;
+$("askq").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();ask()}});
+
+/* ── the tamper widget ────────────────────────────────────────────────────
+   Recompute the real audit chain in the browser as the visitor edits it.
+   The recipe mirrors AuditLog.append exactly: sha256 over the event as
+   Python's json.dumps(sort_keys=True) renders it, ", " and ": " separators. */
+function pyjson(v){
+  if(v===null)return "null";
+  if(typeof v==="boolean"||typeof v==="number")return JSON.stringify(v);
+  if(typeof v==="string")return JSON.stringify(v);
+  if(Array.isArray(v))return "["+v.map(pyjson).join(", ")+"]";
+  return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+": "+pyjson(v[k])).join(", ")+"}";
+}
+/* compact sha256 fallback for non secure contexts; crypto.subtle when we can */
+function sha256js(ascii){
+  const rr=(v,n)=>(v>>>n)|(v<<(32-n));
+  const K=[];const H=[];
+  let p=2,i=0;
+  const isPrime=n=>{for(let f=2;f*f<=n;f++)if(n%f===0)return false;return true};
+  const frac=(x,r)=>((x**(1/r))%1)*4294967296|0;
+  while(i<64){if(isPrime(p)){if(i<8)H[i]=frac(p,2);K[i]=frac(p,3);i++}p++}
+  const bytes=[...ascii].map(c=>c.codePointAt(0)>127?null:c.charCodeAt(0));
+  if(bytes.includes(null)){
+    /* utf-8 encode the rare non ascii character */
+    const enc=new TextEncoder().encode(ascii);bytes.length=0;enc.forEach(b=>bytes.push(b));
+  }
+  const bitLen=bytes.length*8;
+  bytes.push(0x80);while(bytes.length%64!==56)bytes.push(0);
+  for(let s=56;s>=0;s-=8)bytes.push((bitLen/2**s)&255);
+  const w=new Array(64);
+  for(let off=0;off<bytes.length;off+=64){
+    for(let t=0;t<16;t++)w[t]=(bytes[off+4*t]<<24)|(bytes[off+4*t+1]<<16)|(bytes[off+4*t+2]<<8)|bytes[off+4*t+3];
+    for(let t=16;t<64;t++){
+      const s0=rr(w[t-15],7)^rr(w[t-15],18)^(w[t-15]>>>3);
+      const s1=rr(w[t-2],17)^rr(w[t-2],19)^(w[t-2]>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)|0;
+    }
+    let[a,b2,c,d2,e,f,g,h]=H;
+    for(let t=0;t<64;t++){
+      const S1=rr(e,6)^rr(e,11)^rr(e,25),ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[t]+w[t])|0;
+      const S0=rr(a,2)^rr(a,13)^rr(a,22),maj=(a&b2)^(a&c)^(b2&c);
+      const t2=(S0+maj)|0;
+      h=g;g=f;f=e;e=(d2+t1)|0;d2=c;c=b2;b2=a;a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b2)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d2)|0;
+    H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  return H.map(x=>(x>>>0).toString(16).padStart(8,"0")).join("");
+}
+async function sha256(s){
+  if(window.crypto&&crypto.subtle&&window.isSecureContext){
+    try{
+      const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+      return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    }catch(e){/* fall through */}
+  }
+  return sha256js(s);
+}
+if(CHAIN&&$("tblocks")){
+  const blocks=[...document.querySelectorAll("#tblocks .tb")];
+  const inputs=blocks.map(b=>b.querySelector("input"));
+  inputs.forEach(inp=>inp.removeAttribute("readonly"));
+  let seq=0;
+  async function reverify(){
+    const my=++seq;
+    let broken=-1;
+    const shown=[];
+    for(let i=0;i<CHAIN.events.length;i++){
+      const o=CHAIN.events[i];
+      const ev={ts:o.ts,actor:inputs[i].value,action:o.action,subject:o.subject,
+        detail:o.detail,prev_hash:o.prev_hash};
+      const h=await sha256(pyjson(ev));
+      if(my!==seq)return; /* a newer edit superseded this pass */
+      shown[i]=h;
+      if(broken<0&&h!==o.hash)broken=i;
+    }
+    blocks.forEach((b,i)=>{
+      b.classList.toggle("broken",broken>=0&&i>=broken);
+      b.querySelector(".hash").textContent=(shown[i]||"").slice(0,18);
+    });
+    const st=$("tstatus");
+    if(broken<0){st.textContent="Chain verifies, all six links intact";st.classList.remove("bad")}
+    else{st.textContent="Verification fails from event "+String(broken+1).padStart(2,"0")
+      +", and every event after it is untrustworthy";st.classList.add("bad")}
+  }
+  inputs.forEach(inp=>inp.addEventListener("input",reverify));
+  $("treset").onclick=()=>{
+    inputs.forEach((inp,i)=>inp.value=CHAIN.events[i].actor);
+    reverify();
+  };
+  reverify();
+}
 
 /* WCAG 2.2.2: a moving carousel needs a pause, and reduced motion means it
    never starts. Pointer or keyboard inside the frame holds it. */

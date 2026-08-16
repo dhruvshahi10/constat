@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import html as _html
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -110,6 +111,216 @@ def answer(question_text: str, store: EvidenceStore, retriever: Retriever) -> di
 
 
 CHIP_CLASS = {"ok": "chip c-ok", "legal": "chip c-sig", "rev": "chip c-rev"}
+
+# --- the question bank -------------------------------------------------------
+# Roughly forty buyer-phrased questionnaire items, distinct from the showcase
+# seven, spanning the breadth of a real vendor security questionnaire. Every
+# one runs through the same answer() path as the showcase, so whatever verdict
+# lands in contracts.json is what the engine actually returned. The client-side
+# matcher picks a bank entry by keyword overlap, so each entry also carries a
+# keyword list derived from its own wording.
+BANK_QUESTIONS = [
+    "Is customer data encrypted at rest, and with what algorithm and key length?",
+    "Is data encrypted in transit using TLS 1.2 or higher?",
+    "How are encryption keys managed, stored, and rotated?",
+    "Are backups performed regularly, and are they encrypted and tested for restore?",
+    "Do you maintain a documented disaster recovery plan, and how often is it tested?",
+    "What are your recovery time objective (RTO) and recovery point objective (RPO)?",
+    "Do you have a formal incident response policy with defined roles and severity levels?",
+    "What is your breach notification window for incidents involving personal data?",
+    "Describe your vulnerability management program, including scanning frequency.",
+    "What are your patching SLAs for critical, high, and medium severity vulnerabilities?",
+    "Who performs your penetration tests, and can you share the executive summary?",
+    "Can you provide your most recent SOC 2 report under NDA?",
+    "Do you hold an ISO 27001 certificate covering the services provided to us?",
+    "How is access to customer data restricted and reviewed?",
+    "Do you enforce least privilege and role based access control for internal systems?",
+    "How quickly is access revoked when an employee leaves or changes role?",
+    "Are security events centrally logged and monitored for anomalies?",
+    "How long are audit logs retained, and are they protected from tampering?",
+    "How do you assess and monitor the security of your vendors and subprocessors?",
+    "Will you notify us before adding a new subprocessor that handles our data?",
+    "How is customer data deleted at our request, and is deletion certified?",
+    "What is your data retention schedule for customer content and derived data?",
+    "In which regions is customer data stored, and can we choose our data residency?",
+    "Does your development lifecycle include security requirements and threat modeling?",
+    "Is all code peer reviewed before it is merged and deployed to production?",
+    "How are secrets such as API keys and credentials stored and rotated?",
+    "Do you scan third party dependencies for known vulnerabilities?",
+    "Do all employees receive security awareness training, and how often?",
+    "Are background checks performed on employees before they are hired?",
+    "What physical security controls protect the data centers hosting our data?",
+    "Are company endpoints protected with disk encryption and endpoint detection tooling?",
+    "Is your production network segmented from corporate and development networks?",
+    "What DDoS mitigation protections are in place for your public services?",
+    "What uptime SLA do you commit to, and how are service credits handled?",
+    "Will you contractually commit to a liability cap higher than twelve months of fees?",
+    "Do you carry cyber liability insurance, and what is the coverage amount?",
+    "How does your privacy program address GDPR and India's DPDP Act obligations?",
+    "Have you appointed a data protection officer, and how can they be contacted?",
+    "Do we have the right to audit your security controls or receive audit reports?",
+    "Which multi-factor authentication methods are supported, and is phishing resistant MFA available?",
+    "What password complexity, rotation, and storage requirements do you enforce?",
+    "How are user sessions managed, including timeout and revocation on logout?",
+]
+
+# Tokens carrying no matching signal. The list from the brief plus the same
+# kind of glue words that appear in the bank's own phrasing.
+KEYWORD_STOPWORDS = set(
+    "is are the of for your you do does a an in to and what how within with any "
+    "we our us it its be can will have has had that this these those such as or "
+    "on at by from under before after when which who whom whose they them their "
+    "there here was were been being not new all often long quickly higher please "
+    "describe provide including involving performed".split())
+
+# Where a question's main term has an obvious synonym a visitor might type,
+# carry it so the client-side matcher hits. Applied per token, values appended.
+KEYWORD_SYNONYMS = {
+    "multi-factor": ["mfa", "2fa", "multifactor"],
+    "mfa": ["multi-factor", "2fa"],
+    "penetration": ["pentest"],
+    "pentest": ["penetration"],
+    "backups": ["backup"],
+    "backup": ["backups"],
+    "encrypted": ["encryption"],
+    "encryption": ["encrypted"],
+    "subprocessor": ["subprocessors", "vendor"],
+    "subprocessors": ["subprocessor", "vendors"],
+    "disaster": ["dr"],
+    "logged": ["logging", "logs"],
+    "logs": ["logging"],
+    "slas": ["sla"],
+    "sla": ["slas"],
+    "ddos": ["denial-of-service"],
+    "iso": ["27001"],
+    "27001": ["iso"],
+    "soc": ["soc2"],
+    "gdpr": ["privacy"],
+    "dpdp": ["privacy"],
+    "uptime": ["availability"],
+    "deleted": ["deletion"],
+    "deletion": ["deleted"],
+    "secrets": ["credentials"],
+    "credentials": ["secrets"],
+    "endpoints": ["endpoint", "laptops"],
+    "officer": ["dpo"],
+    "dpo": ["officer"],
+    "vulnerabilities": ["vulnerability"],
+    "vulnerability": ["vulnerabilities"],
+    "patching": ["patch", "patches"],
+    "training": ["awareness"],
+    "retention": ["retained"],
+    "retained": ["retention"],
+    "rto": ["recovery"],
+    "rpo": ["recovery"],
+    "tested": ["testing"],
+    "tests": ["testing", "test"],
+    "insurance": ["insured"],
+    "segmented": ["segmentation"],
+    "liability": ["liable"],
+}
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+(?:[-/.][a-z0-9]+)*")
+
+
+def keywords_for(text: str) -> list[str]:
+    """Deduplicated lowercased content tokens plus synonyms, for the matcher."""
+    out, seen = [], set()
+    for tok in _TOKEN_RE.findall(text.lower()):
+        if tok in KEYWORD_STOPWORDS:
+            continue
+        for k in (tok, *KEYWORD_SYNONYMS.get(tok, ())):
+            if k not in seen:
+                seen.add(k)
+                out.append(k)
+    return out
+
+
+def build_bank(store: EvidenceStore, retriever: Retriever) -> list[dict]:
+    """Run every bank question through the real engine and keep its verdict."""
+    bank, dist = [], {}
+    for text in BANK_QUESTIONS:
+        a = answer(text, store, retriever)
+        dist[a["verdict"]] = dist.get(a["verdict"], 0) + 1
+        bank.append({
+            "question": text, "verdict": a["verdict"], "tone": a["tone"],
+            "answer": a["answer"], "citations": a["citations"],
+            "gaps": a["gaps"], "keywords": keywords_for(text),
+        })
+    print(f"bank: {len(bank)} questions, verdict distribution:")
+    for verdict, n in sorted(dist.items(), key=lambda kv: -kv[1]):
+        print(f"  {n:3}  {verdict}")
+    return bank
+
+
+# --- the audit chain sample --------------------------------------------------
+# The live tamper widget lets a visitor edit an event field in the browser and
+# recompute the chain, so it needs genuine events and the exact hashing recipe
+# AuditLog uses: sha256 over json.dumps(event, sort_keys=True) with Python's
+# default separators, where event = {ts, actor, action, subject, detail,
+# prev_hash}. The events come from a real pipeline run, not from hand-written
+# fixtures, and every hash is recomputed here before it is shipped, so a drift
+# in the recipe fails the build instead of shipping a widget that lies.
+
+CHAIN_RECIPE = ("sha256 over json.dumps(event, sort_keys=True) with ', '/': ' "
+                "separators; event={ts,actor,action,subject,detail,prev_hash}")
+_CHAIN_FIELDS = ("ts", "actor", "action", "subject", "detail", "prev_hash")
+CHAIN_EVENTS = 6
+
+
+def _chain_hash(event: dict) -> str:
+    import hashlib
+    body = {k: event[k] for k in _CHAIN_FIELDS}
+    payload = json.dumps(body, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def build_chain(root: Path) -> dict:
+    import tempfile
+
+    from trustops.pipeline import GENESIS, run as pipeline_run
+
+    with tempfile.TemporaryDirectory(prefix="trustops-sitechain-") as td:
+        result = pipeline_run(
+            root / "data" / "questionnaires" / "acme_security_questionnaire.xlsx",
+            tenant="acme", evidence_root=root / "data" / "evidence",
+            out_dir=Path(td), drafter_kind="mock", today=FIXED_TODAY)
+        events = [json.loads(ln) for ln
+                  in result.audit_path.read_text(encoding="utf-8").splitlines()
+                  if ln.strip()]
+
+    # The browser canonicalizer assumes JSON.stringify-compatible escaping, so
+    # every string in the shipped window must be pure ASCII. Prefer the start
+    # of the log (prev of the first event is then GENESIS); slide forward only
+    # if a window contains non-ASCII text.
+    def _is_ascii(ev: dict) -> bool:
+        return json.dumps(ev, ensure_ascii=False).isascii()
+
+    window = None
+    for i in range(len(events) - CHAIN_EVENTS + 1):
+        if all(_is_ascii(events[i + j]) for j in range(CHAIN_EVENTS)):
+            window = events[i:i + CHAIN_EVENTS]
+            break
+    if window is None:
+        raise SystemExit("chain: no contiguous ASCII-clean window of "
+                         f"{CHAIN_EVENTS} events in {len(events)} audit events")
+
+    # Permanent recipe assertion: if AuditLog's hashing ever drifts from
+    # CHAIN_RECIPE, this build must fail rather than ship a broken widget.
+    for j, ev in enumerate(window):
+        recomputed = _chain_hash(ev)
+        if recomputed != ev["hash"]:
+            raise SystemExit(
+                f"chain: event {j} hash mismatch, recipe has drifted from "
+                f"AuditLog (stored {ev['hash'][:12]}, recomputed {recomputed[:12]})")
+        if j and ev["prev_hash"] != window[j - 1]["hash"]:
+            raise SystemExit(f"chain: event {j} does not link to event {j - 1}")
+
+    return {
+        "recipe": CHAIN_RECIPE,
+        "genesis": GENESIS,
+        "events": [{k: ev[k] for k in (*_CHAIN_FIELDS, "hash")} for ev in window],
+    }
 
 # --- legal pages -------------------------------------------------------------
 # site/legal/*.html are built here rather than hand-maintained, for the same
@@ -440,6 +651,52 @@ def ticker_html(out: dict) -> str:
 SHOTS = {"SHOT_REPORT": "report", "SHOT_REVIEW": "review", "SHOT_WORKSPACE": "workspace"}
 
 
+def media_uris() -> dict[str, str]:
+    """The screen capture and its poster, inlined like the screenshots.
+
+    The video is real footage of a complete run (scripts/capture_demo_video.py
+    regenerates it). Missing files degrade to an empty src, which renders a
+    blank frame rather than breaking the page; the build says so out loud.
+    """
+    import base64 as _b64
+    out = {}
+    for token, rel, mime in (("VIDEO_URI", "site/img/demo.webm", "video/webm"),
+                             ("POSTER_URI", "site/img/demo_poster.jpg", "image/jpeg")):
+        path = ROOT / rel
+        if not path.is_file():
+            print(f"  WARNING: {rel} missing, the film frame will be blank")
+            out[token] = ""
+        else:
+            b64 = _b64.b64encode(path.read_bytes()).decode("ascii")
+            out[token] = f"data:{mime};base64,{b64}"
+    return out
+
+
+def chain_html(chain: dict) -> str:
+    """Prerendered tamper-widget blocks, so the chain is visible with JS off.
+
+    Inputs render readonly; the widget's JS removes the attribute when it can
+    actually recompute hashes. The hash shown is the stored one, truncated to
+    the same 18 characters the live recompute displays.
+    """
+    e = _html.escape
+    # Display labels only: the event data (and therefore every hash) keeps the
+    # engine's own action names verbatim; the raw name rides in a title
+    # attribute. CLASSIFIED as visible text trips the brand's dossier-language
+    # rule, and the brand rule wins on a marketing page.
+    labels = {"CLASSIFIED": "ROUTED", "EVIDENCE_INTEGRITY_SCAN": "EVIDENCE SCAN"}
+    blocks = []
+    for i, ev in enumerate(chain["events"]):
+        label = labels.get(ev["action"], ev["action"].replace("_", " "))
+        blocks.append(
+            f'<div class="tb" data-i="{i}" title="{e(ev["action"])}">'
+            f'<span class="th">{i + 1:02d} / {e(label)}</span>'
+            f'<input data-f="actor" value="{e(ev["actor"])}" readonly '
+            f'aria-label="actor of event {i + 1}, edit to tamper with the chain">'
+            f'<span class="hash">{e(ev["hash"][:18])}</span></div>')
+    return "".join(blocks)
+
+
 def shot_uris() -> dict[str, str]:
     path = ROOT / "site" / "img" / "shots.json"
     if not path.is_file():
@@ -475,13 +732,10 @@ def shot_uris() -> dict[str, str]:
 STATIC_SIGNUP = """<section id="signup" class="secpad">
   <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
   <h2 class="rv">The interactive workspace is not live yet</h2>
-  <p class="sub rv">Everything above is a real recorded run of the engine, replayed unchanged.
-  The part that is not yet public is the workspace where you upload your own evidence and run the
-  ten questions against it. It is built and tested; it needs a server, and it will have one
-  shortly. Until then the fastest way in is a message.</p>
-  <p class="sub rv">If you want to run it today, the whole engine is open source and runs on your
-  own machine in two commands.
-  <a href="https://github.com/dhruvshahi10/trustops">See the repository</a>.</p>
+  <p class="sub rv">Everything above is real: recorded runs, real screenshots, real hashes. The
+  hosted workspace is built and tested and goes live shortly. Until then the fastest way in is a
+  message below, or run the open source engine yourself in two commands:
+  <a href="https://github.com/dhruvshahi10/trustops">the repository</a>.</p>
 </section>
 """
 
@@ -588,11 +842,16 @@ def main() -> None:
     for key, label, text, trap in SHOWCASE:
         out[key] = {"label": label, "question": text, "trap": trap,
                     **answer(text, store, retriever)}
+    bank = build_bank(store, retriever)
+    chain = build_chain(ROOT)
+    demo = {"showcase": out, "bank": bank, "chain": chain}
+
     dest = ROOT / "site" / "demo" / "contracts.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    dest.write_text(json.dumps(demo, indent=2, ensure_ascii=False), encoding="utf-8")
     refused = sum(1 for v in out.values() if v["tone"] != "ok")
-    print(f"wrote {dest}: {len(out)} contracts, {refused} refusals")
+    print(f"wrote {dest}: {len(out)} showcase contracts ({refused} refusals), "
+          f"{len(bank)} bank entries, {len(chain['events'])} chain events")
 
     # the flagship card is only honest if the cert gate actually fired
     iso_flags = out["iso"]["flags"]
@@ -607,17 +866,20 @@ def main() -> None:
     from trustops import brand
     template = (ROOT / "site" / "index.template.html").read_text(encoding="utf-8")
     page = template.replace("/*@CSS@*/", brand.stylesheet())
-    page = page.replace("/*@DEMO@*/", json.dumps(out, ensure_ascii=False))
+    page = page.replace("/*@DEMO@*/", json.dumps(demo, ensure_ascii=False))
     page = page.replace("<!--@CHIPS@-->", chips_html(out))
     page = page.replace("<!--@TICKER@-->", ticker_html(out))
-    for token, uri in shot_uris().items():
+    page = page.replace("<!--@CHAIN@-->", chain_html(chain))
+    for token, uri in {**shot_uris(), **media_uris()}.items():
         page = page.replace(f"@{token}@", uri)
     first_key = next(iter(out))
     for name, html in prerender(out[first_key]).items():
         page = page.replace(f"<!--@{name}@-->", html)
-    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@TICKER@", "@Q0@", "@VERDICT0@",
+    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@TICKER@", "@CHAIN@",
+                             "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
-                             "@SHOT_REVIEW@", "@SHOT_WORKSPACE@") if m in page]
+                             "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",
+                             "@VIDEO_URI@", "@POSTER_URI@") if m in page]
     if leftovers:
         raise SystemExit(f"unfilled template placeholders: {leftovers}")
     (ROOT / "site" / "index.html").write_text(page, encoding="utf-8")
