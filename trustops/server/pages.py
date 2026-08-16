@@ -82,6 +82,11 @@ line-height:1.7}
 line-height:1.7}
 
 /* per-file upload rows */
+.fdrop{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;
+text-transform:uppercase;padding:4px 9px;border:1px solid var(--line-2);border-radius:var(--radius-1);
+background:transparent;color:var(--text-tertiary);cursor:pointer}
+.fdrop:hover{color:var(--status-critical);border-color:var(--status-critical)}
+.fn{display:flex;align-items:center;gap:10px}
 .frow{border:1px solid var(--line-1);border-radius:var(--radius-2);padding:12px 14px;margin-top:12px;
 background:var(--surface-sunken)}
 .frow .fn{font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);word-break:break-all;
@@ -323,11 +328,14 @@ function guessVersion(name){
 }
 function iso(d){return d.toISOString().slice(0,10)}
 
-let picked=[];   /* the batch, source of truth for the rows below */
+let picked=[];
+const edits={};   /* per-file user edits, keyed by file name */   /* the batch, source of truth for the rows below */
 
 function rowsHTML(){
   return picked.map((f,i)=>`<div class="frow" id="frow-${i}">
-    <div class="fn"><b>${esc(f.name)}</b><span class="st" id="fst-${i}"></span></div>
+    <div class="fn"><b>${esc(f.name)}</b><span class="st" id="fst-${i}"></span>
+      <button type="button" class="fdrop" data-drop="${i}"
+        aria-label="Remove ${esc(f.name)} from this batch">Remove</button></div>
     <div class="grid2">
       <div><label for="ftitle-${i}">Title</label>
         <input type="text" id="ftitle-${i}" maxlength="120" required value="${esc(guessTitle(f.name))}"></div>
@@ -344,10 +352,32 @@ function rowsHTML(){
     </details>
   </div>`).join('');
 }
+function readRows(){
+  /* capture what the user typed before any re-render, keyed by file name so an
+     edit survives a rejected batch. Rebuilding rows from guessTitle() threw
+     away every hand-corrected title the moment one bad date failed the batch. */
+  picked.forEach((f,i)=>{
+    const t=$('ftitle-'+i), ty=$('ftype-'+i), v=$('fver-'+i), tp=$('ftop-'+i);
+    edits[f.name]=Object.assign(edits[f.name]||{}, {
+      title:t?t.value:undefined, type:ty?ty.value:undefined,
+      version:v?v.value:undefined, topics:tp?tp.value:undefined});
+  });
+}
 function renderRows(){
   $('filerows').innerHTML=rowsHTML();
-  picked.forEach((f,i)=>{const s=$('ftype-'+i);if(s)s.value=guessType(f.name)});
+  picked.forEach((f,i)=>{
+    const e=edits[f.name]||{};
+    const ty=$('ftype-'+i); if(ty) ty.value=e.type||guessType(f.name);
+    const t=$('ftitle-'+i); if(t&&e.title!==undefined&&e.title!=='') t.value=e.title;
+    const v=$('fver-'+i); if(v&&e.version) v.value=e.version;
+    const tp=$('ftop-'+i); if(tp&&e.topics) tp.value=e.topics;
+  });
   $('upbtn').disabled=picked.length===0;
+}
+function dropFile(i){
+  readRows();
+  picked.splice(i,1);
+  renderRows();syncInput();
 }
 function syncInput(){
   /* keep the file control's own display in step with `picked` */
@@ -355,6 +385,12 @@ function syncInput(){
   $('file').files=dt.files;
 }
 $('file').onchange=()=>{picked=Array.from($('file').files||[]);renderRows()};
+/* dropping one file from a batch used to mean reopening the OS picker and
+   re-selecting everything */
+$('filerows').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-drop]');
+  if(b) dropFile(parseInt(b.dataset.drop,10));
+});
 
 /* dates default to today and today + one year: the server needs both, and
    expiry strictly after effective, so guessing badly is worse than guessing
@@ -369,6 +405,7 @@ $('upform').onsubmit=async e=>{
   e.preventDefault();
   $('uperr').textContent='';$('upok').textContent='';
   if(!picked.length){$('uperr').textContent='Choose at least one file.';return}
+  readRows();
   $('upbtn').disabled=true;$('upbtn').textContent='Uploading';
   const failed=[],ids=[];
   for(let i=0;i<picked.length;i++){
@@ -401,6 +438,8 @@ $('upform').onsubmit=async e=>{
     $('uperr').textContent=failed.map(f=>`${f.file.name}: ${f.msg}`).join('\\n');
     /* a rejected file stays selected so the fix is one edit, not a re-pick */
     picked=failed.map(f=>f.file);renderRows();syncInput();
+    /* edits were captured in readRows() before the submit, so the rebuilt
+       rows come back with the user's titles and types intact */
   }else{
     /* targeted clear: files and their titles only. Owner, dates and the
        attestation stay, because they repeat across a batch. */

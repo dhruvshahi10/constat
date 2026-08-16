@@ -22,7 +22,15 @@ from . import brand
 from .models import Coverage, QState
 from .pipeline import RunResult
 
-CSS = brand.stylesheet()
+REPORT_CSS = """
+.repnav{display:flex;gap:18px;flex-wrap:wrap;padding:14px 0;margin:0 0 8px;
+border-bottom:1px solid var(--line-1)}
+.repnav:last-of-type{border-bottom:0;border-top:1px solid var(--line-1);margin-top:26px}
+.repnav a{text-decoration:none}
+.repnav a:hover{color:var(--signal-bright)}
+"""
+
+CSS = brand.stylesheet(REPORT_CSS)
 
 # The engine name is an internal identifier; a buyer reading this document
 # should not have to decode "mock".
@@ -189,6 +197,18 @@ def write_report(res: RunResult, today: date) -> Path:
          f"refused, {_refusal_kind(res.drafts[q.question_id])}")
         for q in res.questions
     ])
+    # The report opens in a new tab with no history, so the back button is dead.
+    # Without an exit it is a one-way door at the exact moment the product
+    # delivers its value, which on a phone is close to fatal. Hosted runs get a
+    # nav; a local CLI run has no workspace to return to, so it does not.
+    hosted = m.get("approval_mode") == "human"
+    nav = ("""<div class="repnav">
+<a class="filelink" href="../..">Back to workspace</a>
+<a class="filelink" href="../../review">Open the review queue</a>
+<a class="filelink" href="./{stem}__DELIVERED.xlsx">Download DELIVERED.xlsx</a>
+</div>""".format(stem=res.delivered_xlsx.stem.replace("__DELIVERED", ""))
+           if hosted else "")
+
     dial = brand.coverage_dial(m["cited_draft_coverage"])
     refusals = _refusal_bar(list(res.drafts.values()))
     chain_ok = m["audit_chain_valid"]
@@ -217,6 +237,7 @@ def write_report(res: RunResult, today: date) -> Path:
  &nbsp;/&nbsp; cycle={m['cycle_seconds']}s</div>
 </header>
 
+{nav}
 <div class="latkey" style="margin-bottom:14px">
 <span class="chip c-ok">{m['auto_approved_delivered']} delivered</span>
 <span class="chip c-rev">{m['awaiting_human_review']} awaiting a human</span>
@@ -259,6 +280,7 @@ change to the engine. Any failure blocks the release.</p>
 <table class="evals"><thead><tr><th>Test</th><th>Trap planted</th><th>Result</th></tr></thead>
 <tbody>{evals}</tbody></table>
 
+{nav}
 <footer>
 TrustOps v0 / synthetic tenant data only / hash chained audit log: {res.audit_path.name}
  / delivered artifact: {res.delivered_xlsx.name}<br>

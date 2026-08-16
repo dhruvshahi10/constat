@@ -97,3 +97,22 @@ rather than forgotten.
   one tenant can race it. A torn read is swallowed and silently downgrades that
   run to lexical retrieval, which is at least recorded in `metrics["retrieval"]`.
 - Nothing tests the connection semaphore or the expiry sweeper.
+
+## Deferred from re-audit round 3 (2026-08-16)
+
+- **The result card does not survive a reload.** After a completed run, a refresh
+  leaves only a bare row in the runs list; the framing (10 questions, N delivered,
+  N refused, N awaiting a reviewer) is gone. Recoverable friction, not a dead end,
+  since every artifact is still linked.
+- **The hero disclaimer is readable but misplaced.** It passes AA at 5.65:1 but
+  sits last in the hero column rather than as a top eyebrow, so it is still read
+  after the demo rather than before it.
+- **`docs/roundtable.html` ships the pre-fix palette** (`--bone-3:#85857E`,
+  `--bone-4:#56564F`) and six `--text-faint` text rules. It is a point-in-time
+  briefing artifact rather than a live surface, so it was left as published.
+- **`/favicon.ico` 404s** once per fresh navigation on the authenticated pages.
+- **The privacy retention table scrolls horizontally at 390px** inside its own
+  container with no affordance signalling that it scrolls.
+- **With no API key the demo's headline reads "0 delivered"**, because the offline
+  engine abstains on everything. The report header says the engine was offline;
+  the result card does not.

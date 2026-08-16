@@ -106,7 +106,7 @@ border-radius:var(--radius-2);padding:20px 22px;margin:20px 0}
 textarea{width:100%;min-height:64px;font-family:var(--font-sans);font-size:14px;line-height:1.5;
 color:var(--text-primary);background:var(--surface-sunken);border:1px solid var(--line-1);
 border-radius:var(--radius-1);padding:11px 13px;resize:vertical}
-textarea::placeholder{color:var(--text-faint)}
+textarea::placeholder{color:var(--text-tertiary)}
 select,button{font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
 padding:10px 15px;border:1px solid var(--line-2);border-radius:var(--radius-1);
 background:var(--surface-raised);color:var(--text-primary);cursor:pointer;
