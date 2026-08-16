@@ -702,6 +702,106 @@ def chain_html(chain: dict) -> str:
     return "".join(blocks)
 
 
+# --- the workbook proof ------------------------------------------------------
+# The page's job is to be understood in five seconds by someone who has never
+# heard the word "gate". The fastest way to do that is to show the artefact the
+# reader already has a mental model of: the questionnaire spreadsheet, with the
+# last column filled in. These rows are read out of the real DELIVERED workbook
+# at build time, so the marketing page cannot drift from the engine's output.
+#
+# Five rows chosen to show every outcome the engine can produce: two cited, one
+# refused for expired evidence, one refused for contradicting sources, and one
+# routed to counsel without ever reaching the model.
+WORKBOOK_FILE = ROOT / "examples" / "acme_security_questionnaire__DELIVERED.xlsx"
+WORKBOOK_ROWS = ["A&A-01.1", "GRC-01.1", "AIS-01.1", "DSP-01.1", "LGL-01.1"]
+
+
+def _dedash(s: str) -> str:
+    """Engine text is verbatim except for dashes.
+
+    The drafter writes em dashes ("Insufficient approved evidence - see
+    exception notes"), the brand copy gate bans them in rendered copy, and the
+    engine's own wording is not going to be changed to suit a web page. So the
+    dash normalizes to a comma here, at the rendering boundary only.
+    """
+    return s.replace("—", ",").replace("–", ",").replace(" ,", ",")
+
+
+def _clip(s: str, n: int) -> str:
+    """Clip to n characters, preferring a natural end over a hard cut.
+
+    Questionnaire items are often two sentences ("Do you hold a current SOC 2
+    Type II attestation? If yes, state the criteria covered"). Cutting at the
+    first question mark reads as the whole question; cutting at a word boundary
+    mid-clause reads as broken text.
+    """
+    s = " ".join(s.split())
+    if len(s) <= n:
+        return s
+    # a complete question reads better than a truncation, so allow a little
+    # overshoot to reach the question mark
+    q = s.find("?")
+    if 0 < q <= int(n * 1.4):
+        return s[:q + 1]
+    return s[:n].rsplit(" ", 1)[0].rstrip(" ,;:.") + "..."
+
+
+def workbook_html() -> str:
+    """Render the real delivered rows as a compact sheet."""
+    try:
+        import openpyxl
+    except ImportError:
+        print("  WARNING: openpyxl missing, the workbook proof will be empty")
+        return ""
+    if not WORKBOOK_FILE.is_file():
+        print(f"  WARNING: {WORKBOOK_FILE.name} missing, the workbook proof will be empty")
+        return ""
+
+    ws = openpyxl.load_workbook(WORKBOOK_FILE).active
+    by_id = {}
+    for r in range(1, ws.max_row + 1):
+        qid = ws.cell(r, 1).value
+        if qid in WORKBOOK_ROWS:
+            by_id[qid] = (ws.cell(r, 3).value or "", ws.cell(r, 4).value or "",
+                          ws.cell(r, 5).value or "")
+
+    e = _html.escape
+    out = []
+    for qid in WORKBOOK_ROWS:
+        if qid not in by_id:
+            print(f"  WARNING: row {qid} not in the workbook, skipped")
+            continue
+        question, response, notes = (_dedash(str(v)) for v in by_id[qid])
+        if response.startswith("[ROUTED TO LEGAL]"):
+            tone, verdict = "legal", "Routed to counsel"
+            body = _clip(response.split("]", 1)[1], 70)
+        elif response.startswith("[ABSTAINED]"):
+            tone, verdict = "warn", "Refused"
+            body = _clip(response.split("]", 1)[1], 70)
+        else:
+            tone, verdict = "ok", "Cited"
+            body = _clip(response, 104)
+
+        # the evidence pointer for a cited answer, the named gap for a refusal
+        line = ""
+        for raw in notes.splitlines():
+            if raw.startswith("Evidence:"):
+                line = _clip(raw, 46)
+                break
+            if raw.startswith("Gaps:"):
+                line = _clip(raw[5:].split("|")[0], 74)
+                break
+        out.append(
+            f'<div class="wbrow" data-tone="{tone}">'
+            f'<div class="wbq"><span class="wbid">{e(qid)}</span>'
+            f'<p>{e(_clip(question, 72))}</p></div>'
+            f'<div class="wbr"><span class="wbv">{e(verdict)}</span>'
+            f'<p>{e(body)}</p>'
+            + (f'<span class="wbe">{e(line)}</span>' if line else "")
+            + "</div></div>")
+    return "".join(out)
+
+
 def shot_uris() -> dict[str, str]:
     path = ROOT / "site" / "img" / "shots.json"
     if not path.is_file():
@@ -734,21 +834,17 @@ def shot_uris() -> dict[str, str]:
 # once, from the same TERMS_BODY and PRIVACY_BODY the hosted pages use, so there
 # is still one source of truth.
 
-STATIC_SIGNUP = """<section id="signup" class="secpad">
-  <div class="seclabel rv"><span class="idx">06</span><span class="label">Get early access</span><span class="rule"></span></div>
-  <h2 class="rv">The hosted workspace opens shortly.<br>Get in first.</h2>
-  <p class="sub rv">Everything above is real: recorded runs, real screenshots, real hashes. The
-  workspace where you upload your own evidence is built and tested, and it opens to early users
-  first. One message reserves your place, and the message tells us exactly what you want to run.</p>
+STATIC_SIGNUP = """  <h2 class="rv">The hosted workspace opens shortly</h2>
+  <p class="sub rv">It is built and tested, and it opens to early users first. One message
+  reserves your place.</p>
   <div class="ctarow rv">
-    <a class="btn btn-primary" href="#contact">Reserve early access</a>
-    <a class="btn btn-ghost" href="https://github.com/dhruvshahi10/trustops">Read the engine source</a>
+    <a class="btn btn-primary" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Reserve early access</a>
+    <a class="btn btn-ghost" href="https://github.com/dhruvshahi10/trustops">Read the source</a>
   </div>
-  <p class="sub rv" style="margin-top:26px">Or run the open source engine on your own machine
-  right now, evidence included:</p>
+  <p class="sub rv" style="margin-top:26px">Or run the engine on your own machine right now,
+  evidence included:</p>
   <pre class="cmds rv"><code>python3 -m venv .venv &amp;&amp; .venv/bin/pip install pytest openpyxl
 .venv/bin/python run_demo.py</code></pre>
-</section>
 """
 
 
@@ -801,9 +897,7 @@ def _static_legal_section():
             '<div class="seclabel rv"><span class="idx">08</span>'
             '<span class="label">The documents</span><span class="rule"></span></div>'
             '<h2 class="rv">Terms and data handling</h2>'
-            '<p class="sub rv">Both are here in full rather than on a separate page, because this '
-            'whole site is one file with nothing to fetch. Both are founder drafted and pending '
-            'review by counsel, which is stated inside them too.</p>'
+            '<p class="sub rv">Founder drafted, pending review by counsel.</p>'
             '<div class="legalset">'
             + _static_legal_doc("terms", "Terms of use", TERMS_BODY)
             + _static_legal_doc("privacy", "Privacy and data handling", PRIVACY_BODY)
@@ -814,9 +908,14 @@ def build_static(page: str) -> str:
     """Turn the hosted page into a self-contained, backend-free one."""
     import re as _re
 
-    # 1. replace the signup section (from its opening tag to its closing tag)
-    start = page.index('<section id="signup"')
-    end = page.index("</section>", start) + len("</section>")
+    # 1. swap the hosted signup form for the early access block. The region is
+    # delimited by explicit markers rather than located by tag index: the
+    # section now also carries the contact block, which must survive.
+    a, b = "<!--HOSTED-ONLY-START-->", "<!--HOSTED-ONLY-END-->"
+    if page.count(a) != 1 or page.count(b) != 1:
+        raise SystemExit("expected exactly one hosted-only marker pair")
+    start = page.index(a)
+    end = page.index(b) + len(b)
     page = page[:start] + STATIC_SIGNUP + page[end:]
 
     # 2. inline both legal documents, folded, before the footer
@@ -825,13 +924,6 @@ def build_static(page: str) -> str:
     # 3. point every legal link at those documents
     page = page.replace('href="/site/legal/terms.html"', 'href="#terms"')
     page = page.replace('href="/site/legal/privacy.html"', 'href="#privacy"')
-
-    # 3b. the CTAs tell the truth for this variant: there is no workspace to
-    # create yet, so the label is early access, and the sample pack button
-    # points at the stage that actually replays the sample pack instead of at
-    # a signup form that no longer exists
-    page = page.replace('>Create a workspace</a>', '>Get early access</a>')
-    page = page.replace('href="#signup" id="samplecta"', 'href="#stage" id="samplecta"')
 
     # 4. the folded documents need one handler, and it has to be inserted above
     #    the signup block so that step 5 does not cut it away again
@@ -892,14 +984,14 @@ def main() -> None:
     page = template.replace("/*@CSS@*/", brand.stylesheet())
     page = page.replace("/*@DEMO@*/", json.dumps(demo, ensure_ascii=False))
     page = page.replace("<!--@CHIPS@-->", chips_html(out))
-    page = page.replace("<!--@TICKER@-->", ticker_html(out))
     page = page.replace("<!--@CHAIN@-->", chain_html(chain))
+    page = page.replace("<!--@WORKBOOK@-->", workbook_html())
     for token, uri in {**shot_uris(), **media_uris()}.items():
         page = page.replace(f"@{token}@", uri)
     first_key = next(iter(out))
     for name, html in prerender(out[first_key]).items():
         page = page.replace(f"<!--@{name}@-->", html)
-    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@TICKER@", "@CHAIN@",
+    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@CHAIN@", "@WORKBOOK@",
                              "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
                              "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",
