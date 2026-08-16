@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustOps</title>
+<meta name="description" content="Security questionnaires answered from your approved evidence, with a citation on every answer and a named gap on every refusal.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 27 7v9c0 7-4.6 11.4-11 13C9.6 27.4 5 23 5 16V7z' fill='none' stroke='%23B7C4FF' stroke-width='2.4'/%3E%3Cpath d='M11 16.5 14.5 20 21 12' fill='none' stroke='%23B7C4FF' stroke-width='2.4'/%3E%3C/svg%3E">
+<style>
+/*@CSS@*/
+
+/* ── landing-specific ──────────────────────────────────── */
+.nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0;
+border-bottom:1px solid var(--line-1)}
+.wordmark{font-family:var(--font-mono);font-size:13px;letter-spacing:0.22em;
+text-transform:uppercase;color:var(--text-primary)}
+.wordmark b{color:var(--signal);font-weight:400}
+.nav a.cta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.12em;
+text-transform:uppercase;color:var(--signal-ink);background:var(--signal);
+padding:9px 14px;border-radius:var(--radius-1);text-decoration:none}
+.nav a.cta:hover{background:var(--signal-bright)}
+
+.hero{display:grid;gap:44px;padding:72px 0 64px;grid-template-columns:1fr;align-items:center}
+@media(min-width:960px){.hero{grid-template-columns:1.05fr 1fr}}
+.hero h1{font-size:clamp(38px,5.4vw,64px);line-height:1.02;letter-spacing:-0.02em;text-wrap:balance}
+.hero h1 i{font-style:italic;color:var(--signal)}
+.hero .deck{font-size:clamp(16px,1.8vw,19px);line-height:1.55;color:var(--text-secondary);
+margin-top:20px;max-width:52ch;text-wrap:pretty}
+.ctarow{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+a.btn{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+padding:13px 20px;border-radius:var(--radius-1);text-decoration:none;
+transition:background 240ms var(--ease-out),border-color 240ms var(--ease-out)}
+a.btn-primary{background:var(--signal);color:var(--signal-ink)}
+a.btn-primary:hover{background:var(--signal-bright)}
+a.btn-ghost{border:1px solid var(--line-2);color:var(--text-primary)}
+a.btn-ghost:hover{border-color:var(--line-signal)}
+.hero-note{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;
+color:var(--text-faint);margin-top:18px}
+
+/* demo frame with registration ticks + scan reveal */
+.demoframe{position:relative;background:var(--surface-card);border:1px solid var(--line-1);
+border-radius:var(--radius-2);padding:22px;min-height:380px;display:flex;flex-direction:column}
+.p-ticks{position:relative}
+.p-ticks::before,.p-ticks::after{content:"";position:absolute;inset:-7px;pointer-events:none;
+background-repeat:no-repeat;
+background-image:linear-gradient(var(--line-3),var(--line-3)),linear-gradient(var(--line-3),var(--line-3)),
+linear-gradient(var(--line-3),var(--line-3)),linear-gradient(var(--line-3),var(--line-3))}
+.p-ticks::before{background-size:12px 1px,1px 12px,12px 1px,1px 12px;
+background-position:left top,left top,right top,right top}
+.p-ticks::after{background-size:12px 1px,1px 12px,12px 1px,1px 12px;
+background-position:left bottom,left bottom,right bottom,right bottom}
+.scanline{position:absolute;left:0;right:0;top:0;height:1px;background:var(--signal);
+opacity:0;pointer-events:none}
+.js .scanline{animation:scan 900ms var(--ease-inout) 300ms 1 both}
+@keyframes scan{0%{opacity:0.9;transform:translateY(0)}100%{opacity:0;transform:translateY(378px)}}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.chips button{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;padding:6px 10px;
+border:1px solid var(--line-1);border-radius:var(--radius-1);background:transparent;
+color:var(--text-tertiary);cursor:pointer;transition:color 240ms var(--ease-out),border-color 240ms var(--ease-out)}
+.chips button:hover{color:var(--text-primary);border-color:var(--line-signal)}
+.chips button.on{color:var(--signal);border-color:var(--line-signal);background:var(--signal-wash)}
+.q-line{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text-primary);
+min-height:44px}
+.q-line .caret{display:inline-block;width:7px;height:15px;background:var(--signal);
+vertical-align:text-bottom;margin-left:2px}
+.js .caret{animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.verdict-chip{margin:16px 0 12px;opacity:1;transition:opacity 240ms var(--ease-out)}
+.d-answer{font-size:14px;line-height:1.6;color:var(--text-primary);background:var(--surface-sunken);
+border-radius:var(--radius-1);padding:13px 15px}
+.d-answer em{color:var(--text-tertiary)}
+.d-prov{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--text-tertiary);
+border-left:2px solid var(--status-ok);padding-left:9px;margin-top:12px}
+.d-prov.warn{border-left-color:var(--status-warn)}
+.d-gap{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--status-warn);margin-top:10px}
+.d-note{margin-top:auto;padding-top:14px;font-family:var(--font-mono);font-size:9.5px;
+letter-spacing:0.08em;color:var(--text-faint)}
+
+/* reveal-on-scroll */
+.js .rv{opacity:0;transform:translateY(14px);
+transition:opacity 480ms var(--ease-out),transform 480ms var(--ease-out)}
+.js .rv.is-in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+.js .rv{opacity:1;transform:none;transition:none}
+.js .scanline,.js .caret{animation:none}}
+
+/* trap cards */
+.traps{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:30px}
+.trap{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:20px;display:flex;flex-direction:column;gap:12px}
+.trap h3{font-size:18px;line-height:1.25}
+.trap .q{font-size:13px;color:var(--text-secondary);line-height:1.55}
+.p-redact{background:var(--surface-raised);color:transparent;border-radius:1px;cursor:pointer;
+transition:color 480ms var(--ease-out),background-color 480ms var(--ease-out);
+font-family:var(--font-mono);font-size:11px;line-height:1.7;padding:1px 4px;
+-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.p-redact:hover,.p-redact:focus-visible{color:var(--status-warn);background:transparent}
+.trap .hint{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.1em;
+text-transform:uppercase;color:var(--text-faint);margin-top:auto}
+
+/* how it works */
+.steps{margin-top:28px;display:flex;flex-direction:column}
+.step{display:flex;gap:16px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--line-1)}
+.step:last-child{border-bottom:0}
+.step .n{font-family:var(--font-mono);font-size:11px;color:var(--signal);flex:0 0 26px}
+.step .t{font-size:15.5px;font-weight:500;white-space:nowrap}
+.step .leader{flex:1;border-bottom:1px dotted var(--line-2);margin:0 6px 5px}
+.step .d{font-size:13px;color:var(--text-tertiary);text-align:right;max-width:46ch}
+@media(max-width:700px){.step{flex-wrap:wrap}.step .d{text-align:left}.step .leader{display:none}}
+
+/* custody diagram */
+.custody{display:grid;gap:1px;background:var(--line-1);border:1px solid var(--line-1);
+border-radius:var(--radius-2);overflow:hidden;margin-top:30px;grid-template-columns:1fr}
+@media(min-width:820px){.custody{grid-template-columns:1fr 1fr 1fr}}
+.cust{background:var(--surface-card);padding:22px}
+.cust h3{font-size:17px;margin-bottom:10px}
+.cust p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
+.cust .tag{margin-top:14px}
+
+/* deliverables */
+.dels{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:30px}
+.del{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);padding:20px}
+.del h3{font-size:17px;margin-bottom:8px}
+.del p{font-size:13px;line-height:1.6;color:var(--text-secondary)}
+.del .mono{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);
+letter-spacing:0.08em;margin-top:12px;display:block}
+
+/* signup */
+.signup{background:var(--surface-card);border:1px solid var(--line-signal);
+border-radius:var(--radius-2);padding:30px;margin-top:30px;max-width:560px}
+.signup label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:0.13em;
+text-transform:uppercase;color:var(--text-tertiary);margin:16px 0 6px}
+.signup input{width:100%;font-family:var(--font-sans);font-size:14px;color:var(--text-primary);
+background:var(--surface-sunken);border:1px solid var(--line-1);border-radius:var(--radius-1);
+padding:11px 13px}
+.signup input:focus{outline:1px solid var(--focus-ring)}
+.signup button{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;
+text-transform:uppercase;padding:13px 20px;margin-top:20px;border:0;border-radius:var(--radius-1);
+background:var(--signal);color:var(--signal-ink);cursor:pointer;width:100%}
+.signup button:hover{background:var(--signal-bright)}
+.signup button:disabled{opacity:.45;cursor:not-allowed}
+.hp{position:absolute;left:-6000px;top:-6000px}
+.err{color:var(--status-critical);font-family:var(--font-mono);font-size:12px;margin-top:12px;
+white-space:pre-wrap}
+.wslink{margin-top:16px;display:none}
+.wslink a{font-family:var(--font-mono);font-size:12px;color:var(--signal);word-break:break-all}
+.wslink p{font-family:var(--font-mono);font-size:10.5px;color:var(--status-warn);margin-top:8px}
+
+footer{margin-top:88px;padding:26px 0 40px;border-top:1px solid var(--line-1);
+display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+font-family:var(--font-mono);font-size:10.5px;line-height:2;color:var(--text-faint)}
+footer a{color:var(--text-tertiary)}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<div class="wrap">
+
+<nav class="nav">
+  <span class="wordmark"><b>Trust</b>Ops</span>
+  <a class="cta" href="#signup">Run it on your documents</a>
+</nav>
+
+<section class="hero">
+  <div>
+    <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
+    <p class="deck">TrustOps answers security questionnaires from your own approved evidence.
+    Every released answer carries a citation. Every refusal names its gap and routes to the right
+    human. Deterministic gates decide what ships, not model confidence.</p>
+    <div class="ctarow">
+      <a class="btn btn-primary" href="#signup">Run it on your documents</a>
+      <a class="btn btn-ghost" href="#gates">Watch the gates work</a>
+    </div>
+    <p class="hero-note">No sales call. No form gate. Upload your real policies,
+    get ten gated answers in about two minutes.</p>
+  </div>
+
+  <div class="demoframe p-ticks" id="demoframe" aria-live="polite">
+    <div class="scanline"></div>
+    <div class="chips" id="chips"></div>
+    <div class="q-line"><span id="qtext"></span><span class="caret" id="caret"></span></div>
+    <div class="verdict-chip"><span class="chip" id="verdict"></span></div>
+    <div class="d-answer" id="answer"></div>
+    <div id="prov"></div>
+    <div id="gaps"></div>
+    <div class="d-note">Recorded output of the deterministic engine on a synthetic evidence set.
+    Replayed unchanged.</div>
+  </div>
+</section>
+
+<section id="gates">
+  <div class="seclabel rv"><span class="idx">01</span><span class="label">The part others get wrong</span><span class="rule"></span></div>
+  <h2 class="rv">Most tools answer confidently.<br>This one refuses correctly.</h2>
+  <p class="sub rv">A wrong answer in a security questionnaire is a material misrepresentation in
+  an enterprise deal. Accuracy percentages concede a remainder that ships anyway. Our release rule
+  is different: zero unsupported claims, enforced in code. These four traps are planted in every
+  eval run, and the suite blocks release if any of them leaks. Hover the bars to see the gate reasoning.</p>
+
+  <div class="traps">
+    <div class="trap rv">
+      <span class="chip c-warn">CERT NEVER INFERRED</span>
+      <h3>The certification trap</h3>
+      <p class="q">Asked for ISO 27001 status when the evidence holds only a certification roadmap.</p>
+      <span class="p-redact" tabindex="0">Certification claims require a certificate or attestation
+      source. Plans and roadmaps never qualify, no matter how confident the draft sounds.</span>
+      <span class="hint">Hover to reveal the gate</span>
+    </div>
+    <div class="trap rv">
+      <span class="chip c-warn">SOURCES CONFLICT</span>
+      <h3>The contradiction trap</h3>
+      <p class="q">Two approved policies state different customer data deletion windows: 90 and 365 days.</p>
+      <span class="p-redact" tabindex="0">Both sources are quarantined and the question routes to
+      both owners. Even a different question that cites the tainted policy refuses too.</span>
+      <span class="hint">Hover to reveal the gate</span>
+    </div>
+    <div class="trap rv">
+      <span class="chip c-warn">EVIDENCE EXPIRED</span>
+      <h3>The staleness trap</h3>
+      <p class="q">The penetration test report in evidence expired months before the question arrived.</p>
+      <span class="p-redact" tabindex="0">Expired evidence cannot support a current state claim.
+      The refusal names the document, its expiry date, and the owner to chase.</span>
+      <span class="hint">Hover to reveal the gate</span>
+    </div>
+    <div class="trap rv">
+      <span class="chip c-warn">ROUTED TO COUNSEL</span>
+      <h3>The legal trap</h3>
+      <p class="q">The buyer demands unlimited liability and uptime guarantees with penalties.</p>
+      <span class="p-redact" tabindex="0">Contract commitments route to legal before drafting.
+      The model never sees it as an answerable question.</span>
+      <span class="hint">Hover to reveal the gate</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="seclabel rv"><span class="idx">02</span><span class="label">How it works</span><span class="rule"></span></div>
+  <h2 class="rv">Five steps, one rule</h2>
+  <div class="steps">
+    <div class="step rv"><span class="n">01</span><span class="t">Upload evidence</span><span class="leader"></span><span class="d">Policies, standards, reports. PDF, DOCX, MD, TXT. You attest what is approved.</span></div>
+    <div class="step rv"><span class="n">02</span><span class="t">Retrieve</span><span class="leader"></span><span class="d">Relevant excerpts are pulled from your documents only. Tenants are structurally isolated.</span></div>
+    <div class="step rv"><span class="n">03</span><span class="t">Draft</span><span class="leader"></span><span class="d">A model drafts an answer against the excerpts. The gates never trust it.</span></div>
+    <div class="step rv"><span class="n">04</span><span class="t">Gate</span><span class="leader"></span><span class="d">Citation or refusal. Staleness, contradiction, certification class, legal routing, all in code.</span></div>
+    <div class="step rv"><span class="n">05</span><span class="t">Named review</span><span class="leader"></span><span class="d">Nothing reaches DELIVERED without a human name and note in the audit chain.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="seclabel rv"><span class="idx">03</span><span class="label">Evidence custody</span><span class="rule"></span></div>
+  <h2 class="rv">What leaves your infrastructure</h2>
+  <div class="custody">
+    <div class="cust rv">
+      <h3>Your documents</h3>
+      <p>Stored in your isolated workspace on our server. Never used for training.
+      Hard deleted 14 days after signup, stated up front.</p>
+      <span class="chip c-ok tag">STAYS PUT</span>
+    </div>
+    <div class="cust rv">
+      <h3>Retrieval</h3>
+      <p>The search index over your documents is built and queried on our server.
+      No third party retrieval or indexing service is involved.</p>
+      <span class="chip c-ok tag">LOCAL</span>
+    </div>
+    <div class="cust rv">
+      <h3>The drafting model</h3>
+      <p>Sees one question and its retrieved excerpts per answer. Never your full documents,
+      never your document list, never another tenant.</p>
+      <span class="chip c-sig tag">QUESTION + EXCERPTS ONLY</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="seclabel rv"><span class="idx">04</span><span class="label">What you take away</span><span class="rule"></span></div>
+  <h2 class="rv">Deliverables an auditor can hold</h2>
+  <div class="dels">
+    <div class="del rv"><h3>The answered workbook</h3>
+      <p>Your questionnaire returned in its original structure with responses and evidence notes
+      written in. Merged cells, hidden rows, and formulas survive untouched.</p>
+      <span class="mono">DELIVERED.xlsx</span></div>
+    <div class="del rv"><h3>The audit working paper</h3>
+      <p>Per question verdicts, provenance strips, gate findings, and the refusals with their
+      gaps named. A report you can hand to a reviewer.</p>
+      <span class="mono">run_report.html</span></div>
+    <div class="del rv"><h3>The tamper evident log</h3>
+      <p>Every state transition hash chained in an append only log. Edit any historical event
+      and verification fails from that point on. Check it yourself.</p>
+      <span class="mono">audit_log.jsonl</span></div>
+  </div>
+</section>
+
+<section id="signup">
+  <div class="seclabel rv"><span class="idx">05</span><span class="label">Try it now</span><span class="rule"></span></div>
+  <h2 class="rv">Run it on your documents</h2>
+  <p class="sub rv">Create a workspace, upload your real evidence or seed the sample pack, and get
+  ten answered or refused questions in about two minutes. Three runs per workspace, deleted after
+  14 days. No card, no call.</p>
+  <div class="signup rv">
+    <form id="signupform">
+      <label for="org">Organization</label>
+      <input id="org" name="org" type="text" required maxlength="80" placeholder="Acme Corp">
+      <label for="email">Work email</label>
+      <input id="email" name="email" type="email" required placeholder="you@acme.com">
+      <div class="hp"><label>Website</label><input name="website" tabindex="-1" autocomplete="off"></div>
+      <button type="submit" id="gobtn">Create my workspace</button>
+      <div class="err" id="sgerr"></div>
+      <div class="wslink" id="wslink">
+        <a id="wsanchor" href="#">workspace link</a>
+        <p>Save this link. It is the only key to your workspace.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <span>TrustOps / evidence gated answers for security questionnaires<br>
+  synthetic demo data on this page / your uploads deleted after 14 days / never used for training</span>
+  <span><a href="mailto:dhruv.shahi07@gmail.com?subject=TrustOps%20pilot">book a pilot</a><br>
+  <a href="https://github.com/dhruvshahi10/trustops">how the gates work</a></span>
+</footer>
+
+</div>
+<script>
+const DEMO=/*@DEMO@*/;
+const $=id=>document.getElementById(id);
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* reveal on scroll */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}
+}),{rootMargin:"0px 0px -8% 0px"});
+document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+
+/* typed demo */
+const keys=Object.keys(DEMO);
+let current=null,timer=null,cycleTimer=null;
+function chipClass(t){return t==="ok"?"chip c-ok":t==="legal"?"chip c-sig":t==="rev"?"chip c-rev":"chip c-warn"}
+function show(key,instant){
+  const d=DEMO[key];current=key;
+  clearTimeout(timer);clearTimeout(cycleTimer);
+  document.querySelectorAll("#chips button").forEach(b=>
+    b.classList.toggle("on",b.dataset.k===key));
+  $("verdict").textContent="";$("verdict").className="chip";
+  $("answer").innerHTML="";$("prov").innerHTML="";$("gaps").innerHTML="";
+  const q=d.question;
+  const reveal=()=>{
+    $("verdict").textContent=d.verdict;$("verdict").className=chipClass(d.tone);
+    $("answer").innerHTML=d.answer?d.answer:"<em>No answer released.</em>";
+    $("prov").innerHTML=d.citations.length
+      ?`<div class="d-prov">${d.citations.join("<br>")}</div>`
+      :`<div class="d-prov warn">no citation released</div>`;
+    $("gaps").innerHTML=d.gaps.map(g=>`<div class="d-gap">&#9656; ${g}</div>`).join("");
+    cycleTimer=setTimeout(()=>{
+      const next=keys[(keys.indexOf(key)+1)%keys.length];show(next,false);
+    },9000);
+  };
+  if(instant||reduced){$("qtext").textContent=q;reveal();return}
+  let i=0;$("qtext").textContent="";
+  const type=()=>{
+    $("qtext").textContent=q.slice(0,++i);
+    if(i<q.length){timer=setTimeout(type,18)}else{timer=setTimeout(reveal,350)}
+  };
+  type();
+}
+$("chips").innerHTML=keys.map(k=>
+  `<button type="button" data-k="${k}">${DEMO[k].label}</button>`).join("");
+document.querySelectorAll("#chips button").forEach(b=>
+  b.onclick=()=>show(b.dataset.k,false));
+show(keys[0],reduced);
+
+/* signup */
+$("signupform").onsubmit=async e=>{
+  e.preventDefault();
+  $("sgerr").textContent="";$("gobtn").disabled=true;
+  try{
+    const r=await fetch("/api/signup",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({org:$("org").value.trim(),email:$("email").value.trim(),
+        website:document.querySelector('input[name="website"]').value})});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    const a=$("wsanchor");a.href=data.workspace;a.textContent=location.origin+data.workspace;
+    $("wslink").style.display="block";
+    $("gobtn").textContent="Workspace created";
+    setTimeout(()=>{location.href=data.workspace},1800);
+  }catch(err){
+    $("sgerr").textContent=err.message;
+    $("gobtn").disabled=false;
+  }
+};
+</script>
+</body>
+</html>

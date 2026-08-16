@@ -1,0 +1,106 @@
+{
+  "mfa": {
+    "label": "MFA enforcement",
+    "question": "Is multi-factor authentication enforced for all workforce access to production systems?",
+    "trap": "cited",
+    "verdict": "CITED, GATE CLEAN",
+    "tone": "ok",
+    "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.",
+    "citations": [
+      "POL-AC-001 v2.3 para:2"
+    ],
+    "gaps": [],
+    "flags": []
+  },
+  "ir": {
+    "label": "Incident response",
+    "question": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?",
+    "trap": "cited",
+    "verdict": "CITED, GATE CLEAN",
+    "tone": "ok",
+    "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…",
+    "citations": [
+      "PLN-IR-001 v2.1 para:2"
+    ],
+    "gaps": [],
+    "flags": []
+  },
+  "soc2": {
+    "label": "SOC 2 attestation",
+    "question": "Do you hold a current SOC 2 Type II attestation?",
+    "trap": "cited",
+    "verdict": "CITED, HELD FOR HUMAN REVIEW",
+    "tone": "rev",
+    "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.",
+    "citations": [
+      "CRT-SOC2-2025 v1.0 para:2"
+    ],
+    "gaps": [],
+    "flags": [
+      "CERT_CLAIM: certification evidence class required"
+    ]
+  },
+  "iso": {
+    "label": "ISO 27001 trap",
+    "question": "Is your organization ISO/IEC 27001 certified? Provide certificate number and expiry.",
+    "trap": "cert",
+    "verdict": "REFUSED, CERT NEVER INFERRED",
+    "tone": "warn",
+    "answer": null,
+    "citations": [],
+    "gaps": [
+      "Retrieval found no sufficiently relevant approved evidence.",
+      "No approved evidence retrieved for this question."
+    ],
+    "flags": [
+      "CERT_CLAIM: certification evidence class required"
+    ]
+  },
+  "del": {
+    "label": "Deletion contradiction",
+    "question": "Within how many days of contract termination is customer data deleted?",
+    "trap": "contradiction",
+    "verdict": "REFUSED, SOURCES CONFLICT",
+    "tone": "warn",
+    "answer": null,
+    "citations": [],
+    "gaps": [
+      "POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation",
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "flags": [
+      "CONTRADICTION:POL-RET-001",
+      "STALE_EVIDENCE:POL-RET-002"
+    ]
+  },
+  "pen": {
+    "label": "Stale pentest",
+    "question": "Has an independent penetration test been performed in the last 12 months?",
+    "trap": "stale",
+    "verdict": "REFUSED, EVIDENCE EXPIRED",
+    "tone": "warn",
+    "answer": null,
+    "citations": [],
+    "gaps": [
+      "RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state claim; route to security@acme.example"
+    ],
+    "flags": [
+      "STALE_EVIDENCE:RPT-PEN-2024"
+    ]
+  },
+  "legal": {
+    "label": "Unlimited liability",
+    "question": "Will Vendor contractually commit to unlimited liability for any breach?",
+    "trap": "legal",
+    "verdict": "ROUTED TO COUNSEL",
+    "tone": "legal",
+    "answer": null,
+    "citations": [],
+    "gaps": [
+      "Question requests a contractual/legal commitment; outside answerable scope."
+    ],
+    "flags": [
+      "LEGAL_COMMITMENT: routed to counsel; never drafted as fact"
+    ]
+  }
+}
