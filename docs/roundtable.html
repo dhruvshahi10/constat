@@ -1,0 +1,617 @@
+<title>TrustOps Round Table</title>
+<style>
+:root{
+  --paper:#F1F4EE; --card:#FAFCF8; --sunk:#EAEFE6;
+  --ink:#131F1A; --ink2:#56685E; --ink3:#7C8D83;
+  --line:#D6DED1; --rule:#B9C6B5;
+  --ship:#1E6B47; --ship-bg:#E3EFE7;
+  --build:#8F5300; --build-bg:#F6EBD8;
+  --next:#34506B; --next-bg:#E4EAF1;
+  --risk:#9E2B20; --risk-bg:#F3E1DF;
+  --shadow:0 1px 0 rgba(19,31,26,.05), 0 1px 3px rgba(19,31,26,.05);
+  --display:ui-serif,"Iowan Old Style","Charter","Palatino Linotype",Palatino,Georgia,serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1512; --card:#161E1A; --sunk:#111814;
+    --ink:#E6EDE7; --ink2:#93A69B; --ink3:#75887D;
+    --line:#26332C; --rule:#3A4B41;
+    --ship:#5CB98A; --ship-bg:#153123;
+    --build:#DA9836; --build-bg:#33250D;
+    --next:#8DB0D0; --next-bg:#152330;
+    --risk:#E08173; --risk-bg:#341A1A;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 1px 4px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1512; --card:#161E1A; --sunk:#111814;
+  --ink:#E6EDE7; --ink2:#93A69B; --ink3:#75887D;
+  --line:#26332C; --rule:#3A4B41;
+  --ship:#5CB98A; --ship-bg:#153123;
+  --build:#DA9836; --build-bg:#33250D;
+  --next:#8DB0D0; --next-bg:#152330;
+  --risk:#E08173; --risk-bg:#341A1A;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 1px 4px rgba(0,0,0,.25);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.6;
+  margin:0; padding:0 20px 96px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto}
+.narrow{max-width:68ch}
+
+/* ---------- masthead ---------- */
+header{padding:56px 0 34px; border-bottom:2px solid var(--ink)}
+.eyebrow{
+  font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--ship);
+  display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:20px;
+}
+.eyebrow span{color:var(--ink3)}
+h1{
+  font-family:var(--display); font-weight:600; font-size:clamp(34px,5.2vw,54px);
+  line-height:1.06; letter-spacing:-.02em; margin:0; text-wrap:balance;
+}
+h1 em{font-style:italic; color:var(--ship)}
+.deck{
+  font-family:var(--display); font-size:clamp(17px,2vw,20px); line-height:1.5;
+  color:var(--ink2); margin:20px 0 0; max-width:60ch; text-wrap:pretty;
+}
+.stamp{
+  margin-top:26px; font-family:var(--mono); font-size:11.5px; line-height:2;
+  color:var(--ink3); display:flex; flex-wrap:wrap; gap:4px 26px;
+}
+.stamp b{color:var(--ink2); font-weight:600}
+
+/* ---------- sections ---------- */
+section{padding-top:52px}
+h2{
+  font-family:var(--display); font-weight:600; font-size:clamp(23px,3vw,30px);
+  letter-spacing:-.015em; line-height:1.15; margin:0 0 10px; text-wrap:balance;
+}
+.kicker{
+  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink3); margin:0 0 12px;
+}
+.lede{color:var(--ink2); margin:0 0 26px; max-width:66ch; text-wrap:pretty}
+p{margin:0 0 14px}
+a{color:var(--ship)}
+:focus-visible{outline:2px solid var(--ship); outline-offset:3px; border-radius:2px}
+
+/* ---------- stat strip ---------- */
+.stats{
+  display:grid; gap:1px; background:var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
+  border:1px solid var(--line); margin-top:34px;
+}
+.stat{background:var(--card); padding:18px 16px 16px}
+.stat b{
+  display:block; font-family:var(--display); font-size:31px; font-weight:600;
+  line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums;
+}
+.stat.ok b{color:var(--ship)} .stat.warn b{color:var(--build)} .stat.info b{color:var(--next)}
+.stat span{
+  display:block; margin-top:7px; font-family:var(--mono); font-size:10px;
+  font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--ink3);
+}
+.stat small{display:block; margin-top:5px; font-size:12px; color:var(--ink2); line-height:1.4}
+
+/* ---------- verdict ---------- */
+.verdict{
+  margin-top:34px; border-left:3px solid var(--ship); background:var(--card);
+  padding:22px 24px; box-shadow:var(--shadow);
+}
+.verdict p:last-child{margin-bottom:0}
+.verdict strong{color:var(--ink)}
+
+/* ---------- pipeline diagram ---------- */
+.figure{margin-top:26px; border:1px solid var(--line); background:var(--card); box-shadow:var(--shadow)}
+.figscroll{overflow-x:auto}
+.figscroll svg{display:block; width:100%; min-width:760px; height:auto}
+figcaption{
+  border-top:1px solid var(--line); padding:12px 18px; font-size:12.5px;
+  color:var(--ink2); font-family:var(--mono); line-height:1.6;
+}
+.svg-flow{fill:none; stroke:var(--rule); stroke-width:1.5}
+.svg-box{fill:var(--sunk); stroke:var(--rule); stroke-width:1.5}
+.svg-box-ship{fill:var(--ship-bg); stroke:var(--ship); stroke-width:1.5}
+.svg-box-gap{fill:var(--build-bg); stroke:var(--build); stroke-width:1.5; stroke-dasharray:5 3}
+.svg-label{font-family:var(--mono); font-size:11px; font-weight:600; fill:var(--ink); letter-spacing:.04em}
+.svg-sub{font-family:var(--mono); font-size:9.5px; fill:var(--ink2)}
+.svg-note{font-family:var(--mono); font-size:9.5px; fill:var(--ink3)}
+.svg-gate{font-family:var(--mono); font-size:9.5px; font-weight:600; fill:var(--ship)}
+.svg-gapt{font-family:var(--mono); font-size:9.5px; font-weight:600; fill:var(--build)}
+
+/* ---------- ledger table ---------- */
+.tablewrap{overflow-x:auto; margin-top:24px; border:1px solid var(--line); background:var(--card)}
+table{border-collapse:collapse; width:100%; min-width:660px; font-size:14px}
+th{
+  text-align:left; font-family:var(--mono); font-size:10px; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink3);
+  padding:12px 14px; border-bottom:2px solid var(--ink); white-space:nowrap;
+}
+td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.where{font-family:var(--mono); font-size:11.5px; color:var(--ink2); white-space:nowrap}
+.pill{
+  display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600;
+  letter-spacing:.09em; text-transform:uppercase; padding:3px 8px; border:1px solid;
+  border-radius:2px; white-space:nowrap;
+}
+.p-ship{color:var(--ship); border-color:var(--ship); background:var(--ship-bg)}
+.p-build{color:var(--build); border-color:var(--build); background:var(--build-bg)}
+.p-next{color:var(--next); border-color:var(--next); background:var(--next-bg)}
+.p-risk{color:var(--risk); border-color:var(--risk); background:var(--risk-bg)}
+
+/* ---------- refusal bar ---------- */
+.refusal{margin-top:26px; display:grid; gap:20px; grid-template-columns:1fr}
+@media(min-width:820px){.refusal{grid-template-columns:1.1fr 1fr}}
+.bar{display:flex; height:46px; border:1px solid var(--line); overflow:hidden}
+.bar div{display:flex; align-items:center; justify-content:center; font-family:var(--mono);
+  font-size:11px; font-weight:600; color:var(--card)}
+.seg-r{background:var(--build)} .seg-s{background:var(--risk)}
+.seg-c{background:var(--next)} .seg-l{background:var(--ship)}
+.barkey{list-style:none; margin:0; padding:0; font-size:13.5px}
+.barkey li{display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); align-items:baseline}
+.barkey li:last-child{border-bottom:0}
+.swatch{width:10px; height:10px; flex:0 0 10px; margin-top:5px; border-radius:1px}
+.barkey b{font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums}
+
+/* ---------- gantt ---------- */
+.ganttwrap{overflow-x:auto; margin-top:28px; border:1px solid var(--line); background:var(--card); box-shadow:var(--shadow)}
+.gantt{min-width:880px; display:grid; grid-template-columns:290px repeat(4,1fr)}
+.gh{
+  padding:12px 14px; border-bottom:2px solid var(--ink); font-family:var(--mono);
+  font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3);
+}
+.gh b{display:block; color:var(--ink); font-size:11px; letter-spacing:.1em; margin-bottom:3px}
+.gh:not(:first-child){border-left:1px solid var(--line)}
+.grow-label{
+  padding:16px 14px; border-bottom:1px solid var(--line); display:flex; gap:11px; align-items:flex-start;
+}
+.gnum{
+  font-family:var(--mono); font-size:10px; font-weight:600; color:var(--ink3);
+  border:1px solid var(--line); padding:2px 5px; border-radius:2px; margin-top:2px; flex:0 0 auto;
+}
+.grow-label strong{display:block; font-size:14.5px; line-height:1.35; font-weight:600}
+.grow-label em{
+  display:block; font-style:normal; margin-top:5px; font-family:var(--mono);
+  font-size:11px; line-height:1.55; color:var(--ink2);
+}
+.gcell{border-bottom:1px solid var(--line); border-left:1px solid var(--line); padding:16px 6px;
+  position:relative; display:flex; align-items:center}
+.gbar{
+  width:100%; border-radius:2px; padding:9px 12px;
+  border-bottom:1px solid var(--line); display:flex; align-items:center;
+  font-family:var(--mono); font-size:11px; font-weight:600; line-height:1.4;
+}
+.b-build{background:var(--build-bg); color:var(--build); box-shadow:inset 3px 0 0 var(--build)}
+.b-next{background:var(--next-bg); color:var(--next); box-shadow:inset 3px 0 0 var(--next)}
+.b-ship{background:var(--ship-bg); color:var(--ship); box-shadow:inset 3px 0 0 var(--ship)}
+.b-thin{background:transparent; color:var(--ink2); border:1px dashed var(--rule); box-shadow:none}
+.gexit{
+  grid-column:1 / -1; padding:11px 14px 13px 315px; border-bottom:1px solid var(--line);
+  background:var(--sunk); font-family:var(--mono); font-size:11px; line-height:1.6; color:var(--ink2);
+}
+.gexit b{color:var(--ship); letter-spacing:.08em; text-transform:uppercase; font-size:10px}
+.milestone{
+  grid-column:1 / -1; padding:14px; background:var(--ink); color:var(--paper);
+  font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.08em;
+  display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+
+/* ---------- seats ---------- */
+.seats{display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); margin-top:26px}
+.seat{background:var(--card); border:1px solid var(--line); border-top:3px solid var(--ship);
+  padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column}
+.seat:nth-child(2){border-top-color:var(--next)}
+.seat:nth-child(3){border-top-color:var(--build)}
+.seat:nth-child(4){border-top-color:var(--risk)}
+.seat h3{font-family:var(--display); font-size:19px; font-weight:600; margin:0 0 3px; letter-spacing:-.01em}
+.seat .who{font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink3); margin:0 0 14px}
+.seat ul{margin:0 0 16px; padding-left:17px; font-size:14px; line-height:1.55}
+.seat li{margin-bottom:7px}
+.ask{margin-top:auto; border-top:1px solid var(--line); padding-top:13px;
+  font-size:13.5px; line-height:1.5; color:var(--ink2)}
+.ask b{display:block; font-family:var(--mono); font-size:10px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink); margin-bottom:5px}
+
+/* ---------- decisions ---------- */
+.decision{background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); margin-top:18px}
+.dhead{padding:18px 20px 4px; display:flex; gap:12px; align-items:baseline; flex-wrap:wrap}
+.dhead h3{font-family:var(--display); font-size:20px; font-weight:600; margin:0; letter-spacing:-.01em}
+.dopts{display:grid; gap:1px; background:var(--line); grid-template-columns:1fr; margin:16px 0 0}
+@media(min-width:700px){.dopts{grid-template-columns:1fr 1fr}}
+.dopt{background:var(--card); padding:16px 20px}
+.dopt h4{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; margin:0 0 8px; color:var(--ink2)}
+.dopt.pick h4{color:var(--ship)}
+.dopt p{font-size:13.5px; line-height:1.55; margin:0; color:var(--ink2)}
+.dopt.pick{background:var(--ship-bg)}
+.dopt.pick p{color:var(--ink)}
+.drec{border-top:1px solid var(--line); padding:14px 20px; font-size:13.5px; color:var(--ink2)}
+.drec b{color:var(--ink)}
+
+/* ---------- risks ---------- */
+.risks{margin-top:24px; border:1px solid var(--line); background:var(--card)}
+.riskrow{display:grid; gap:14px; padding:16px 18px; border-bottom:1px solid var(--line);
+  grid-template-columns:1fr; align-items:start}
+@media(min-width:760px){.riskrow{grid-template-columns:104px 1fr 250px}}
+.riskrow:last-child{border-bottom:0}
+.riskrow p{margin:0; font-size:14px; line-height:1.5}
+.riskrow .mit{font-size:13px; color:var(--ink2); font-family:var(--mono); line-height:1.6}
+.riskrow strong{display:block; margin-bottom:3px}
+
+/* ---------- done ---------- */
+.done{margin-top:26px; border:2px solid var(--ink); background:var(--card); padding:26px 28px}
+.done ol{margin:0; padding-left:22px; font-size:15px; line-height:1.6}
+.done li{margin-bottom:10px}
+.done li:last-child{margin-bottom:0}
+.done li b{font-family:var(--mono); font-size:13px; color:var(--ship)}
+footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:11px; line-height:1.9; color:var(--ink3)}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">
+    Round table · 16 Aug 2026
+    <span>TrustOps v0 · branch claude/project-status-roadmap-qqr2je</span>
+  </div>
+  <h1>v0 does the hard part. <em>It is not yet a product.</em></h1>
+  <p class="deck">The engine refuses correctly, cites everything it releases, and proves it in
+  eleven adversarial evals. What stands between here and a paid pilot is a real human in the
+  approval loop, retrieval that stops missing, and CI that actually exercises the live models.</p>
+  <div class="stamp">
+    <span><b>Verified today:</b> 11/11 evals green in 0.16s · 24-question run in 0.03s</span>
+    <span><b>HEAD:</b> ce43efd · <b>Code:</b> 1,758 LOC Python · <b>Runtime deps:</b> openpyxl</span>
+  </div>
+</header>
+
+<section>
+  <p class="kicker">Where the project stands</p>
+  <h2>The run, as of this morning</h2>
+  <p class="lede">Every number below came from executing the suite and the demo in this session —
+  not from the README.</p>
+
+  <div class="stats">
+    <div class="stat ok"><b>11/11</b><span>Adversarial evals</span><small>Six planted traps, two integrity tests, release gate</small></div>
+    <div class="stat ok"><b>0</b><span>Unsupported claims</span><small>Hard release blocker; holds under all three drafters</small></div>
+    <div class="stat info"><b>70.8%</b><span>Cited coverage</span><small>17 of 24 answered with surviving citations</small></div>
+    <div class="stat warn"><b>29.2%</b><span>Refused</span><small>7 refusals, each naming its gap and its human route</small></div>
+    <div class="stat ok"><b>valid</b><span>Audit chain</span><small>Hash-chained JSONL; tamper detection under test</small></div>
+    <div class="stat info"><b>14 / 3 / 7</b><span>Delivered / review / exception</span><small>No row reaches delivered without gate-clean coverage</small></div>
+  </div>
+
+  <div class="verdict">
+    <p><strong>The honest read.</strong> The safety architecture is genuinely done. Eight invariants
+    are enforced in code, not prompt, and they hold identically whether the drafter is the
+    deterministic mock, Haiku 4.5, or Gemini — which is the whole thesis and it is proven.</p>
+    <p>The gap is everything around that core. Approval is simulated by a labelled stand-in, so we
+    cannot yet claim a human-gated workflow to a buyer. Two of three drafters are never touched by
+    CI. Retrieval is lexical and misses. None of that is a design flaw — it is scope that was
+    deliberately deferred, and it is now the critical path.</p>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Architecture</p>
+  <h2>Where the gates sit, and where the seam is</h2>
+  <p class="lede">Solid green is production-grade and under test. The dashed amber block is the one
+  place the demo substitutes for the product.</p>
+
+  <figure class="figure">
+    <div class="figscroll">
+      <svg viewBox="0 0 980 300" role="img" aria-label="TrustOps pipeline: received, classified with pre-gates, drafted, post-gates, then either exception queue or simulated review, then delivered, with a hash-chained audit log beneath every transition.">
+        <!-- flow arrows -->
+        <path class="svg-flow" d="M132 66 H168" marker-end="url(#ar)"/>
+        <path class="svg-flow" d="M300 66 H336" marker-end="url(#ar)"/>
+        <path class="svg-flow" d="M444 66 H480" marker-end="url(#ar)"/>
+        <path class="svg-flow" d="M636 66 V120 H700" marker-end="url(#ar)"/>
+        <path class="svg-flow" d="M636 66 V16 H700" marker-end="url(#ar)"/>
+        <defs>
+          <marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0 L8 4 L0 8 z" fill="var(--rule)"/>
+          </marker>
+        </defs>
+
+        <rect class="svg-box-ship" x="16" y="42" width="116" height="48" rx="2"/>
+        <text class="svg-label" x="74" y="64" text-anchor="middle">RECEIVED</text>
+        <text class="svg-sub" x="74" y="79" text-anchor="middle">sha256 of source</text>
+
+        <rect class="svg-box-ship" x="168" y="42" width="132" height="48" rx="2"/>
+        <text class="svg-label" x="234" y="64" text-anchor="middle">CLASSIFIED</text>
+        <text class="svg-sub" x="234" y="79" text-anchor="middle">row identity kept</text>
+        <text class="svg-gate" x="234" y="112" text-anchor="middle">PRE-GATES</text>
+        <text class="svg-sub" x="234" y="126" text-anchor="middle">legal routing · cert tagging</text>
+
+        <rect class="svg-box-ship" x="336" y="42" width="108" height="48" rx="2"/>
+        <text class="svg-label" x="390" y="64" text-anchor="middle">DRAFTED</text>
+        <text class="svg-sub" x="390" y="79" text-anchor="middle">mock · haiku · gemini</text>
+
+        <rect class="svg-box-ship" x="480" y="42" width="156" height="48" rx="2"/>
+        <text class="svg-label" x="558" y="64" text-anchor="middle">POST-GATES</text>
+        <text class="svg-sub" x="558" y="79" text-anchor="middle">cite-or-abstain</text>
+        <text class="svg-gate" x="558" y="112" text-anchor="middle">STALE · CONTRADICTION · CERT-CLASS</text>
+        <text class="svg-sub" x="558" y="126" text-anchor="middle">the gates do not trust the drafter</text>
+
+        <rect class="svg-box" x="700" y="0" width="144" height="40" rx="2"/>
+        <text class="svg-label" x="772" y="18" text-anchor="middle">EXCEPTION · 7</text>
+        <text class="svg-sub" x="772" y="32" text-anchor="middle">routed: SME · owner · legal</text>
+
+        <rect class="svg-box-gap" x="700" y="98" width="144" height="46" rx="2"/>
+        <text class="svg-gapt" x="772" y="118" text-anchor="middle">GRC_REVIEW · 3</text>
+        <text class="svg-sub" x="772" y="133" text-anchor="middle">reviewer is SIMULATED</text>
+
+        <rect class="svg-box-ship" x="700" y="186" width="144" height="46" rx="2"/>
+        <text class="svg-label" x="772" y="206" text-anchor="middle">DELIVERED · 14</text>
+        <text class="svg-sub" x="772" y="221" text-anchor="middle">exported into source XLSX</text>
+        <path class="svg-flow" d="M772 144 V186" marker-end="url(#ar)"/>
+
+        <!-- audit rail -->
+        <rect class="svg-box-ship" x="16" y="256" width="828" height="34" rx="2"/>
+        <text class="svg-label" x="430" y="277" text-anchor="middle">HASH-CHAINED APPEND-ONLY AUDIT LOG — every transition writes an event</text>
+        <text class="svg-note" x="16" y="246">Phase 2 replaces the dashed block with a named human, an approval note, and an edit diff.</text>
+      </svg>
+    </div>
+    <figcaption>Counts are from the 24-question acme run executed 16 Aug 2026. The dashed block is
+    the only simulated segment — nothing may reach DELIVERED through it without gate-clean,
+    complete coverage.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <p class="kicker">Invariant register</p>
+  <h2>Eight promises, and whether the code keeps them</h2>
+  <p class="lede">These are the non-negotiables from the build directive. Any change that breaks one
+  is rejected unless a dated DECISIONS.md entry authorises it.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Invariant</th><th>Status</th><th>Enforced in</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Citation-or-abstain — nothing leaves without a gate-surviving citation</td><td><span class="pill p-ship">Held</span></td><td class="where">gates.py:103</td></tr>
+        <tr><td>2</td><td>Certification claims require a certificate or attestation source</td><td><span class="pill p-ship">Held</span></td><td class="where">gates.py:91</td></tr>
+        <tr><td>3</td><td>Stale or contradicted sources are uncitable everywhere, automatically</td><td><span class="pill p-ship">Held</span></td><td class="where">gates.py:77–89</td></tr>
+        <tr><td>4</td><td>Legal-commitment questions route to counsel pre-draft</td><td><span class="pill p-ship">Held</span></td><td class="where">gates.py:45</td></tr>
+        <tr><td>5</td><td>Tenant isolation is structural, never prompt-based</td><td><span class="pill p-ship">Held</span></td><td class="where">evidence.py:63</td></tr>
+        <tr><td>6</td><td>Audit log append-only and hash-chained on every transition</td><td><span class="pill p-ship">Held</span></td><td class="where">pipeline.py:32–66</td></tr>
+        <tr><td>7</td><td>Zero unsupported material claims is a release blocker</td><td><span class="pill p-ship">Held</span></td><td class="where">pipeline.py:162</td></tr>
+        <tr><td>8</td><td>Export writes response columns only; structure untouchable</td><td><span class="pill p-ship">Held</span></td><td class="where">export.py:64</td></tr>
+        <tr><td>—</td><td>Approval carries a named human actor <em>(directive Phase 2; not yet an invariant)</em></td><td><span class="pill p-build">Simulated</span></td><td class="where">pipeline.py:140</td></tr>
+        <tr><td>—</td><td>Live drafters covered by CI <em>(both live paths ship untested)</em></td><td><span class="pill p-risk">Gap</span></td><td class="where">ci.yml — mock only</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">The coverage lever</p>
+  <h2>Three of the seven refusals are retrieval's fault</h2>
+  <p class="lede">This is the finding that should set priority. Four refusals are the product working
+  exactly as designed and must never go away. The other three are lexical retrieval failing to find
+  evidence we already hold — and they are recoverable.</p>
+
+  <div class="refusal">
+    <div>
+      <div class="bar" role="img" aria-label="Seven refusals: three retrieval-caused, one stale evidence, two contradiction, one legal routing.">
+        <div class="seg-r" style="flex:3">3 · retrieval</div>
+        <div class="seg-s" style="flex:1">1</div>
+        <div class="seg-c" style="flex:2">2</div>
+        <div class="seg-l" style="flex:1">1</div>
+      </div>
+      <p style="margin-top:14px; font-size:13.5px; color:var(--ink2)">Recovering all three lifts cited
+      coverage from <b>70.8% to 83.3%</b> without touching a single gate. That is the entire business
+      case for Phase 3, and it is measurable on the existing eval suite.</p>
+    </div>
+    <ul class="barkey">
+      <li><span class="swatch seg-r"></span><div><b>3 — recoverable.</b> A&amp;A-02.1 and STA-01.1 found nothing; IVS-01.1 retrieved the wrong document (a retention policy for a hosting-regions question) which then died on staleness.</div></li>
+      <li><span class="swatch seg-s"></span><div><b>1 — correct.</b> AIS-01.1: pentest report expired 2025-06-10. Must keep refusing.</div></li>
+      <li><span class="swatch seg-c"></span><div><b>2 — correct.</b> DSP-01.1 and PRV-01.1: two approved policies disagree on deletion window. Both quarantined until an owner reconciles.</div></li>
+      <li><span class="swatch seg-l"></span><div><b>1 — correct.</b> LGL-01.1: unlimited-liability demand, routed to counsel before drafting.</div></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Roadmap to pilot-ready</p>
+  <h2>Four sprints, each with an exit gate that can fail</h2>
+  <p class="lede">Phases follow the build directive, so the numbering is the directive's, not
+  decoration. A phase is not done when the code lands — it is done when its gate passes.</p>
+
+  <div class="ganttwrap">
+    <div class="gantt">
+      <div class="gh">Workstream</div>
+      <div class="gh"><b>Sprint 1</b>17–30 Aug</div>
+      <div class="gh"><b>Sprint 2</b>31 Aug – 13 Sep</div>
+      <div class="gh"><b>Sprint 3</b>14–27 Sep</div>
+      <div class="gh"><b>Sprint 4</b>28 Sep – 11 Oct</div>
+
+      <div class="grow-label"><span class="gnum">P1</span><div><strong>Live-drafter hardening</strong><em>~40% done · fail-closed paths coded, untested</em></div></div>
+      <div class="gcell"><div class="gbar b-build">Fixtures · telemetry · tracing</div></div>
+      <div class="gcell"></div><div class="gcell"></div><div class="gcell"></div>
+      <div class="gexit"><b>Exit gate ·</b> 11 evals plus 4 recorded live-drafter fixtures green; per-question tokens and cost in metrics.json; Langfuse behind TRUSTOPS_LANGFUSE=1; verdict diff of mock vs Haiku vs Gemini published.</div>
+
+      <div class="grow-label"><span class="gnum">P2</span><div><strong>Review queue with a named human</strong><em>Not started · the biggest demo-to-product gap</em></div></div>
+      <div class="gcell"></div>
+      <div class="gcell"><div class="gbar b-next">Queue · approval · actor</div></div>
+      <div class="gcell"><div class="gbar b-next">Edit diff · leverage metric</div></div>
+      <div class="gcell"></div>
+      <div class="gexit"><b>Exit gate ·</b> No row can reach DELIVERED without a named actor in the audit log — enforced in the pipeline, tested by an eval that tries to force it. Reviewer edit distance recorded per answer.</div>
+
+      <div class="grow-label"><span class="gnum">P3</span><div><strong>Semantic retrieval</strong><em>Not started · worth +12.5pp coverage</em></div></div>
+      <div class="gcell"></div><div class="gcell"></div>
+      <div class="gcell"><div class="gbar b-ship">Per-tenant embedding index</div></div>
+      <div class="gcell"></div>
+      <div class="gexit"><b>Exit gate ·</b> IVS-01.1, A&amp;A-02.1 and STA-01.1 flip from abstention to cited; zero regressions on T1–T6; tenant namespace enforced at index build <em>and</em> at query, with a cross-tenant eval proving it.</div>
+
+      <div class="grow-label"><span class="gnum">P4</span><div><strong>Real-world formats</strong><em>Not started · gated on what the pilot buyer sends</em></div></div>
+      <div class="gcell"></div><div class="gcell"></div><div class="gcell"></div>
+      <div class="gcell"><div class="gbar b-next">Multi-sheet · autodetect · DOCX</div></div>
+      <div class="gexit"><b>Exit gate ·</b> Every new format ships its own structure-preservation test in the T6 style. No format is supported until its round-trip test is green.</div>
+
+      <div class="grow-label"><span class="gnum">X</span><div><strong>Cross-cutting engineering debt</strong><em>Packaging, pinning, CI parity</em></div></div>
+      <div class="gcell"><div class="gbar b-thin">pyproject · pinned deps</div></div>
+      <div class="gcell"><div class="gbar b-thin">CI installs from lockfile</div></div>
+      <div class="gcell"><div class="gbar b-thin">Nightly live smoke</div></div>
+      <div class="gcell"><div class="gbar b-thin">Install-to-run in one command</div></div>
+      <div class="gexit"><b>Exit gate ·</b> A stranger clones the repo and gets a green suite and a completed run in two commands, with byte-identical dependency versions.</div>
+
+      <div class="grow-label"><span class="gnum">GTM</span><div><strong>Founder track — design partner</strong><em>Runs in parallel; gates Phase 2's realism</em></div></div>
+      <div class="gcell"><div class="gbar b-thin">Partner conversations</div></div>
+      <div class="gcell"><div class="gbar b-thin">Pilot terms · their real workbook</div></div>
+      <div class="gcell"><div class="gbar b-thin">Their reviewer in the queue</div></div>
+      <div class="gcell"><div class="gbar b-thin">Pilot run on live deal</div></div>
+      <div class="gexit"><b>Exit gate ·</b> One signed design partner whose actual questionnaire runs through the engine, and whose named GRC reviewer approves in our queue — before we build anything in the deferred column.</div>
+
+      <div class="milestone"><span>▪ PILOT-READY — 11 OCT 2026</span><span>~20 evals green · coverage ≥ 83% · unsupported claims still 0</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Around the table</p>
+  <h2>What each seat owns between now and October</h2>
+  <p class="lede">Four seats, four different jobs. Each card ends with the one call that seat needs to
+  make in this meeting.</p>
+
+  <div class="seats">
+    <div class="seat">
+      <h3>Founder</h3>
+      <p class="who">Dhruv · distribution and truth in market</p>
+      <ul>
+        <li>Land one design partner before Sprint 3 — Phase 2 is unfalsifiable without a real reviewer's hands on it.</li>
+        <li>Hold the line on the deferred column: no portal, no SSO, no OCR, no trust-center until a pilot is paid for.</li>
+        <li>Own the claim discipline in sales material.</li>
+      </ul>
+      <p class="ask"><b>Call for today</b>The demo's reviewer is simulated. That must never appear in a
+      deck as a human-approved workflow. Confirm the language we use until Phase 2 lands.</p>
+    </div>
+
+    <div class="seat">
+      <h3>CTO</h3>
+      <p class="who">Architecture and the invariant register</p>
+      <ul>
+        <li>Rule on the embedding provider — it decides whether evidence text ever leaves the box.</li>
+        <li>Decide how live drafters get into CI: recorded fixtures, a secret key, or both.</li>
+        <li>Keep the register honest — every gate change needs a dated DECISIONS.md entry naming the rejected alternative.</li>
+      </ul>
+      <p class="ask"><b>Call for today</b>Two of three drafters ship with zero CI coverage. Approve
+      Sprint 1's fixture harness as the fix, or accept the risk explicitly.</p>
+    </div>
+
+    <div class="seat">
+      <h3>Product</h3>
+      <p class="who">The reviewer's experience and the metric that sells</p>
+      <ul>
+        <li>Define reviewer leverage in numbers — minutes per questionnaire before and after — so Phase 2 has a target, not a vibe.</li>
+        <li>Design the exception queue around the four refusal reasons; they are not interchangeable.</li>
+        <li>Sequence Phase 4 by what buyers actually send, not by what is easiest to parse.</li>
+      </ul>
+      <p class="ask"><b>Call for today</b>The directive says you approve the queue UX before any
+      styling work. Book that review inside Sprint 2.</p>
+    </div>
+
+    <div class="seat">
+      <h3>Engineering</h3>
+      <p class="who">The suite is the constitution</p>
+      <ul>
+        <li>Fixture-test the two fail-closed paths that currently have none: contract parse failure and drafter unavailable.</li>
+        <li>Enforce the tenant namespace at index build <em>and</em> query — an embedding index is a new leak surface.</li>
+        <li>Fix the change, never the test. Every new format arrives with its own round-trip test.</li>
+      </ul>
+      <p class="ask"><b>Call for today</b>Confirm Sprint 1 is achievable alongside packaging, or cut
+      Langfuse tracing to Sprint 2 and say so now.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">On the table</p>
+  <h2>Three decisions that need a ruling today</h2>
+  <p class="lede">Each blocks a sprint. Recommendation is marked; the alternative is stated fairly.</p>
+
+  <div class="decision">
+    <div class="dhead"><h3>1. Where embeddings run</h3><span class="pill p-ship">Blocks Sprint 3</span></div>
+    <div class="dopts">
+      <div class="dopt pick"><h4>Local model — recommended</h4><p>Evidence text never leaves the process. Costs one heavy pinned dependency and breaks the current near-zero-install story, but keeps the trust posture we sell on.</p></div>
+      <div class="dopt"><h4>Hosted embedding API</h4><p>Lighter to install and better recall out of the box. Ships customer policy text to a third party — which we would then have to disclose in the very questionnaires we answer.</p></div>
+    </div>
+    <p class="drec"><b>Why:</b> we sell evidence custody. An architecture that egresses evidence to improve retrieval trades the product's premise for a metric.</p>
+  </div>
+
+  <div class="decision">
+    <div class="dhead"><h3>2. What the review queue is built in</h3><span class="pill p-next">Blocks Sprint 2</span></div>
+    <div class="dopts">
+      <div class="dopt pick"><h4>Extend the stdlib console — recommended</h4><p>One UI codebase, no install, reuses the run-report design system and the same pipeline the tests exercise. Costs us hand-written form handling.</p></div>
+      <div class="dopt"><h4>Streamlit, per the directive</h4><p>Faster to a working queue and a diff view. Adds a second UI stack, a second answer path to keep honest, and an install step for the reviewer.</p></div>
+    </div>
+    <p class="drec"><b>Why:</b> DECISIONS.md already chose stdlib for the client UI on these exact grounds. Overriding it is fine — but it needs a dated entry, not a drift.</p>
+  </div>
+
+  <div class="decision">
+    <div class="dhead"><h3>3. How live drafters enter CI</h3><span class="pill p-build">Blocks Sprint 1</span></div>
+    <div class="dopts">
+      <div class="dopt pick"><h4>Recorded fixtures plus nightly live smoke — recommended</h4><p>Deterministic, free, and blocks merges. The nightly run catches provider drift — the exact failure that already bit us when Google retired dated Gemini models.</p></div>
+      <div class="dopt"><h4>Live keys on every CI run</h4><p>Maximum realism. Flaky on rate limits, costs money per push, and leaves the suite dependent on a third party's uptime to merge a typo fix.</p></div>
+    </div>
+    <p class="drec"><b>Why:</b> the constitution has to be runnable offline by anyone who clones the repo.</p>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Risk register</p>
+  <h2>What could actually derail this</h2>
+  <div class="risks">
+    <div class="riskrow">
+      <div><span class="pill p-risk">High</span></div>
+      <p><strong>No design partner by Sprint 3</strong>Phase 2 gets built against an imagined reviewer, and we discover the queue is wrong after we have paid for it.</p>
+      <p class="mit">Mitigation → founder track starts Sprint 1, not Sprint 2. Partner conversations are on the critical path, not beside it.</p>
+    </div>
+    <div class="riskrow">
+      <div><span class="pill p-risk">High</span></div>
+      <p><strong>Semantic retrieval quietly widens the tenant boundary</strong>An index is a second copy of the evidence. Isolation currently holds because the store is scoped; an index can leak across tenants at build time.</p>
+      <p class="mit">Mitigation → namespace enforced at build and query, with a cross-tenant eval that fails the build, written before the index.</p>
+    </div>
+    <div class="riskrow">
+      <div><span class="pill p-build">Medium</span></div>
+      <p><strong>Provider drift breaks the live path silently</strong>Already happened once: Google retired dated Gemini models for new accounts while still listing them.</p>
+      <p class="mit">Mitigation → rolling alias is in place; nightly smoke turns the next occurrence into an alert instead of a demo failure.</p>
+    </div>
+    <div class="riskrow">
+      <div><span class="pill p-build">Medium</span></div>
+      <p><strong>Coverage pressure erodes a gate</strong>The temptation at 83% will be to loosen the contradiction or staleness rule to reach 90%.</p>
+      <p class="mit">Mitigation → coverage is a target; zero unsupported claims is a blocker. Only a dated DECISIONS.md entry may touch a gate.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Definition of done</p>
+  <h2>What "pilot-ready" means on 11 October</h2>
+  <div class="done">
+    <ol>
+      <li><b>Zero unsupported material claims</b> — unchanged, under all three drafters, on a real customer's workbook.</li>
+      <li><b>No delivered row without a named human</b> — the simulated reviewer is gone from the product path, and an eval proves it cannot be bypassed.</li>
+      <li><b>Cited coverage ≥ 83%</b> — with every remaining refusal traceable to a correct gate, never a retrieval miss.</li>
+      <li><b>~20 evals green in CI</b> — including recorded live-drafter fixtures and a cross-tenant index test.</li>
+      <li><b>Two commands from clone to completed run</b> — pinned dependencies, no manual setup.</li>
+      <li><b>One design partner's real questionnaire</b> — ingested in its native format, reviewed by their named GRC lead, delivered back with the audit chain intact.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  Prepared 16 Aug 2026 from HEAD ce43efd · evals and demo run re-executed in-session, not quoted from docs.<br>
+  All figures synthetic; nothing in this briefing derives from a client engagement.<br>
+  Source of record: docs/TRUSTOPS_V0.md (directive) · DECISIONS.md (dated rulings) · GOTCHAS.md (surprises).
+</footer>
+
+</div>
