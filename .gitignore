@@ -8,3 +8,4 @@ __pycache__/
 .claude/
 trustops-v0.zip
 site/img/*.png
+.demo_master/

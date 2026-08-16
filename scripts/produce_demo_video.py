@@ -7,7 +7,8 @@ closing stat card.
 
     .venv/bin/python scripts/produce_demo_video.py
 
-Reads   site/img/demo.webm            (VP8, 960x600, 24fps, 737 frames, silent)
+Reads   .demo_master/                 (3840x2400 PNG stills + manifest.json,
+                                       from scripts/capture_demo_video.py)
 Writes  site/img/demo_edit.mp4        (H.264 High, yuv420p, faststart)  <- primary
         site/img/demo_edit.webm       (VP9 in WebM)                     <- fallback
         site/img/demo_edit_poster.jpg (960x600, q82)
@@ -20,14 +21,35 @@ it gives pixel-exact control over the brand typography (Newsreader / Archivo /
 Fragment Mono, loaded straight out of the .woff2 files) and over the easing of
 every zoom, which drawtext+zoompan cannot do.
 
+NOTHING UPSCALES  (the whole point of the third cut)
+----------------------------------------------------
+The first two cuts read their footage from site/img/demo.webm, a 960x600 VP8
+recording.  A 2.10x punch-in there crops 457x286 real pixels and stretches them
+to a 960x600 frame, so every zoom in the film was an upscale and the UI body
+text inside it was soft -- LANCZOS cannot invent detail that was never
+recorded.
+
+The source is now a MASTER of 3840x2400 stills (Playwright screenshots at
+device_scale_factor=3; the video recorder ignores dsf, screenshots do not).
+The crop rectangle is computed in MASTER pixels and LANCZOS-downsampled to
+960x600, so the tightest punch in the film reads 1829x1143 real pixels into a
+960x600 frame (1.9:1 downsample) and a full-frame shot reads 3840x2400 (4:1).
+check_source_scales() below computes the crop width of every shot before a
+frame is rendered and refuses to run if any of them is under 960 -- an upscale
+cannot get back into this film by accident.
+
 THE EDIT
 --------
-Source beats were measured from the capture, not guessed (see BEATS below).
-The timeline is the SHOTS table -- it is plain data, edit it and re-run.
+The edit itself is unchanged from the 50s cut: same twelve beats, same shot
+list, same captions, same holds, same cards, same progress bar.  Only the
+source resolution and the resampling path moved.
 
-  frames are 24fps.  A footage shot names a source frame `src` and animates a
-  crop rectangle from `start` to `end`, each being (centre_x, centre_y, zoom).
-  The crop is always exactly 8:5 so nothing is ever stretched.
+  frames are 24fps.  A footage shot names a `beat` in the master and animates a
+  crop rectangle from `start` to `end`, each being (centre_x, centre_y, zoom)
+  in 960x600 OUTPUT coordinates -- the framing the cut was composed against.
+  The crop is always exactly 8:5 so nothing is ever stretched.  `src` is kept
+  as the frame number that beat occupied in the old recording, because the
+  BEATS notes and the caption wording were measured against those frames.
 
 MOVE AND HOLD  (the whole point of the second cut)
 --------------------------------------------------
@@ -38,17 +60,19 @@ can read in 1.4 seconds.
 So a shot is now two phases, not one:
 
     move   ~1.8s   the camera eases from `start` to `end`, and the source
-                   footage advances 1:1 so live events (the seed landing, the
-                   button click, the run finishing) play inside the move.
-    hold   ~3.2s   t is pinned at 1.0 AND the source frame is pinned at
-                   src+srcn-1.  The crop rectangle is therefore byte-identical
-                   frame to frame; the only thing that changes is the caption
-                   and the 2px progress bar.  The stillness is real, not slow.
+                   advances 1:1 so live events (the seed landing, the button
+                   click, the running progress bar) play inside the move.
+    hold   ~3.2s   t is pinned at 1.0 AND the source is pinned at its last
+                   still.  The crop rectangle is therefore byte-identical frame
+                   to frame; the only thing that changes is the caption and the
+                   2px progress bar.  The stillness is real, not slow.
 
-`srcn` is how many source frames the move is allowed to eat, clamped to the
-STATIC window listed in BEATS -- a 44-frame move over a 34-frame static window
-would scroll off the beat, so the footage freezes first and the camera keeps
-easing to its mark.
+`srcn` is how many source frames the move is allowed to eat, which is also how
+long the old STATIC window listed in BEATS ran.  The master's stills carry
+relative durations measured off that same window (a beat that moved, like the
+run click, is several stills; a beat whose measured inter-frame delta was 0.01
+of a grey level is one still), and those durations are apportioned across
+`srcn`, so the re-shot master keeps the old cutting rhythm to the frame.
 
 Cards hold the same way: they finish animating, then sit.
 """
@@ -56,6 +80,7 @@ Cards hold the same way: they finish animating, then sit.
 from __future__ import annotations
 
 import io
+import json
 import math
 import os
 import shutil
@@ -63,7 +88,6 @@ import subprocess
 import sys
 import tempfile
 
-import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # --------------------------------------------------------------------------
@@ -71,7 +95,7 @@ from PIL import Image, ImageDraw, ImageFont
 # --------------------------------------------------------------------------
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_VIDEO = os.path.join(ROOT, "site", "img", "demo.webm")
+MASTER_DIR = os.environ.get("DEMO_MASTER", os.path.join(ROOT, ".demo_master"))
 OUT_DIR = os.path.join(ROOT, "site", "img")
 OUT_MP4 = os.path.join(OUT_DIR, "demo_edit.mp4")
 OUT_WEBM = os.path.join(OUT_DIR, "demo_edit.webm")
@@ -152,7 +176,7 @@ SHOTS = [
          sub="Thirteen documents, seeded in one click"),
     # the seed click lands, "Seeded 13 sample documents" pops in, and the punch
     # settles holding the 13/20 counter and the first seven ATTESTED rows
-    dict(kind="footage", src=90, srcn=34, trans="wipe", wipe=WIPE,
+    dict(kind="footage", beat="seed", src=90, srcn=34, trans="wipe", wipe=WIPE,
          start=(480, 300, 1.00), end=(310, 412, 1.60),
          caption="13 DOCUMENTS, EVERY ONE ATTESTED"),
 
@@ -164,11 +188,11 @@ SHOTS = [
     # line -- the caption says "ten questions", so ten questions have to be in
     # frame when it finishes typing.  x 88..699 keeps the question text; the
     # crop bottoms out at src y=396 so "Running:" clears the caption bar.
-    dict(kind="footage", src=210, srcn=42, trans="wipe", wipe=WIPE,
+    dict(kind="footage", beat="run", src=210, srcn=42, trans="wipe", wipe=WIPE,
          start=(480, 300, 1.00), end=(394, 211, 1.57),
          caption="TEN QUESTIONS, ONE CLICK"),
     # dissolve = time passing while the run gates; land on the verdict card
-    dict(kind="footage", src=300, srcn=MOVE, trans="dissolve", diss=DISS,
+    dict(kind="footage", beat="complete", src=300, srcn=MOVE, trans="dissolve", diss=DISS,
          start=(480, 300, 1.18), end=(330, 280, 1.75),
          caption="10 QUESTIONS. 0 DELIVERED. 4 REFUSED."),
 
@@ -176,7 +200,7 @@ SHOTS = [
     dict(kind="act", n=62, num="03", name="VERDICTS",
          sub="Four refused, every gap named"),
     # push onto the coverage dial
-    dict(kind="footage", src=388, srcn=40, trans="wipe", wipe=WIPE,
+    dict(kind="footage", beat="reporttop", src=388, srcn=40, trans="wipe", wipe=WIPE,
          start=(480, 300, 1.00), end=(280, 430, 2.00),
          caption="60.0% CITED COVERAGE"),
     # pull back off the CONTRADICTION block to reveal the whole refusal stack,
@@ -192,7 +216,7 @@ SHOTS = [
     #
     # Dissolve, not a cut: same page, overlapping framing -- a hard cut there
     # reads as a glitch rather than as a deliberate re-frame.
-    dict(kind="footage", src=534, srcn=MOVE, trans="dissolve", diss=DISS,
+    dict(kind="footage", beat="stackbar", src=534, srcn=MOVE, trans="dissolve", diss=DISS,
          start=(220, 300, 2.10), end=(480, 341, 1.16),
          caption="1 CONTRADICTION, 2 STALE, 1 LEGAL"),
 
@@ -207,7 +231,7 @@ SHOTS = [
     # of which are in frame.  It does NOT name "H-05": at this zoom the row
     # identifier is off to the left, and a caption must be true to the frame
     # it is sitting on.
-    dict(kind="footage", src=632, srcn=42, trans="wipe", wipe=WIPE,
+    dict(kind="footage", beat="provenance", src=632, srcn=42, trans="wipe", wipe=WIPE,
          hold=90,
          start=(478, 280, 1.15), end=(655, 245, 2.05),
          caption="CONTRADICTION: NO ANSWER RELEASED"),
@@ -260,6 +284,15 @@ X264_CRF = 23
 # This is only a fallback source (Safari and Chrome both take the MP4), so
 # size matters more than the last few dB.
 VP9_CRF = "42"
+
+# Budgets. Both files are base64-inlined into the one-file marketing page, so
+# they are page weight, not asset weight. The 3.2MB / 2.4MB ceilings are the
+# most the page will carry for a 50s film; the sharper master costs real bits
+# on the moves, and these are what stops that from running away.
+MP4_BUDGET = 3_200_000
+WEBM_BUDGET = 2_400_000
+POSTER_Q = 82
+POSTER_BUDGET = 70_000
 
 # --------------------------------------------------------------------------
 # ffmpeg
@@ -365,64 +398,124 @@ def mix(a, b, t):
 
 
 # --------------------------------------------------------------------------
-# Source frames
+# The master
+#
+# A directory of high-resolution stills plus a manifest, written by
+# scripts/capture_demo_video.py.  Every image is the same size and the same 8:5
+# as the output frame, so output coordinates map into master coordinates by one
+# scalar (3840/960 = 4.0 at dsf 3).
 # --------------------------------------------------------------------------
 
-
-def load_source_frames(shots) -> dict[int, Image.Image]:
-    """Decode the source once as raw RGB24 and keep only the frames the shot
-    list actually asks for.  Streaming keeps peak memory to the kept set."""
-    wanted = set()
-    for s in shots:
-        if s["kind"] == "footage":
-            wanted.update(range(s["src"], s["src"] + s["srcn"]))
-    hi = max(wanted)
-    frame_bytes = W * H * 3
-    proc = subprocess.Popen(
-        [FFMPEG, "-hide_banner", "-loglevel", "error", "-i", SRC_VIDEO,
-         "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=frame_bytes,
-    )
-    out: dict[int, Image.Image] = {}
-    idx = 0
-    try:
-        while idx <= hi:
-            buf = proc.stdout.read(frame_bytes)
-            if len(buf) < frame_bytes:
-                break
-            if idx in wanted:
-                out[idx] = Image.frombytes("RGB", (W, H), buf)
-            idx += 1
-    finally:
-        # we stop reading early, so tear the decoder down instead of letting it
-        # spew "broken pipe" into stderr
-        proc.stdout.close()
-        proc.terminate()
-        proc.wait()
-    missing = wanted - set(out)
-    if missing:
-        raise SystemExit(f"source is too short; missing frames {sorted(missing)[:5]}...")
-    print(f"  decoded {len(out)} source frames of {idx} scanned")
-    return out
+# a punch-in may never read fewer than this many master pixels across, because
+# below it the LANCZOS resample stops being a downsample and starts inventing
+MIN_CROP_W = W
+# and the master itself has to be big enough that the tightest punch clears it
+MASTER_MIN_W = 2560
 
 
-def crop_zoom(img: Image.Image, cx: float, cy: float, zoom: float) -> Image.Image:
-    """Crop an exactly-8:5 window around (cx, cy) at `zoom` and blow it back up
-    to full frame.  Clamped to the image so a punch never runs off the edge,
-    and rounded to ints so the rectangle never wobbles sub-pixel."""
+class Master:
+    """The stills master, addressed by beat rather than by frame number."""
+
+    def __init__(self, path: str):
+        man_path = os.path.join(path, "manifest.json")
+        if not os.path.exists(man_path):
+            raise SystemExit(
+                f"no master at {path}\n"
+                f"shoot one first:  .venv/bin/python scripts/capture_demo_video.py")
+        man = json.load(open(man_path))
+        self.dir = path
+        self.beats = man["beats"]
+        # trust the manifest for nothing that can be measured: the real decoded
+        # size of the first still is the size that governs
+        first = self.beats[man["order"][0]]["stills"][0]["file"]
+        self.w, self.h = Image.open(os.path.join(path, first)).size
+        if self.w < MASTER_MIN_W:
+            raise SystemExit(
+                f"master is {self.w}x{self.h}; under {MASTER_MIN_W} wide the "
+                f"punch-ins upscale again. Re-shoot with a higher "
+                f"DEMO_MASTER_DSF.")
+        if self.w * H != self.h * W:
+            raise SystemExit(f"master {self.w}x{self.h} is not the film's 8:5")
+        self.scale = self.w / W
+        self._cache: dict[str, Image.Image] = {}
+
+    def schedule(self, beat: str, srcn: int) -> list[str]:
+        """One still filename per source frame of the move.
+
+        The manifest gives each still a relative duration measured off the old
+        recording's static window; largest-remainder apportionment turns those
+        into whole frames so the beat's rhythm survives exactly."""
+        if beat not in self.beats:
+            raise SystemExit(f"master has no beat {beat!r}")
+        stills = self.beats[beat]["stills"]
+        ws = [float(s.get("w", 1.0)) for s in stills]
+        tot = sum(ws) or 1.0
+        raw = [w / tot * srcn for w in ws]
+        counts = [int(math.floor(r)) for r in raw]
+        order = sorted(range(len(raw)), key=lambda i: raw[i] - counts[i],
+                       reverse=True)
+        for i in order[:srcn - sum(counts)]:
+            counts[i] += 1
+        out: list[str] = []
+        for s, c in zip(stills, counts):
+            out.extend([s["file"]] * c)
+        if len(out) != srcn:          # every weight rounded to zero but one
+            out = (out + [stills[-1]["file"]] * srcn)[:srcn]
+        return out
+
+    def frame(self, name: str) -> Image.Image:
+        img = self._cache.get(name)
+        if img is None:
+            img = Image.open(os.path.join(self.dir, name)).convert("RGB")
+            self._cache[name] = img
+        return img
+
+    def release(self):
+        """Drop the decoded stills of the shot just rendered: each is ~27MB."""
+        self._cache.clear()
+
+
+def crop_zoom(master: Master, img: Image.Image, cx: float, cy: float,
+              zoom: float) -> Image.Image:
+    """Crop an exactly-8:5 window around (cx, cy) at `zoom` and resample it to
+    the output frame.
+
+    (cx, cy, zoom) are in 960x600 output coordinates -- that is the frame the
+    edit was composed against -- but the crop itself happens in MASTER pixels,
+    so at zoom 2.10 this reads 1829 real pixels and hands LANCZOS a 1.9:1
+    DOWNSAMPLE.  Clamped to the master so a punch never runs off the edge, and
+    rounded to whole master pixels so the rectangle never wobbles."""
     zoom = max(1.0, zoom)
-    cw = int(round(W / zoom))
-    ch = int(round(cw * H / W))  # exact 8:5, no distortion
-    cw = min(cw, W)
-    ch = min(ch, H)
-    x = int(round(cx - cw / 2))
-    y = int(round(cy - ch / 2))
-    x = max(0, min(W - cw, x))
-    y = max(0, min(H - ch, y))
-    box = img.crop((x, y, x + cw, y + ch))
-    if (cw, ch) == (W, H):
-        return box
-    return box.resize((W, H), Image.LANCZOS)
+    cw = min(int(round(master.w / zoom)), master.w)
+    ch = min(int(round(cw * H / W)), master.h)  # exact 8:5, no distortion
+    if cw < MIN_CROP_W:
+        raise SystemExit(
+            f"crop of {cw}px at zoom {zoom:.2f} would upscale to {W}px")
+    x = max(0, min(master.w - cw, int(round(cx * master.scale - cw / 2))))
+    y = max(0, min(master.h - ch, int(round(cy * master.scale - ch / 2))))
+    return img.crop((x, y, x + cw, y + ch)).resize((W, H), Image.LANCZOS)
+
+
+def check_source_scales(shots, master: Master) -> None:
+    """Fail loudly, before a single frame is rendered, if any shot in the film
+    reads fewer master pixels than the frame it is going into."""
+    print(f"  master {master.w}x{master.h}, scale {master.scale:g}x")
+    worst = master.w
+    for s in shots:
+        if s["kind"] != "footage":
+            continue
+        zooms = (s["start"][2], s["end"][2])
+        widths = [int(round(master.w / max(1.0, z))) for z in zooms]
+        tight = min(widths)
+        worst = min(worst, tight)
+        flag = "UPSCALE" if tight < MIN_CROP_W else f"{tight / W:.2f}:1 down"
+        print(f"  {s['beat']:11s} zoom {min(zooms):.2f}-{max(zooms):.2f}  "
+              f"crop {max(widths)}px -> {tight}px of master   {flag}")
+    if worst < MIN_CROP_W:
+        raise SystemExit(
+            f"tightest shot reads {worst}px into a {W}px frame: that is an "
+            f"upscale, which is the defect this pipeline exists to prevent")
+    print(f"  tightest crop {worst}px >= {MIN_CROP_W}px: nothing upscales")
 
 
 # --------------------------------------------------------------------------
@@ -657,10 +750,11 @@ def draw_over(img: Image.Image, fn):
 # --------------------------------------------------------------------------
 
 
-def render_shot(shot, src_frames, prev_frame) -> list[Image.Image]:
+def render_shot(shot, master: Master, prev_frame) -> list[Image.Image]:
     n = shot["n"]
     kind = shot["kind"]
     frames: list[Image.Image] = []
+    plan = master.schedule(shot["beat"], shot["srcn"]) if kind == "footage" else []
 
     for i in range(n):
         if kind == "title":
@@ -671,14 +765,14 @@ def render_shot(shot, src_frames, prev_frame) -> list[Image.Image]:
             img = render_close(i, n)
         else:
             # ease() clamps, so for i >= move-1 the crop rectangle is EXACTLY
-            # the end mark -- same ints, same box -- and the source index is
+            # the end mark -- same ints, same box -- and the source still is
             # pinned too.  Those frames are byte-identical apart from the
             # caption and the progress bar.  That is the hold.
             t = ease(i / max(1, shot["move"] - 1))
             sx, sy, sz = shot["start"]
             ex, ey, ez = shot["end"]
             img = crop_zoom(
-                src_frames[shot["src"] + min(i, shot["srcn"] - 1)],
+                master, master.frame(plan[min(i, len(plan) - 1)]),
                 sx + (ex - sx) * t, sy + (ey - sy) * t, sz + (ez - sz) * t,
             )
             if shot.get("caption"):
@@ -715,32 +809,28 @@ def timeline_length(shots) -> int:
 
 
 class Encoder:
-    """Fans one raw RGB24 stream out to every encoder we can build."""
+    """Takes the composited frames once, as raw RGB24, into a LOSSLESS
+    intermediate.
 
-    def __init__(self, total: int):
+    The old build fanned the raw stream straight into libx264 and libvpx at
+    fixed CRFs, which meant the only way to answer "is it under budget?" was to
+    re-composite all 1,196 frames.  The master is sharper now and the encoders
+    have more to chew on, so the answer has to be enforced rather than hoped
+    for: FFV1 is mathematically lossless, so the delivery encodes are cut from
+    exactly the frames that were rendered, and the CRF ladder costs an encode
+    rather than a whole render."""
+
+    def __init__(self, total: int, work: str):
         self.total = total
         self.i = 0
-        self.procs = []
         self.poster: Image.Image | None = None
-
-        common = ["-hide_banner", "-loglevel", "error", "-y",
-                  "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                  "-r", str(FPS), "-i", "pipe:0", "-an"]  # -an: never any audio
-
-        if ffmpeg_has("encoders", "libx264"):
-            self.procs.append(("mp4", subprocess.Popen(
-                [FFMPEG, *common, "-c:v", "libx264", "-profile:v", "high",
-                 "-pix_fmt", "yuv420p", "-crf", str(X264_CRF), "-preset", "slower",
-                 "-g", "48", "-movflags", "+faststart", OUT_MP4],
-                stdin=subprocess.PIPE)))
-        else:
-            print("  !! no libx264 -- skipping MP4")
-
-        self.procs.append(("webm", subprocess.Popen(
-            [FFMPEG, *common, "-c:v", "libvpx-vp9", "-crf", VP9_CRF, "-b:v", "0",
-             "-row-mt", "1", "-cpu-used", "2",
-             "-pix_fmt", "yuv420p", OUT_WEBM],
-            stdin=subprocess.PIPE)))
+        self.path = os.path.join(work, "master.mkv")
+        self.proc = subprocess.Popen(
+            [FFMPEG, "-hide_banner", "-loglevel", "error", "-y",
+             "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
+             "-r", str(FPS), "-i", "pipe:0", "-an",   # -an: never any audio
+             "-c:v", "ffv1", "-level", "3", "-pix_fmt", "gbrp", self.path],
+            stdin=subprocess.PIPE)
 
     def write(self, img: Image.Image, poster: bool = False):
         if img.mode != "RGB":
@@ -753,31 +843,76 @@ class Encoder:
         draw_progress(img, self.i, self.total)
         if poster and self.poster is None:
             self.poster = img.copy()
-        data = img.tobytes()
-        for _, p in self.procs:
-            p.stdin.write(data)
+        self.proc.stdin.write(img.tobytes())
         self.i += 1
 
-    def close(self):
-        for _, p in self.procs:
-            p.stdin.close()
-        for name, p in self.procs:
-            if p.wait() != 0:
-                raise SystemExit(f"{name} encoder failed")
+    def close(self) -> str:
+        self.proc.stdin.close()
+        if self.proc.wait() != 0:
+            raise SystemExit("lossless intermediate failed")
+        return self.path
+
+
+def encode_mp4(src: str) -> int:
+    """H.264 High / yuv420p / +faststart, stepping CRF only if the budget says
+    so.  X264_CRF is the intended quality; the ladder is a guard rail, and it
+    says out loud when it has to use one."""
+    if not ffmpeg_has("encoders", "libx264"):
+        print("  !! no libx264 -- skipping MP4")
+        return 0
+    for crf in (X264_CRF, X264_CRF + 1, X264_CRF + 2, X264_CRF + 3):
+        subprocess.run(
+            [FFMPEG, "-hide_banner", "-loglevel", "error", "-y", "-i", src,
+             "-an", "-c:v", "libx264", "-profile:v", "high", "-pix_fmt",
+             "yuv420p", "-crf", str(crf), "-preset", "slower", "-g", "48",
+             "-movflags", "+faststart", OUT_MP4], check=True)
+        size = os.path.getsize(OUT_MP4)
+        print(f"  mp4  crf {crf}: {size:,d} bytes (budget {MP4_BUDGET:,d})")
+        if size <= MP4_BUDGET:
+            return size
+    print("  !! MP4 is over budget at the bottom of the CRF ladder")
+    return os.path.getsize(OUT_MP4)
+
+
+def encode_webm(src: str) -> int:
+    subprocess.run(
+        [FFMPEG, "-hide_banner", "-loglevel", "error", "-y", "-i", src, "-an",
+         "-c:v", "libvpx-vp9", "-crf", VP9_CRF, "-b:v", "0", "-row-mt", "1",
+         "-cpu-used", "2", "-pix_fmt", "yuv420p", OUT_WEBM], check=True)
+    size = os.path.getsize(OUT_WEBM)
+    print(f"  webm crf {VP9_CRF}: {size:,d} bytes (budget {WEBM_BUDGET:,d})")
+    if size > WEBM_BUDGET:
+        print("  !! WebM is over budget")
+    return size
+
+
+def save_poster(img: Image.Image) -> int:
+    """q82 is the intended quality; the film is sharper than it was, so the
+    poster is checked against its budget and only stepped if it misses."""
+    for q in (POSTER_Q, 78, 74, 70, 66):
+        img.save(OUT_POSTER, "JPEG", quality=q, optimize=True,
+                 progressive=True, subsampling=1)
+        size = os.path.getsize(OUT_POSTER)
+        if size <= POSTER_BUDGET:
+            if q != POSTER_Q:
+                print(f"  poster stepped to q{q} to make budget")
+            return size
+    print("  !! poster is over budget")
+    return os.path.getsize(OUT_POSTER)
 
 
 def main() -> int:
-    if not os.path.exists(SRC_VIDEO):
-        raise SystemExit(f"missing source {SRC_VIDEO}")
     print(f"ffmpeg: {FFMPEG}")
 
     total = timeline_length(SHOTS)
     print(f"timeline: {len(SHOTS)} shots, {total} frames, {total / FPS:.2f}s @ {FPS}fps")
 
-    print("decoding source...")
-    src_frames = load_source_frames(SHOTS)
+    print("master:")
+    master = Master(MASTER_DIR)
+    check_source_scales(SHOTS, master)
 
-    enc = Encoder(total)
+    work = tempfile.mkdtemp(prefix="demo_edit_")
+    enc = Encoder(total, work)
     # frame chosen for the poster: deep in the RUN COMPLETE hold, camera
     # settled, caption fully typed on -- a composed frame, not a screenshot.
     poster_shot, poster_i = 5, 76
@@ -786,7 +921,8 @@ def main() -> int:
     prev_frame: Image.Image | None = None
 
     for si, shot in enumerate(SHOTS):
-        frames = render_shot(shot, src_frames, prev_frame)
+        frames = render_shot(shot, master, prev_frame)
+        master.release()   # each still is ~27MB decoded; keep one shot's worth
 
         off = 0  # frames of this shot already consumed by an incoming dissolve
         if shot.get("trans") == "dissolve" and pending_tail:
@@ -814,14 +950,19 @@ def main() -> int:
 
     for f in pending_tail:
         enc.write(f)
-    enc.close()
+    inter = enc.close()
 
     if enc.i != total:
         print(f"  !! wrote {enc.i} frames, predicted {total}")
 
-    if enc.poster is not None:
-        enc.poster.save(OUT_POSTER, "JPEG", quality=82, optimize=True,
-                        progressive=True, subsampling=1)
+    print(f"encoding ({os.path.getsize(inter):,d} bytes lossless):")
+    try:
+        encode_mp4(inter)
+        encode_webm(inter)
+        if enc.poster is not None:
+            save_poster(enc.poster)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
 
     print()
     for path in (OUT_MP4, OUT_WEBM, OUT_POSTER):
