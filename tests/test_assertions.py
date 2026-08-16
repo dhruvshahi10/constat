@@ -289,3 +289,61 @@ def test_extracted_pdf_chunks_are_paragraph_sized(tmp_path):
     chunks = EvidenceStore("acme", root).chunks()
     assert len(chunks) > 1, "one chunk per page defeats retrieval and provenance"
     assert all(len(c.text) < 1200 for c in chunks)
+
+
+# --- regression: the extractor must not manufacture false contradictions -----
+# A re-audit found that the extractor had no notion of WHOSE obligation a
+# sentence states. A GDPR Article 33 quotation, which is boilerplate in
+# essentially every incident response plan, was extracted as a 72-hour
+# notification commitment and collided with the vendor's own 24-hour promise.
+# The product then quarantined both documents and told the customer their
+# correct policies contradicted each other, naming their document owners.
+# That is worse than the gate being inert, so these cases are pinned.
+
+NOT_OUR_COMMITMENT = [
+    ("statutory quotation",
+     "Under GDPR Article 33, the controller must notify the supervisory "
+     "authority of a personal data breach within 72 hours of becoming aware."),
+    ("subprocessor obligation",
+     "Our subprocessors are contractually obliged to delete customer data "
+     "within 90 days of contract end."),
+    ("inbound obligation on the customer",
+     "The customer shall notify TrustOps of any suspected incident within 24 hours."),
+    ("vendor obligation",
+     "Vendors must notify us of any breach within 4 hours."),
+    ("legacy cipher mention",
+     "Supported ciphers include AES-128 for legacy integrations."),
+    ("non-production scope",
+     "Guest wifi passphrases must be at least 8 characters."),
+]
+
+
+@pytest.mark.parametrize("label,sentence", NOT_OUR_COMMITMENT,
+                         ids=[c[0] for c in NOT_OUR_COMMITMENT])
+def test_does_not_extract_other_parties_obligations(label, sentence):
+    assert extract_assertions(sentence) == {}, (
+        f"{label}: extracted an assertion from a sentence that is not our "
+        f"commitment; this manufactures a false contradiction")
+
+
+def test_statutory_quote_does_not_contradict_our_own_commitment():
+    """The exact pair that reproduced the failure end to end."""
+    ir_plan = ("Under GDPR Article 33, the controller must notify the supervisory "
+               "authority of a personal data breach within 72 hours.")
+    our_policy = ("We will notify affected customers of a confirmed security "
+                  "breach within 24 hours of confirmation.")
+    a, b = extract_assertions(ir_plan), extract_assertions(our_policy)
+    assert a == {}, "statutory quotation must not become an assertion"
+    assert b == {"breach_notification_hours": "24"}
+    # no shared key means contradictions() has nothing to flag
+    assert not (set(a) & set(b))
+
+
+def test_real_commitments_still_extract():
+    """The guard must not be so broad that it silences genuine claims."""
+    assert extract_assertions(
+        "Customer data is deleted within 90 days of contract termination."
+    ) == {"customer_data_deletion_days": "90"}
+    assert extract_assertions(
+        "All customer data at rest is encrypted using AES-256."
+    ) == {"encryption_algorithm": "AES-256"}

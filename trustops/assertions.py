@@ -63,7 +63,42 @@ _NEGATED = re.compile(
     r"unsupported|reject\w+|except|unless|may\s+vary|where\s+feasible|"
     r"aim\s+to|aspir\w+|plan\s+to|intend\s+to|roadmap)", re.I)
 
+# A sentence can state a perfectly real duration that is not OUR commitment.
+# The extractor has no notion of whose obligation it is reading, so without this
+# filter it turns ordinary policy prose into a machine-checked assertion, which
+# then collides with a genuine commitment elsewhere and quarantines both
+# documents. A re-audit reproduced the worst case: a GDPR Article 33 quotation
+# ("the controller must notify the supervisory authority within 72 hours"),
+# which is boilerplate in essentially every incident response plan, contradicting
+# the vendor's own 24-hour customer commitment. The product then told the
+# customer their correct policies disagreed, and named their document owners.
+#
+# A false extraction is worse than no extraction, so this errs toward dropping.
+_NOT_OUR_COMMITMENT = re.compile(
+    r"("
+    # quoting law or a regulator rather than promising anything
+    r"\bgdpr\b|\bhipaa\b|\bccpa\b|\bdpdp\b|\barticle\s+\d|\bregulation\b|"
+    r"\bdirective\b|supervisory\s+authority|data\s+protection\s+authority|"
+    r"pursuant\s+to|as\s+required\s+by\s+law|under\s+applicable\s+law|"
+    r"\bthe\s+controller\b|\bthe\s+processor\b|statutory|regulator\w*|"
+    # somebody else's obligation
+    r"sub[\s-]?processors?|\bvendors?\b|\bsuppliers?\b|third[\s-]part(y|ies)|"
+    r"\bcontractors?\b|\bpartners?\b|"
+    r"\b(customer|client|user|you)s?\s+(shall|must|will|are\s+required|agrees?)|"
+    # scoped to something that is not the production commitment
+    r"\bguest\b|\blegacy\b|\bdeprecated\b|\bexample\b|for\s+instance|\bsuch\s+as\b|"
+    r"\btest\s+environment\b|\bsandbox\b|\bdemo\b"
+    r")", re.I)
+
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?;])\s+|\n+")
+
+
+def _is_our_commitment(sentence: str) -> bool:
+    """False when the sentence states someone else's duty, quotes law, or is
+    scoped to a non-production case. Conservative by design: a legitimate
+    sentence that merely mentions a subprocessor is dropped too, which costs a
+    true positive and avoids a false accusation."""
+    return not _NOT_OUR_COMMITMENT.search(sentence)
 
 
 def _sentences(text: str) -> list[str]:
@@ -112,7 +147,7 @@ _RETAIN_WINDOW = re.compile(
 def _deletion_days(text: str) -> set[str]:
     found: set[str] = set()
     for s in _sentences(text):
-        if not _CUSTOMER.search(s) or _NEGATED.search(s):
+        if not _CUSTOMER.search(s) or _NEGATED.search(s) or not _is_our_commitment(s):
             continue
         if _DELETE.search(s):
             for m in _DELETE_WINDOW.finditer(s):
@@ -138,7 +173,8 @@ _NOTIFY_WINDOW = re.compile(
 def _breach_notification_hours(text: str) -> set[str]:
     found: set[str] = set()
     for s in _sentences(text):
-        if not (_BREACH.search(s) and _NOTIFY.search(s)) or _NEGATED.search(s):
+        if not (_BREACH.search(s) and _NOTIFY.search(s)) or _NEGATED.search(s) \
+                or not _is_our_commitment(s):
             continue
         for m in _NOTIFY_WINDOW.finditer(s):
             h = _to_hours(int(m.group("num")), m.group("unit"))
@@ -153,7 +189,7 @@ _AES = re.compile(r"\bAES[\s-]?(128|192|256)\b|\b(128|192|256)[\s-]?bit\s+AES\b"
 def _encryption_algorithm(text: str) -> set[str]:
     found: set[str] = set()
     for s in _sentences(text):
-        if _NEGATED.search(s):
+        if _NEGATED.search(s) or not _is_our_commitment(s):
             continue
         for m in _AES.finditer(s):
             bits = m.group(1) or m.group(2)
@@ -175,7 +211,7 @@ _TLS_MIN = re.compile(
 def _minimum_tls_version(text: str) -> set[str]:
     found: set[str] = set()
     for s in _sentences(text):
-        if _NEGATED.search(s):
+        if _NEGATED.search(s) or not _is_our_commitment(s):
             continue
         for m in _TLS_MIN.finditer(s):
             found.add(m.group(1) or m.group(2) or m.group(3))
@@ -199,7 +235,7 @@ def _mfa_required(text: str) -> set[str]:
     production. Silence is the honest output there.
     """
     for s in _sentences(text):
-        if _NEGATED.search(s):
+        if _NEGATED.search(s) or not _is_our_commitment(s):
             continue
         if _MFA_REQUIRED.search(s):
             return {"yes"}
@@ -215,7 +251,7 @@ _PWD_SUBJECT = re.compile(r"\b(password|passphrase)s?\b", re.I)
 def _password_min_length(text: str) -> set[str]:
     found: set[str] = set()
     for s in _sentences(text):
-        if not _PWD_SUBJECT.search(s) or _NEGATED.search(s):
+        if not _PWD_SUBJECT.search(s) or _NEGATED.search(s) or not _is_our_commitment(s):
             continue
         for m in _PWD_LEN.finditer(s):
             n = int(m.group(1))

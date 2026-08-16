@@ -230,8 +230,6 @@ def write_report(res: RunResult, today: date) -> Path:
 <div class="stat"><b>{m['questions']}</b><span>questions ingested</span></div>
 <div class="stat warn"><b>{int(m['abstention_rate']*100)}%</b><span>refused by design</span></div>
 <div class="stat ok"><b>{m['auto_approved_delivered']}</b><span>delivered on clean gates</span></div>
-<div class="stat {'ok' if m['unsupported_material_claims'] == 0 else 'bad'}">
-<b>{m['unsupported_material_claims']}</b><span>answers released without a citation</span></div>
 <div class="stat {'ok' if grounding_refusals == 0 else 'warn'}"><b>{grounding_refusals}</b>
 <span>answers refused as ungrounded</span></div>
 <div class="stat {'ok' if dropped_citations == 0 else 'warn'}"><b>{dropped_citations}</b>

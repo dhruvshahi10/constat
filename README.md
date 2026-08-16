@@ -93,7 +93,8 @@ Coverage is derived from citations that **survived the gates** — model confide
 
 - Retrieval is lexical (transparent, reproducible). One question (`IVS-01.1`, hosting regions) abstained on a retrieval miss rather than answering — fail-closed as designed. Semantic retrieval is the v1 upgrade and does not change the gates.
 - Demo runs use a *labeled, simulated* reviewer that approves only gate-clean, complete-coverage drafts; production requires interactive named-human sign-off.
-- Contradiction detection uses declared machine-checkable assertions; NLI-based detection is future work.
+- Contradiction detection uses declared machine-checkable assertions; NLI-based detection is future work. On uploaded documents those assertions are extracted from prose, and the extractor is deliberately narrow: it ignores anything that is not the vendor's own commitment (quoted law, a subprocessor's duty, an obligation on the customer) because a false assertion manufactures a false contradiction and quarantines a perfectly good source. Hedged prose is skipped too, so a real corpus yields fewer contradictions than the synthetic sample pack demonstrates.
+- **The grounding gate is lexical, not semantic.** It checks that an answer's words are traceable to the passage it cites, which catches fabricated citations and answers that drift off their source. It does not understand meaning: an answer that reuses a passage's vocabulary while inverting it ("data is *not* encrypted at rest") still passes. The 0.35 threshold was calibrated against the deterministic mock drafter, which quotes chunk text verbatim and is therefore trivially grounded; it has not been calibrated against a live model that paraphrases, and a model that summarizes policy prose into plain business language will trip it. Expect a higher abstention rate on the first live run, attributable to the gate rather than to missing evidence.
 
 ## Roadmap
 

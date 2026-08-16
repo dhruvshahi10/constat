@@ -17,7 +17,8 @@ gates that sit outside the model:
 
 - No surviving citation, no answer. The refusal names the gap and who should fix it.
 - The answer's own words have to be traceable to the passage it cites. A citation
-  bolted onto a sentence the source does not support gets the answer refused.
+  bolted onto a sentence whose words are not traceable to that source gets the
+  answer refused.
 - The excerpt under an answer is your document's text, never the model's. If the
   model invents a source or a paragraph reference, that citation is dropped before
   the answer is even scored.

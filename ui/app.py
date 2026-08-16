@@ -234,7 +234,8 @@ $('runbtn').onclick=async()=>{
       tile(Math.round(m.cited_draft_coverage*100)+'%','cited coverage','ok')+
       tile(Math.round(m.abstention_rate*100)+'%','refusals (by design)','warn')+
       tile(m.exception_queue,'exceptions &rarr; humans','warn')+
-      tile(m.unsupported_material_claims,'unsupported claims (must be 0)', m.unsupported_material_claims===0?'ok':'bad')+
+      tile(m.ungrounded_refusals??0,'answers refused as ungrounded', (m.ungrounded_refusals??0)===0?'ok':'warn')+
+      tile(m.citations_dropped??0,'citations dropped by the gates', (m.citations_dropped??0)===0?'ok':'warn')+
       tile(m.audit_chain_valid?'VALID':'BROKEN','audit chain', m.audit_chain_valid?'ok':'bad');
     $('rlink').href=data.report;$('dlink').href=data.delivered;$('alink').href=data.audit;
     $('runresult').style.display='block';
