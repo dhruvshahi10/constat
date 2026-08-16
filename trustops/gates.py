@@ -69,28 +69,28 @@ def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> D
     for c in draft.citations:
         src = store.sources.get(c.source_id)
         if src is None:
-            gaps.append(f"{c.source_id}: unknown source — citation rejected")
+            gaps.append(f"{c.source_id}: unknown source, citation rejected")
             continue
         if not src.is_approved():
-            gaps.append(f"{c.source_id}: not approved — citation rejected")
+            gaps.append(f"{c.source_id}: not approved, citation rejected")
             continue
         if c.source_id in stale:
             gaps.append(
-                f"{c.source_id} v{src.version}: EXPIRED {src.expiry_date.isoformat()} — "
+                f"{c.source_id} v{src.version}: EXPIRED {src.expiry_date.isoformat()}, "
                 f"cannot support a current-state claim; route to {src.owner}"
             )
             draft.gate_flags.append(f"STALE_EVIDENCE:{c.source_id}")
             continue
         if c.source_id in contradicted:
             gaps.append(
-                f"{c.source_id}: conflicting approved sources on a machine-checked assertion — "
+                f"{c.source_id}: conflicting approved sources on a machine-checked assertion, "
                 f"route to owners for reconciliation"
             )
             draft.gate_flags.append(f"CONTRADICTION:{c.source_id}")
             continue
         if is_cert and src.type not in CERT_EVIDENCE_TYPES:
             gaps.append(
-                f"{c.source_id} (type={src.type}): not a certificate/attestation — "
+                f"{c.source_id} (type={src.type}): not a certificate/attestation, "
                 f"certification status is never inferred from plans or policies"
             )
             draft.gate_flags.append(f"CERT_INFERENCE_BLOCKED:{c.source_id}")

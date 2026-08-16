@@ -193,7 +193,7 @@ class GeminiDrafter:
             # transport failure (rate limit exhausted, network down): the run
             # must degrade to an abstention, never crash and never fabricate
             d.abstained = True
-            d.gaps.append(f"Live drafter unavailable ({type(exc).__name__}) — "
+            d.gaps.append(f"Live drafter unavailable ({type(exc).__name__}), "
                           "fail-closed abstention; retry later or answer via SME.")
             d.gate_flags.append("DRAFTER_UNAVAILABLE")
             return d

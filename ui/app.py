@@ -101,37 +101,48 @@ def run_batch(drafter_kind: str, tenant: str = "acme") -> dict:
 
 
 EXTRA_CSS = """
-.console{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ok);padding:20px 22px;margin:24px 0}
-textarea{width:100%;min-height:64px;font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;color:var(--ink);
-background:var(--paper);border:1px solid var(--line);padding:10px 12px;resize:vertical}
-select,button{font:600 12px "IBM Plex Mono",monospace;padding:9px 14px;border:1.5px solid var(--ink);
-background:var(--card);color:var(--ink);cursor:pointer}
-button.primary{background:var(--ink);color:var(--card)}
-button:disabled{opacity:.45;cursor:not-allowed}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.chips button{border-width:1px;font-weight:400;padding:6px 10px;text-transform:none;color:var(--muted)}
-.result{margin-top:18px;display:none}
-.answer-box{border:1px solid var(--line);background:var(--paper);padding:14px 16px;margin-top:10px;font-size:14px}
-.spin{display:none;font:12px "IBM Plex Mono",monospace;color:var(--muted)}
-a.filelink{font:600 12px "IBM Plex Mono",monospace;color:var(--ok)}
-.small{font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);margin-top:8px}
+.console{background:var(--surface-card);border:1px solid var(--line-1);border-left:2px solid var(--signal);
+border-radius:var(--radius-2);padding:20px 22px;margin:20px 0}
+textarea{width:100%;min-height:64px;font-family:var(--font-sans);font-size:14px;line-height:1.5;
+color:var(--text-primary);background:var(--surface-sunken);border:1px solid var(--line-1);
+border-radius:var(--radius-1);padding:11px 13px;resize:vertical}
+textarea::placeholder{color:var(--text-faint)}
+select,button{font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+padding:10px 15px;border:1px solid var(--line-2);border-radius:var(--radius-1);
+background:var(--surface-raised);color:var(--text-primary);cursor:pointer;
+transition:border-color 240ms cubic-bezier(0.19,1,0.22,1),color 240ms cubic-bezier(0.19,1,0.22,1)}
+select:hover,button:hover{border-color:var(--line-3)}
+button.primary{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+button.primary:hover{background:var(--signal-bright);border-color:var(--signal-bright)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chips button{padding:6px 10px;text-transform:none;letter-spacing:0;color:var(--text-tertiary);
+background:transparent;font-size:11.5px}
+.chips button:hover{color:var(--text-primary);border-color:var(--line-signal)}
+.result{margin-top:20px;display:none}
+.answer-box{border:1px solid var(--line-1);border-radius:var(--radius-1);background:var(--surface-sunken);
+padding:15px 17px;margin-top:12px;font-size:14px;color:var(--text-primary)}
+.spin{display:none;font-family:var(--font-mono);font-size:11px;color:var(--signal)}
+a.filelink{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--signal)}
+.small{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;color:var(--text-faint);margin-top:10px}
 """
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TrustOps console</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>/*CSS*/</style></head><body><div class="wrap">
 <header>
-<div class="eyebrow">TrustOps Desk · Evidence-Gated Answer Engine · v0</div>
-<h1>Every answer cited to an approved source — or refused.</h1>
-<div class="runmeta">tenant=acme (synthetic) · gates: cite-or-abstain · cert-evidence-class · staleness · contradiction · legal-routing · tenant-isolation</div>
+<div class="eyebrow"><b>TrustOps Desk</b> / Evidence gated answer engine / v0</div>
+<h1>Every answer cited to an approved source, <i>or refused.</i></h1>
+<div class="runmeta">tenant=acme (synthetic)<br>gates: cite-or-abstain / cert-evidence-class /
+staleness / contradiction / legal-routing / tenant-isolation</div>
 </header>
 
+<div class="seclabel"><span class="idx">01</span><span class="label">Single question</span><span class="rule"></span></div>
 <h2>Ask a security question</h2>
-<p class="sub">Drafts are produced by the selected model, then every citation must survive the deterministic
-gates. No surviving citation &rarr; the engine refuses and names the gap. Try the planted traps below.</p>
+<p class="sub">The selected model drafts. Every citation must then survive the deterministic gates.
+No surviving citation &rarr; the engine refuses and names the gap. Try the planted traps below.</p>
 <div class="console">
 <textarea id="q" placeholder="e.g. Is customer data encrypted in transit?"></textarea>
 <div class="chips" id="chips"></div>
@@ -149,10 +160,11 @@ gates. No surviving citation &rarr; the engine refuses and names the gap. Try th
 </div>
 </div>
 
+<div class="seclabel"><span class="idx">02</span><span class="label">Full workbook</span><span class="rule"></span></div>
 <h2>Run the full questionnaire</h2>
-<p class="sub">Processes the 24-question CAIQ-style workbook end to end: ingest &rarr; classify &rarr; draft &rarr; gates
-&rarr; simulated review &rarr; export. Produces the audit working paper, the DELIVERED workbook, and the
-hash-chained audit log.</p>
+<p class="sub">The 24-question CAIQ-style workbook end to end: ingest &rarr; classify &rarr; draft &rarr;
+gates &rarr; simulated review &rarr; export. Produces the audit working paper, the DELIVERED workbook,
+and the hash-chained audit log.</p>
 <div class="console">
 <div class="row">
   <select id="rundrafter"></select>
@@ -177,7 +189,7 @@ async function boot(){
   const opts=await (await fetch('/api/options')).json();
   for(const sel of [$('drafter'),$('rundrafter')]){
     sel.innerHTML=opts.drafters.map(d=>`<option value="${d.id}" ${d.available?'':'disabled'}>`+
-      `${d.label}${d.available?'':' — set API key'}</option>`).join('');
+      `${d.label}${d.available?'':' / set API key'}</option>`).join('');
   }
   $('chips').innerHTML=opts.demo.map(q=>`<button type="button">${q}</button>`).join('');
   for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
