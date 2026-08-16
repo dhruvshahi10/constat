@@ -907,16 +907,8 @@ def shot_uris() -> dict[str, str]:
 # is still one source of truth.
 
 STATIC_SIGNUP = """  <h2 class="rv">The hosted workspace opens shortly</h2>
-  <p class="sub rv">It is built and tested, and it opens to early users first. One message
-  reserves your place.</p>
-  <div class="ctarow rv">
-    <a class="btn btn-primary" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Reserve early access</a>
-    <a class="btn btn-ghost" href="https://github.com/dhruvshahi10/trustops">Read the source</a>
-  </div>
-  <p class="sub rv" style="margin-top:26px">Or run the engine on your own machine right now,
-  evidence included:</p>
-  <pre class="cmds rv"><code>python3 -m venv .venv &amp;&amp; .venv/bin/pip install pytest openpyxl
-.venv/bin/python run_demo.py</code></pre>
+  <p class="lede rv">It is built and tested, and it opens to early users first.
+  One message reserves your place.</p>
 """
 
 
@@ -926,6 +918,14 @@ STATIC_SIGNUP = """  <h2 class="rv">The hosted workspace opens shortly</h2>
 # just folded. <details> was chosen over a <dialog> because it needs no
 # JavaScript to open: with scripting off the summary is still a working control.
 STATIC_LEGAL_CSS = """
+.legalstrip{padding:clamp(40px,5vw,64px) 0 0;border-top:1px solid var(--line-1)}
+.legalhead{font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;
+text-transform:uppercase;color:var(--text-tertiary);margin-bottom:16px}
+.legalhead span{color:var(--text-faint)}
+.legaldoc>summary{font-size:15px !important;padding:14px 16px !important;
+font-family:var(--font-sans) !important;letter-spacing:0 !important}
+.legaldoc>summary::after{content:"Read" !important}
+.legaldoc[open]>summary::after{content:"Close" !important}
 .cmds{background:var(--surface-sunken);border:1px solid var(--line-1);
 border-radius:var(--radius-1);padding:16px 18px;margin-top:14px;max-width:560px;
 overflow-x:auto}
@@ -965,15 +965,19 @@ def _static_legal_doc(anchor, heading, body):
 
 
 def _static_legal_section():
-    return ('<section id="legal" class="secpad">'
-            '<div class="seclabel rv"><span class="idx">08</span>'
-            '<span class="label">The documents</span><span class="rule"></span></div>'
-            '<h2 class="rv">Terms and data handling</h2>'
-            '<p class="sub rv">Founder drafted, pending review by counsel.</p>'
+    """A quiet strip above the footer, not a numbered section.
+
+    Legal had a band and a full size heading, which gave it the same billing as
+    the product story and ended the page on two grey rows nobody reads. It is
+    still here in full and still one tap away; it just no longer competes.
+    """
+    return ('<section class="legalstrip"><div class="wrap">'
+            '<p class="legalhead">The documents, in full. '
+            '<span>Founder drafted, pending review by counsel.</span></p>'
             '<div class="legalset">'
             + _static_legal_doc("terms", "Terms of use", TERMS_BODY)
             + _static_legal_doc("privacy", "Privacy and data handling", PRIVACY_BODY)
-            + '</div></section>')
+            + '</div></div></section>')
 
 
 def build_static(page: str) -> str:

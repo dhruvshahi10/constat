@@ -37,6 +37,13 @@ body{overflow-x:hidden}
 box-shadow:inset 0 1px 0 var(--line-1),inset 0 -1px 0 var(--line-1)}
 .band.first{padding-top:clamp(56px,7vh,96px);min-height:calc(100vh - 62px);
 display:flex;flex-direction:column;justify-content:center}
+/* the hero hands over to the proof rather than stopping dead */
+.js .band.first .wrap{will-change:transform,opacity;
+opacity:calc(1 - var(--exit,0) * 0.9);
+transform:translateY(calc(var(--exit,0) * -56px))}
+@media(prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+.js .band.first .wrap{opacity:1;transform:none}}
 .wrap{width:100%;max-width:1140px;margin:0 auto;padding:0 clamp(18px,4vw,32px)}
 
 h1,h2,h3{font-family:var(--font-display);font-weight:400;letter-spacing:-0.028em}
@@ -569,12 +576,21 @@ letter-spacing:-0.02em;color:var(--signal);margin-bottom:4px}
 border-radius:var(--radius-1);padding:15px 17px;margin-top:14px;max-width:560px;overflow-x:auto}
 .cmds code{font-family:var(--font-mono);font-size:12px;line-height:1.9;
 color:var(--text-primary);white-space:pre}
-.intents{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-.icopy{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;
-padding:12px 16px;border:1px solid var(--line-2);border-radius:var(--radius-1);
-background:transparent;color:var(--text-primary);cursor:pointer}
-.icopy:hover{border-color:var(--line-signal);color:var(--signal)}
-.icopy[data-done="1"]{color:var(--status-ok);border-color:var(--status-ok)}
+.picks{display:grid;gap:10px;margin-top:clamp(20px,2.4vw,28px);max-width:760px}
+.pick{display:grid;gap:5px;text-align:left;padding:18px 20px;cursor:pointer;
+background:rgba(26,26,29,0.7);border:1px solid var(--line-1);border-radius:var(--radius-2);
+transition:border-color 220ms var(--ease-out),background 220ms var(--ease-out),
+transform 220ms var(--ease-out)}
+.pick:hover{border-color:var(--line-signal);background:rgba(26,26,29,0.95);
+transform:translateX(3px)}
+.pick b{font-family:var(--font-display);font-size:clamp(17px,1rem + 0.5vw,21px);
+font-weight:400;letter-spacing:-0.015em;color:var(--text-primary)}
+.pick span{font-size:13.5px;line-height:1.5;color:var(--text-tertiary)}
+.pick[data-done="1"]{border-color:var(--status-ok)}
+.pick[data-done="1"] b{color:var(--status-ok)}
+.devfold{max-width:760px;margin-top:clamp(24px,3vw,36px)}
+.devfold p{font-size:13.5px;line-height:1.6;color:var(--text-secondary);margin-top:12px}
+
 .copynote{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;
 color:var(--text-tertiary);margin-top:12px}
 
@@ -629,9 +645,12 @@ transition:opacity 560ms var(--ease-out),transform 560ms var(--ease-out)}
 .js .rv{opacity:1;transform:none;transition:none}
 .js .caret,.js .ground::after,.js .stagelive::before{animation:none}}
 
-footer{margin-top:clamp(64px,8vw,104px);padding:28px 0 44px;border-top:1px solid var(--line-1);
-display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap;
+footer{margin-top:clamp(52px,6vw,84px);padding:26px 0 46px;
+border-top:1px solid var(--line-1);
 font-family:var(--font-mono);font-size:10.5px;line-height:2.1;color:var(--text-tertiary)}
+/* the flex belongs on the inner wrap now that footer carries the full bleed
+   rule; without this the two columns collapsed into one run of text */
+.footin{display:flex;justify-content:space-between;gap:26px;flex-wrap:wrap}
 footer a{color:var(--signal)}
 </style>
 </head>
@@ -939,14 +958,27 @@ footer a{color:var(--signal)}
     </form>
   </div>
   <!--HOSTED-ONLY-END-->
-    <h3 class="rv sub-h">Or tell me which one you are</h3>
-    <div class="intents rv">
-      <button type="button" class="icopy" data-msg="msg-run">Copy: run our questionnaire</button>
-      <button type="button" class="icopy" data-msg="msg-data">Copy: data handling question</button>
-      <button type="button" class="icopy" data-msg="msg-curious">Copy: just curious</button>
-      <a class="btn btn-ghost" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Open LinkedIn</a>
+    <h3 class="rv sub-h">Tell me which one you are</h3>
+    <p class="lede small rv">Pick the line that fits. It copies, then opens LinkedIn, and it
+    tells me what you need before I reply.</p>
+    <div class="picks rv">
+      <button type="button" class="pick" data-msg="msg-run">
+        <b>We want to run our own questionnaire</b>
+        <span>You have one in front of you and a deal waiting on it</span></button>
+      <button type="button" class="pick" data-msg="msg-data">
+        <b>I have a data handling question</b>
+        <span>Where evidence goes, and what BYOK would look like</span></button>
+      <button type="button" class="pick" data-msg="msg-curious">
+        <b>I just want to know how it works</b>
+        <span>The gates and the audit chain, not a purchase</span></button>
     </div>
-    <p class="copynote" id="copynote">Pick a line, then paste it into a LinkedIn message.</p>
+    <p class="copynote" id="copynote">Nothing is sent automatically. You paste it yourself.</p>
+    <details class="more devfold rv"><summary>Run the engine yourself instead</summary>
+      <p>Open source, MIT, evidence included. Two commands on your own machine:</p>
+      <pre class="cmds"><code>python3 -m venv .venv &amp;&amp; .venv/bin/pip install pytest openpyxl
+.venv/bin/python run_demo.py</code></pre>
+      <p><a href="https://github.com/dhruvshahi10/trustops">Read the source on GitHub</a></p>
+    </details>
     <p class="imsg sr-only" id="msg-run">Hi Dhruv, I found TrustOps. We answer security
     questionnaires and I want to try it on ours. Can we talk about a pilot?</p>
     <p class="imsg sr-only" id="msg-data">Hi Dhruv, I read the TrustOps data handling section. I
@@ -1175,11 +1207,17 @@ document.querySelectorAll(".cred b").forEach(b=>cio.observe(b));
 
 /* scroll progress hairline */
 let ticking=false,pinTick=false;
+const heroWrap=document.querySelector('.band.first .wrap');
 addEventListener("scroll",()=>{
   if(ticking)return;ticking=true;
   requestAnimationFrame(()=>{
     const h=document.documentElement.scrollHeight-innerHeight;
     $("progress").style.width=(h>0?(scrollY/h)*100:0)+"%";
+    if(heroWrap&&!reduced){
+      const r=heroWrap.getBoundingClientRect();
+      const e=Math.min(1,Math.max(0,-r.top/(innerHeight*0.75)));
+      heroWrap.style.setProperty("--exit",e.toFixed(3));
+    }
     ticking=false;
   });
 },{passive:true});
@@ -1432,22 +1470,20 @@ if(vid&&!reduced){
 
 /* contact: the message text is off screen, so it costs the page no reading
    load, but it is still real text for the clipboard and for a screen reader */
-document.querySelectorAll(".icopy").forEach(b=>{
+document.querySelectorAll(".pick").forEach(b=>{
   b.onclick=async()=>{
     const el=document.getElementById(b.dataset.msg);
     const text=el.textContent.replace(/\s+/g," ").trim();
-    const label=b.textContent;
-    try{
-      await navigator.clipboard.writeText(text);
-      b.textContent="Copied";b.dataset.done="1";
-      $("copynote").textContent=text;
-    }catch(e){
-      const r=document.createRange();r.selectNodeContents(el);
-      const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
-      b.textContent="Selected";b.dataset.done="1";
-      $("copynote").textContent=text;
-    }
-    setTimeout(()=>{b.textContent=label;delete b.dataset.done},2600);
+    let ok=true;
+    try{await navigator.clipboard.writeText(text)}catch(e){ok=false}
+    b.dataset.done="1";
+    $("copynote").textContent=ok
+      ? "Copied. Paste it into the message LinkedIn opens."
+      : "Could not copy automatically. The text is: "+text;
+    /* the copy and the destination are one action, so the flow does not
+       dead-end on a button that only fills a clipboard */
+    window.open("https://www.linkedin.com/in/dhruvshahi-/","_blank","noopener");
+    setTimeout(()=>{delete b.dataset.done},4000);
   };
 });
 
