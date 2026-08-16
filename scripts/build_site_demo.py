@@ -348,8 +348,10 @@ margin:26px 0;font-size:13.5px;line-height:1.65;color:var(--text-primary)}
 font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;display:block;margin-bottom:7px}
 .ph{font-family:var(--font-mono);font-size:0.92em;color:var(--status-warn);
 background:var(--status-warn-wash);padding:1px 5px;border-radius:var(--radius-1)}
-h2{margin-top:44px}
-h3{font-size:18px;margin-top:26px;margin-bottom:6px}
+/* scoped: bare h2/h3 rules here leaked 44px and 26px of top margin onto
+   every card heading of the static landing page when this block is inlined */
+.legalwrap h2{margin-top:44px}
+.legalwrap h3{font-size:18px;margin-top:26px;margin-bottom:6px}
 .legalwrap p{font-size:14.5px;line-height:1.72;color:var(--text-secondary);margin-top:10px;
 max-width:74ch}
 .legalwrap li{font-size:14.5px;line-height:1.72;color:var(--text-secondary);margin-top:8px}
@@ -688,10 +690,13 @@ def chain_html(chain: dict) -> str:
     blocks = []
     for i, ev in enumerate(chain["events"]):
         label = labels.get(ev["action"], ev["action"].replace("_", " "))
+        prev = "genesis" if set(ev["prev_hash"]) == {"0"} else ev["prev_hash"][:6]
         blocks.append(
             f'<div class="tb" data-i="{i}" title="{e(ev["action"])}">'
             f'<span class="th">{i + 1:02d} / {e(label)}</span>'
+            f'<span class="prev">links back to {e(prev)}</span>'
             f'<input data-f="actor" value="{e(ev["actor"])}" readonly '
+            f'title="{e(ev["actor"])}" '
             f'aria-label="actor of event {i + 1}, edit to tamper with the chain">'
             f'<span class="hash">{e(ev["hash"][:18])}</span></div>')
     return "".join(blocks)
@@ -730,12 +735,19 @@ def shot_uris() -> dict[str, str]:
 # is still one source of truth.
 
 STATIC_SIGNUP = """<section id="signup" class="secpad">
-  <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
-  <h2 class="rv">The interactive workspace is not live yet</h2>
+  <div class="seclabel rv"><span class="idx">06</span><span class="label">Get early access</span><span class="rule"></span></div>
+  <h2 class="rv">The hosted workspace opens shortly.<br>Get in first.</h2>
   <p class="sub rv">Everything above is real: recorded runs, real screenshots, real hashes. The
-  hosted workspace is built and tested and goes live shortly. Until then the fastest way in is a
-  message below, or run the open source engine yourself in two commands:
-  <a href="https://github.com/dhruvshahi10/trustops">the repository</a>.</p>
+  workspace where you upload your own evidence is built and tested, and it opens to early users
+  first. One message reserves your place, and the message tells us exactly what you want to run.</p>
+  <div class="ctarow rv">
+    <a class="btn btn-primary" href="#contact">Reserve early access</a>
+    <a class="btn btn-ghost" href="https://github.com/dhruvshahi10/trustops">Read the engine source</a>
+  </div>
+  <p class="sub rv" style="margin-top:26px">Or run the open source engine on your own machine
+  right now, evidence included:</p>
+  <pre class="cmds rv"><code>python3 -m venv .venv &amp;&amp; .venv/bin/pip install pytest openpyxl
+.venv/bin/python run_demo.py</code></pre>
 </section>
 """
 
@@ -746,6 +758,11 @@ STATIC_SIGNUP = """<section id="signup" class="secpad">
 # just folded. <details> was chosen over a <dialog> because it needs no
 # JavaScript to open: with scripting off the summary is still a working control.
 STATIC_LEGAL_CSS = """
+.cmds{background:var(--surface-sunken);border:1px solid var(--line-1);
+border-radius:var(--radius-1);padding:16px 18px;margin-top:14px;max-width:560px;
+overflow-x:auto}
+.cmds code{font-family:var(--font-mono);font-size:12px;line-height:1.9;
+color:var(--text-primary);white-space:pre}
 .legalset{display:grid;gap:12px;margin-top:clamp(28px,3.6vw,44px)}
 .legaldoc{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);
 border-radius:var(--radius-2);overflow:hidden}
@@ -808,6 +825,13 @@ def build_static(page: str) -> str:
     # 3. point every legal link at those documents
     page = page.replace('href="/site/legal/terms.html"', 'href="#terms"')
     page = page.replace('href="/site/legal/privacy.html"', 'href="#privacy"')
+
+    # 3b. the CTAs tell the truth for this variant: there is no workspace to
+    # create yet, so the label is early access, and the sample pack button
+    # points at the stage that actually replays the sample pack instead of at
+    # a signup form that no longer exists
+    page = page.replace('>Create a workspace</a>', '>Get early access</a>')
+    page = page.replace('href="#signup" id="samplecta"', 'href="#stage" id="samplecta"')
 
     # 4. the folded documents need one handler, and it has to be inserted above
     #    the signup block so that step 5 does not cut it away again

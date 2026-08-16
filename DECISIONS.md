@@ -74,3 +74,72 @@ Verified: 167 tests passing, brand copy gate clean on all four rendered pages
 horizontal overflow and zero console errors at 1440px and 390px, both legal
 disclosures reachable with scripting disabled, and the hosted build unchanged
 in the way that matters (signup form intact, legal links still absolute).
+
+## 2026-08-16 Round 4: the instrument round
+
+The founder's brief after the refusal redesign landed: study UpGuard and the
+top cybersecurity sites, then make the page "unreal, because people believe
+what they see." Both reference URLs are egress blocked here, so the research
+was triangulated by search. It converged on one lesson: UpGuard's liveliness
+is an instrument, an instant security score that does something TO the visitor
+in the first ten seconds. The 2026 retrospectives agree that embedded product
+demos and scroll storytelling held up while WebGL spectacle did not.
+
+Round 4 therefore made the visitor operate the product:
+
+1. **Ask it yourself.** A question box over 49 precomputed real engine
+   contracts (a 42 question bank plus the showcase seven), matched with a
+   stemmed keyword matcher. On no match the demo refuses, which is what the
+   engine would do. Everything shown is a verdict the engine actually returned.
+2. **Tamper with the chain.** Six real audit log events recomputed live in the
+   browser. The JS canonicaliser mirrors Python's json.dumps byte for byte,
+   proven by the untouched chain verifying green in the page; the build
+   asserts the recipe against AuditLog so drift fails the build. The visible
+   label for the CLASSIFIED event reads ROUTED because the brand's dossier
+   language rule wins on a marketing page; the event data underneath is
+   verbatim, hashes and all.
+3. **The pipeline, walked.** A token on a five station rail travels to where
+   each trap strikes its question.
+4. **The product, filmed.** A 30 second unedited Playwright screen capture of
+   the real journey, 1.1MB VP8 inlined, poster from a distinct frame.
+
+An adversarial three lens panel (conversion vs the UpGuard bar, design craft,
+accessibility and performance) then audited the build. Their blocking findings
+and what was done:
+
+- Every CTA landed on a "not live yet" anti headline in the static build. The
+  section is now "The hosted workspace opens shortly. Get in first." with a
+  reserve CTA, the repo, and the two run-it-yourself commands. Static CTAs
+  relabel to "Get early access"; the sample pack button points at the stage
+  that actually replays the sample pack.
+- The suggested placeholder question returned a refusal as the visitor's
+  first hands on moment; it is now a question the engine cites cleanly.
+- The reduced motion override on the stamp lost a specificity fight and the
+  thud still ran; fixed by matching the animating selector.
+- The auto advancing replay re announced the whole verdict block to screen
+  readers every eleven seconds; the live region is now off during auto
+  advance, polite only for user initiated shows, and the replay has a real
+  pause button (WCAG 2.2.2).
+- Pipeline station labels used the decoration only token at 4.26:1; now
+  text tertiary.
+- The tamper grid did not read as a chain; each block now names the hash it
+  links back to, arrows cross the gutters at full width, and the broken state
+  is a labelled wash rather than 7.5px text.
+- Legal CSS leaked bare h2/h3 margins onto every card of the landing page;
+  scoped to .legalwrap.
+- Hotspot callouts could cover a neighbouring marker on a phone with no way
+  out; outside tap now dismisses, markers repositioned onto the pixels their
+  callouts describe, Escape closes, and each has a real accessible name.
+
+Deliberately not adopted, with reasons: replacing LinkedIn intent messages
+with mailto buttons (the founder chose LinkedIn precisely to see intent
+before replying; the rights email stays); un-striking the hero's "or refused"
+(the strike is the brand gesture the whole page performs); pruning the signup
+CSS the static page does not use (the hosted build, which shares the
+template, uses all of it).
+
+Verified after the loop: all four instruments pass their Playwright probes,
+167 tests, copy gate clean on all four rendered pages, zero console errors,
+zero horizontal overflow at 1440 and 390, complete and coherent with
+JavaScript disabled, first paint 240ms on the 2.1MB file with the video
+fetching nothing until played.

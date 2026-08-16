@@ -63,7 +63,7 @@ padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space
 .progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
 /* ── hero ──────────────────────────────────────────────────────────────── */
-.hero{padding:clamp(58px,9vw,132px) 0 0}
+.hero{padding:clamp(40px,5.5vw,76px) 0 0}
 .kicker{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);
 font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-tertiary);
 border:1px solid var(--line-2);border-radius:100px;padding:7px 15px;margin-bottom:clamp(22px,3vw,34px)}
@@ -72,7 +72,7 @@ border:1px solid var(--line-2);border-radius:100px;padding:7px 15px;margin-botto
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(155,196,156,0.5)}
 50%{opacity:.65;box-shadow:0 0 0 6px rgba(155,196,156,0)}}
 
-h1.mega{font-size:clamp(44px,8.4vw,110px);line-height:0.95;letter-spacing:-0.036em;
+h1.mega{font-size:clamp(40px,7.2vw,92px);line-height:0.95;letter-spacing:-0.036em;
 max-width:15ch;text-wrap:balance}
 h1.mega em{font-style:italic;color:var(--status-critical);position:relative;white-space:nowrap}
 /* the headline strikes its own second clause, once, on load */
@@ -97,6 +97,7 @@ a.btn-alt{border-color:var(--line-signal);color:var(--signal);background:var(--s
 a.btn-alt:hover{background:rgba(183,196,255,0.18);transform:translateY(-1px)}
 a.btn-ghost{border-color:var(--line-2);color:var(--text-primary)}
 a.btn-ghost:hover{border-color:var(--line-signal);color:var(--signal)}
+.herolinks{margin-top:16px;font-family:var(--font-mono);font-size:11px}
 
 /* the counter block: four numbers from the recorded run, set in display type */
 .counts{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-1);
@@ -112,7 +113,7 @@ letter-spacing:0.13em;text-transform:uppercase;color:var(--text-tertiary);line-h
 .count.ok b{color:var(--status-ok)}
 
 /* ── the stage: the recorded run, given the room it deserves ───────────── */
-.stage{position:relative;margin-top:clamp(40px,6vw,84px);
+.stage{position:relative;margin-top:clamp(28px,3.6vw,52px);
 background:linear-gradient(180deg,rgba(26,26,29,0.94),rgba(14,14,16,0.94));
 border:1px solid var(--line-2);border-radius:var(--radius-2);overflow:hidden;
 --acc:var(--signal);transition:box-shadow 600ms var(--ease-out)}
@@ -125,6 +126,13 @@ border-bottom:1px solid var(--line-1);background:rgba(14,14,16,0.6);flex-wrap:wr
 text-transform:uppercase;color:var(--text-tertiary);margin-left:6px}
 .stagelive{margin-left:auto;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.18em;
 text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:7px}
+/* WCAG 2.2.2: the auto advancing replay gets a real pause control, not just
+   hover. Meaningless without scripting, so hidden without it. */
+.spause{display:none;font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
+text-transform:uppercase;padding:5px 10px;border:1px solid var(--line-2);
+border-radius:var(--radius-1);background:transparent;color:var(--text-tertiary);cursor:pointer}
+.js .spause{display:inline-block}
+.spause:hover{color:var(--text-primary);border-color:var(--line-3)}
 .stagelive::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
 .js .stagelive::before{animation:pulse 2s var(--ease-inout) infinite}
 .scanline{position:absolute;left:0;right:0;top:0;height:1px;background:var(--signal);opacity:0;
@@ -164,9 +172,10 @@ border-radius:var(--radius-1);padding:12px 14px}
 text-transform:uppercase;padding:12px 18px;border:1px solid var(--signal);
 border-radius:var(--radius-1);background:var(--signal);color:var(--signal-ink);cursor:pointer}
 .askrow button:hover{background:var(--signal-bright)}
-.askhint{display:none;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.14em;
-text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px}
+.askhint{display:none;font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;
+text-transform:uppercase;color:var(--text-secondary);margin-bottom:10px}
 .js .askhint{display:block}
+@media(max-width:719px){.askrow{flex-direction:column}.askrow button{width:100%}}
 .slabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.19em;text-transform:uppercase;
 color:var(--text-tertiary);display:block;margin-bottom:9px}
 .q-line{font-family:var(--font-display);font-size:clamp(19px,2.2vw,28px);line-height:1.28;
@@ -223,6 +232,9 @@ font-weight:200;letter-spacing:-0.05em;color:var(--status-critical);
 font-variant-numeric:tabular-nums;transition:color 400ms var(--ease-out)}
 .gname{font-family:var(--font-display);font-size:clamp(24px,2.6vw,34px);line-height:1.1;
 margin-top:16px;letter-spacing:-0.02em}
+/* below the sticky breakpoint the card titles are already on screen, so the
+   rail's copy of the name would print every title twice */
+@media(max-width:999px){.gname,.grailnote{display:none}}
 .gtick{display:flex;gap:7px;margin-top:24px}
 .gtick i{width:34px;height:2px;background:var(--line-2);border-radius:2px;font-style:normal;
 transition:background 320ms var(--ease-out)}
@@ -241,7 +253,7 @@ background:var(--signal);transition:left 850ms var(--ease-inout),background 300m
 .pipe[data-stop="3"] .tok{left:calc(75% - 4px);background:var(--status-critical)}
 .pipe .sts{display:flex;justify-content:space-between;margin-top:10px;
 font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;
-color:var(--text-faint)}
+color:var(--text-tertiary)}
 .pipe .sts i{font-style:normal;transition:color 300ms var(--ease-out)}
 .pipe[data-stop="1"] .sts i:nth-child(2),.pipe[data-stop="3"] .sts i:nth-child(4){
 color:var(--status-critical)}
@@ -281,7 +293,10 @@ background:rgba(20,20,22,0.94);transform:rotate(-6deg)}
 @keyframes thud{0%{opacity:0;transform:rotate(-16deg) scale(1.7)}
 70%{opacity:1;transform:rotate(-5deg) scale(0.96)}
 100%{opacity:1;transform:rotate(-6deg) scale(1)}}
-@media(prefers-reduced-motion:reduce){.js .gcard .stamp{opacity:1;animation:none}}
+/* must out-specify .js .gcard.is-in .stamp or the thud still runs: a media
+   query adds no specificity of its own */
+@media(prefers-reduced-motion:reduce){
+.js .gcard .stamp,.js .gcard.is-in .stamp{opacity:1;animation:none}}
 .gwhy{font-size:14px;line-height:1.62;color:var(--text-secondary);margin-top:26px;text-wrap:pretty}
 .gwhy b{color:var(--text-primary);font-weight:500}
 
@@ -308,6 +323,19 @@ background:rgba(14,14,16,0.72)}
 margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frame img{display:block;width:100%;height:auto}
 .frame video{display:block;width:100%;height:auto;background:var(--surface-sunken)}
+/* a real play affordance on the poster; native controls remain underneath and
+   are the whole interface when scripting is off */
+.vwrap{position:relative}
+.vplay{display:none;position:absolute;inset:0;width:100%;border:0;cursor:pointer;
+background:linear-gradient(180deg,rgba(14,14,16,0) 40%,rgba(14,14,16,0.55));
+align-items:flex-end;justify-content:center;padding-bottom:12%}
+.js .vplay{display:flex}
+.vplay span{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);
+font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--signal-ink);
+background:var(--signal);padding:13px 22px;border-radius:var(--radius-1)}
+.vplay span::before{content:"";width:0;height:0;border:7px solid transparent;
+border-left:11px solid var(--signal-ink);margin-right:-4px}
+.vplay:hover span{background:var(--signal-bright)}
 /* ── hotspots on the product frames ───────────────────────────────────────
    small numbered markers over the screenshot; each opens a one-line callout.
    Pointless without scripting, so hidden without it. */
@@ -319,7 +347,9 @@ align-items:center;justify-content:center;padding:0}
 .js .hs{display:flex}
 .hs::before{content:"";position:absolute;inset:-5px;border-radius:50%;
 border:1px solid var(--line-signal);opacity:0.5}
-.js .hs::before{animation:pulse 2.6s var(--ease-inout) infinite}
+/* three pulses to catch the eye, then quiet: a page of perpetual halos reads
+   as ornament, not signal */
+.js .hs::before{animation:pulse 2.6s var(--ease-inout) 3}
 .hs[aria-expanded="true"]{background:var(--signal);color:var(--signal-ink)}
 .hscall{display:none;position:absolute;z-index:5;max-width:240px;
 background:rgba(14,14,16,0.96);border:1px solid var(--line-signal);
@@ -343,11 +373,8 @@ padding:6px 0;min-width:118px}
 position:relative}
 .arrow .line::after{content:"";position:absolute;right:0;top:-3px;border:3.5px solid transparent;
 border-left-color:var(--line-signal)}
-.js .arrow .line::before{content:"";position:absolute;top:-1px;width:26px;height:3px;
-background:var(--signal);border-radius:2px;animation:travel 3.4s var(--ease-inout) infinite}
-@keyframes travel{0%{left:0;opacity:0}12%{opacity:0.85}88%{opacity:0.85}100%{left:calc(100% - 26px);opacity:0}}
 .arrow em{font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
-color:var(--signal);font-style:normal;text-align:center;line-height:1.7}
+color:var(--signal);font-style:normal;text-align:center;line-height:1.7;max-width:24ch}
 /* the second arrow is a path that does not exist, so it is drawn as one:
    dashed, no head, and barred across the middle */
 .arrow.blocked .line{height:0;background:none;
@@ -355,7 +382,6 @@ border-top:1px dashed rgba(217,120,98,0.55)}
 .arrow.blocked .line::after{content:"";left:50%;right:auto;top:-8px;border:0;
 width:1px;height:16px;background:var(--status-critical);transform:translateX(-50%)}
 .arrow.blocked em{color:var(--status-critical)}
-.js .arrow.blocked .line::before{display:none}
 @media(max-width:899px){.arrow{min-width:0;flex-direction:row}.arrow .line{flex:1}}
 
 /* ── tiers ─────────────────────────────────────────────────────────────── */
@@ -395,6 +421,16 @@ letter-spacing:0.1em;margin-top:auto;padding-top:12px;border-top:1px solid var(-
 .mlegend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--font-mono);font-size:9px;
 letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary);margin-top:9px}
 /* a chain: blocks linked by their previous hash */
+/* the log card's mini: linked blocks, the last one severed */
+.mlinks{display:flex;align-items:center}
+.mlinks i{flex:1;height:22px;background:var(--surface-raised);border-radius:1px;
+font-style:normal;position:relative}
+.mlinks i+i{margin-left:14px}
+.mlinks i+i::before{content:"";position:absolute;left:-14px;top:50%;width:14px;height:1px;
+background:var(--line-3)}
+.mlinks i.cut{box-shadow:inset 0 0 0 1px var(--status-critical);background:var(--status-critical-wash)}
+.mlinks i.cut::before{background:repeating-linear-gradient(90deg,var(--status-critical) 0 3px,transparent 3px 6px)}
+
 /* ── the tamper widget ────────────────────────────────────────────────────
    six real events from the recorded run's hash chain, recomputed in the
    browser as the visitor edits them. This is the product in one toy. */
@@ -410,19 +446,27 @@ margin:10px 0 18px;max-width:64ch}
 .tb{position:relative;border:1px solid var(--line-1);border-radius:var(--radius-1);
 padding:11px 12px;background:var(--surface-sunken);
 transition:border-color 300ms var(--ease-out)}
+/* the grid has to read as a chain: each block names the hash it links back
+   to, and at full width an arrow crosses every gutter */
+@media(min-width:1080px){
+.tb:not(:first-child)::before{content:"\2192";position:absolute;left:-9px;top:50%;
+transform:translate(-50%,-50%);color:var(--line-3);font-size:12px}}
 .tb .th{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.12em;
 text-transform:uppercase;color:var(--text-tertiary);line-height:1.6;min-height:2.6em}
+.tb .prev{display:block;font-family:var(--font-mono);font-size:8.5px;
+color:var(--text-tertiary);letter-spacing:0.04em;transition:color 300ms var(--ease-out)}
 .tb input{width:100%;font-family:var(--font-mono);font-size:10.5px;color:var(--text-primary);
 background:var(--surface-card);border:1px solid var(--line-1);border-radius:1px;
-padding:6px 7px;margin:8px 0}
+padding:6px 7px;margin:8px 0;text-overflow:ellipsis}
 .tb .hash{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.04em;
 color:var(--status-ok);word-break:break-all;line-height:1.5;
 transition:color 300ms var(--ease-out)}
 .tb.broken{border-color:var(--status-critical)}
-.tb.broken .hash{color:var(--status-critical)}
-.tb.broken::after{content:"LINK BROKEN";position:absolute;right:8px;top:8px;
-font-family:var(--font-mono);font-size:7.5px;letter-spacing:0.16em;
-color:var(--status-critical)}
+.tb.broken .hash,.tb.broken .prev{color:var(--status-critical)}
+.tb.broken::after{content:"LINK BROKEN";position:absolute;right:6px;top:6px;
+font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.14em;
+color:var(--status-critical);background:var(--status-critical-wash);
+padding:2px 6px;border-radius:1px}
 .trow{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:16px}
 .tstatus{font-family:var(--font-mono);font-size:11px;letter-spacing:0.15em;
 text-transform:uppercase;color:var(--status-ok)}
@@ -447,6 +491,10 @@ color:var(--text-tertiary);line-height:1.7}
 letter-spacing:-0.02em;color:var(--signal);margin-bottom:4px}
 /* five cells in a two column grid leave an orphan slot; span the last one */
 @media(max-width:879px){.cred span:last-child{grid-column:1 / -1}}
+
+/* chips inside stretch-aligned flex cards must hug their content, not span
+   the card like a bar */
+.node .chip,.tier .chip,.del .chip,.tamper .chip,.shotcopy .chip{align-self:flex-start}
 
 /* progressive disclosure: one visible sentence, the detail behind a fold */
 details.more{margin-top:10px}
@@ -553,7 +601,7 @@ footer a{color:var(--signal)}
   </div>
 </nav>
 
-<div class="wrap">
+<main class="wrap">
 
 <section class="hero">
   <span class="kicker"><i></i>Recorded run, replayed unchanged</span>
@@ -567,11 +615,12 @@ footer a{color:var(--signal)}
         <a class="btn btn-primary" href="#signup">Create a workspace</a>
         <a class="btn btn-alt" href="#signup" id="samplecta">Run the sample pack, upload nothing</a>
       </div>
+      <p class="herolinks"><a href="#tamper">Or go break the audit chain yourself</a></p>
     </div>
     <div class="counts">
-      <div class="count sig"><b>10</b><span>questions in the recorded run</span></div>
-      <div class="count red"><b>40%</b><span>refused by design</span></div>
+      <div class="count red"><b>4/4</b><span>planted traps caught and refused</span></div>
       <div class="count ok"><b>0</b><span>answers released without a citation</span></div>
+      <div class="count sig"><b>49</b><span>real engine verdicts behind this page</span></div>
       <div class="count"><b>100%</b><span>of refusals name their gap</span></div>
     </div>
   </div>
@@ -580,7 +629,8 @@ footer a{color:var(--signal)}
     <div class="scanline" aria-hidden="true"></div>
     <div class="stagebar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="stagetitle">synthetic evidence / deterministic engine / no API call</span>
+      <span class="stagetitle">sample evidence pack / deterministic engine / no API call</span>
+      <button type="button" class="spause" id="spause" aria-pressed="false">Pause the replay</button>
       <span class="stagelive" id="stagelive">Replaying</span>
     </div>
     <div class="stagebody">
@@ -590,12 +640,12 @@ footer a{color:var(--signal)}
         <div class="askrow">
           <label class="sr-only" for="askq">Ask a security questionnaire question</label>
           <input id="askq" type="text" maxlength="200" autocomplete="off"
-            placeholder="Are backups encrypted and tested?">
+            placeholder="Is data encrypted in transit using TLS 1.2 or higher?">
           <button type="button" id="askbtn">Ask the engine</button>
         </div>
         <span class="slabel">Question from the buyer</span>
         <div class="q-line"><span id="qtext" aria-hidden="true"><!--@Q0@--></span><span class="caret" id="caret" aria-hidden="true"></span></div>
-        <div id="demoresult" aria-live="polite" aria-atomic="true">
+        <div id="demoresult" aria-live="off" aria-atomic="true">
           <p class="sr-only" id="qlive"><!--@Q0@--></p>
           <div class="verdictrow"><!--@VERDICT0@--></div>
           <span class="slabel">What the gates released</span>
@@ -699,6 +749,17 @@ footer a{color:var(--signal)}
       </article>
     </div>
   </div>
+
+  <div class="cred rv" aria-label="Engineering facts about this product">
+    <span><b>167</b>tests passing on every commit</span>
+    <span><b>11</b>adversarial evals gate release</span>
+    <span><b>4</b>traps planted in every run</span>
+    <span><b>0.09s</b>engine cycle time on the recorded run</span>
+    <span><b>MIT</b>the whole engine, open source</span>
+  </div>
+  <div class="ctarow rv" style="justify-content:center;margin-top:22px">
+    <a class="btn btn-ghost" href="#signup">Get in before the workspace opens</a>
+  </div>
 </section>
 
 <section id="product" class="secpad">
@@ -719,9 +780,14 @@ footer a{color:var(--signal)}
       </div>
       <div class="frame">
         <div class="fbar"><i></i><i></i><i></i><span>a complete run, recorded from the browser</span></div>
-        <video controls preload="none" playsinline width="1280" height="800"
-          poster="@POSTER_URI@" src="@VIDEO_URI@"
-          aria-label="Screen recording of a complete TrustOps run: workspace creation, seeding the sample evidence pack, running ten questions, and opening the report."></video>
+        <div class="vwrap">
+          <video id="demovid" controls preload="none" playsinline width="1280" height="800"
+            poster="@POSTER_URI@" src="@VIDEO_URI@"
+            aria-label="Screen recording of a complete TrustOps run: workspace creation, seeding the sample evidence pack, running ten questions, and opening the report."></video>
+          <button type="button" class="vplay" id="vplay" aria-label="Play the 30 second screen capture">
+            <span>Play the 30 second run</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -737,14 +803,14 @@ footer a{color:var(--signal)}
         <div class="fbar"><i></i><i></i><i></i><span>run_report.html / northwind-systems</span></div>
         <div class="fimg">
           <img src="@SHOT_REPORT@" width="1180" height="811" alt="The TrustOps run report: a sixty percent coverage dial, a lattice of ten question verdicts, and stat tiles reading ten questions ingested, forty percent refused by design, and a valid audit chain.">
-          <button type="button" class="hs" style="left:12%;top:56%" aria-expanded="false">1</button>
-          <div class="hscall" style="left:15%;top:64%">The coverage dial counts only answers that
+          <button type="button" class="hs" style="left:21%;top:56%" aria-expanded="false">1</button>
+          <div class="hscall" style="left:24%;top:64%">The coverage dial counts only answers that
           survived every gate. Refusals are not failures here, they are the product doing its job.</div>
-          <button type="button" class="hs" style="left:60%;top:44%" aria-expanded="false">2</button>
-          <div class="hscall" style="left:48%;top:52%">Each tile is a fact of the run. The refused
+          <button type="button" class="hs" style="left:55%;top:63%" aria-expanded="false">2</button>
+          <div class="hscall" style="left:43%;top:71%">Each tile is a fact of the run. The refused
           count is stated as plainly as the delivered one, which is the point.</div>
-          <button type="button" class="hs" style="left:76%;top:87%" aria-expanded="false">3</button>
-          <div class="hscall" style="left:56%;top:66%">The refusal bar names every cause:
+          <button type="button" class="hs" style="left:76%;top:93%" aria-expanded="false">3</button>
+          <div class="hscall" style="left:48%;bottom:9%">The refusal bar names every cause:
           contradiction, staleness, legal routing. A gap you can act on, not a shrug.</div>
         </div>
       </div>
@@ -837,7 +903,7 @@ footer a{color:var(--signal)}
       <p>Confidential evidence. The only party who can promise you anything about your text is
       the provider you already pay, so this tier hands the drafting to them and keeps the gates,
       the chain and the deliverables identical.</p></details>
-      <span class="who">Ask for it and it moves up the queue</span>
+      <span class="who"><a href="#contact">Ask for it</a> and it moves up the queue</span>
     </div>
     <div class="tier rv">
       <span class="chip c-rev">Managed</span>
@@ -882,6 +948,7 @@ footer a{color:var(--signal)}
       <h3>The tamper evident log</h3>
       <p>Every state transition hash chained in an append only file. Edit any historical event and
       verification fails from that point on. Try it yourself, below.</p>
+      <div class="mini mlinks" aria-hidden="true"><i></i><i></i><i></i><i class="cut"></i></div>
       <span class="mono">audit_log.jsonl</span>
     </div>
 
@@ -900,15 +967,9 @@ footer a{color:var(--signal)}
       <p class="tnojs">Editing needs JavaScript. What you are looking at is still the real
       thing: each event's hash covers the event plus the previous hash, so no historical edit
       can survive verification.</p>
+      <p class="tlede" style="margin:18px 0 0">Every run ships with its own chain, and this
+      check runs against the file itself. <a href="#signup">Get a run of your own</a>.</p>
     </div>
-  </div>
-
-  <div class="cred rv" aria-label="Engineering facts about this product">
-    <span><b>167</b>tests passing on every commit</span>
-    <span><b>11</b>adversarial evals gate release</span>
-    <span><b>4</b>traps planted in every run</span>
-    <span><b>0</b>uncited answers ever released</span>
-    <span><b>100%</b>of the engine open source</span>
   </div>
 </section>
 
@@ -1000,7 +1061,7 @@ footer a{color:var(--signal)}
   <a href="https://github.com/dhruvshahi10/trustops">how the gates work</a></span>
 </footer>
 
-</div>
+</main>
 <script>
 const DEMO=/*@DEMO@*/;
 const $=id=>document.getElementById(id);
@@ -1056,13 +1117,41 @@ const cio=new IntersectionObserver(es=>es.forEach(e=>{
 }),{threshold:0.5});
 document.querySelectorAll(".count b,.cred b").forEach(b=>cio.observe(b));
 
-/* hotspots on the product frames: one open at a time */
-document.querySelectorAll(".hs").forEach(h=>h.onclick=()=>{
-  const wasOpen=h.getAttribute("aria-expanded")==="true";
+/* hotspots on the product frames: one open at a time, Escape closes */
+document.querySelectorAll(".hs").forEach((h,i)=>{
+  const call=h.nextElementSibling;
+  const id="hscall-"+i;
+  if(call){call.id=id;h.setAttribute("aria-controls",id)}
+  const gist=call?call.textContent.trim().split(" ").slice(0,4).join(" "):"";
+  h.setAttribute("aria-label","Marker "+h.textContent.trim()+": "+gist);
+  h.onclick=e=>{
+    e.stopPropagation();
+    const wasOpen=h.getAttribute("aria-expanded")==="true";
+    document.querySelectorAll('.hs[aria-expanded="true"]').forEach(o=>
+      o.setAttribute("aria-expanded","false"));
+    h.setAttribute("aria-expanded",wasOpen?"false":"true");
+  };
+});
+/* an open callout can sit over a neighbouring marker on a phone, so any tap
+   outside the marker closes it rather than eating the tap forever */
+addEventListener("click",e=>{
+  if(e.target.closest(".hs")||e.target.closest(".hscall"))return;
   document.querySelectorAll('.hs[aria-expanded="true"]').forEach(o=>
     o.setAttribute("aria-expanded","false"));
-  h.setAttribute("aria-expanded",wasOpen?"false":"true");
 });
+addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  const open=document.querySelector('.hs[aria-expanded="true"]');
+  if(open){open.setAttribute("aria-expanded","false");open.focus()}
+});
+
+/* the film: a real play affordance over the poster; gone once playing */
+const vp=$("vplay"),vid=$("demovid");
+if(vp&&vid){
+  vp.onclick=()=>{vid.play()};
+  vid.addEventListener("play",()=>{vp.style.display="none"});
+  vid.addEventListener("pause",()=>{if(vid.currentTime===0||vid.ended)vp.style.display=""});
+}
 
 /* scroll progress hairline + a light parallax on the product frames */
 const frames=[...document.querySelectorAll(".frame[data-par]")];
@@ -1109,8 +1198,16 @@ function scheduleAdvance(){
   clearTimeout(cycleTimer);cycleTimer=null;
   if(!auto||paused||!revealed||current===null)return;
   cycleTimer=setTimeout(()=>{
-    const next=keys[(keys.indexOf(current)+1)%keys.length];show(next,SHOW[next],false);
+    const next=keys[(keys.indexOf(current)+1)%keys.length];
+    show(next,SHOW[next],false,false);
   },DWELL);
+}
+function setAuto(v){
+  auto=v;
+  const b=$("spause");
+  b.setAttribute("aria-pressed",v?"false":"true");
+  b.textContent=v?"Pause the replay":"Resume the replay";
+  if(v)scheduleAdvance();else clearTimeout(cycleTimer);
 }
 function markChips(){
   document.querySelectorAll("#chips button").forEach(b=>{
@@ -1118,18 +1215,23 @@ function markChips(){
     b.classList.toggle("on",on);b.setAttribute("aria-pressed",on?"true":"false");
   });
 }
-/* key is a showcase key or null when the contract came through the ask box */
-function show(key,d,instant){
+/* key is a showcase key or null when the contract came through the ask box.
+   userInit gates the live region: an auto advance must never speak, or a
+   screen reader is re-read the whole verdict block every eleven seconds. */
+function show(key,d,instant,userInit){
   current=key;revealed=false;
   clearTimeout(timer);clearTimeout(cycleTimer);
   markChips();
+  $("demoresult").setAttribute("aria-live","off");
   $("verdict").textContent="";$("verdict").className="chip";
   $("qlive").textContent="";
   $("answer").innerHTML="";$("prov").innerHTML="";$("gaps").innerHTML="";
   const q=d.question;
   const reveal=()=>{
     /* the question is mirrored into the live region once, at reveal, so a
-       screen reader hears one sentence instead of 89 keystrokes */
+       screen reader hears one sentence instead of 89 keystrokes. polite is
+       flipped on in the same tick as the fill, so it announces exactly once */
+    if(userInit)$("demoresult").setAttribute("aria-live","polite");
     $("qlive").textContent=q;
     $("verdict").textContent=d.verdict;$("verdict").className=chipClass(d.tone);
     paint(d.tone);
@@ -1150,9 +1252,11 @@ function show(key,d,instant){
   type();
 }
 document.querySelectorAll("#chips button").forEach(b=>
-  b.onclick=()=>{auto=false;clearTimeout(cycleTimer);
+  b.onclick=()=>{setAuto(false);
     $("askhint").textContent="Ask it anything a buyer would, or pick a suggested question";
-    show(b.dataset.k,SHOW[b.dataset.k],false)});
+    show(b.dataset.k,SHOW[b.dataset.k],false,true)});
+$("spause").onclick=()=>setAuto(!auto);
+if(reduced)setAuto(false);
 markChips();paint(SHOW[current].tone);
 
 /* ── ask it yourself ──────────────────────────────────────────────────────
@@ -1181,16 +1285,16 @@ function matchBank(q){
 }
 function ask(){
   const q=$("askq").value.trim();if(!q)return;
-  auto=false;clearTimeout(cycleTimer);
+  setAuto(false);
   const hit=matchBank(q);
   if(hit){
     $("askhint").textContent="Closest question in the demo corpus, with the engine's real verdict";
-    show(null,hit,false);
+    show(null,hit,false,true);
   }else{
     $("askhint").textContent="Nothing in the demo corpus matches, so the demo refuses, like the engine";
     show(null,{question:q,verdict:"REFUSED, NO EVIDENCE RETRIEVED",tone:"warn",answer:null,
       citations:[],gaps:["No approved evidence in the demo corpus matches that question. "
-      +"The engine refuses rather than guesses, and so does this demo."]},false);
+      +"The engine refuses rather than guesses, and so does this demo."]},false,true);
   }
 }
 $("askbtn").onclick=ask;
@@ -1276,9 +1380,12 @@ if(CHAIN&&$("tblocks")){
       b.querySelector(".hash").textContent=(shown[i]||"").slice(0,18);
     });
     const st=$("tstatus");
-    if(broken<0){st.textContent="Chain verifies, all six links intact";st.classList.remove("bad")}
-    else{st.textContent="Verification fails from event "+String(broken+1).padStart(2,"0")
-      +", and every event after it is untrustworthy";st.classList.add("bad")}
+    const msg=broken<0?"Chain verifies, all six links intact"
+      :"Verification fails from event "+String(broken+1).padStart(2,"0")
+        +", and every event after it is untrustworthy";
+    /* only write on change: role=status re-announces every assignment, and
+       reverify runs per keystroke */
+    if(st.textContent!==msg){st.textContent=msg;st.classList.toggle("bad",broken>=0)}
   }
   inputs.forEach(inp=>inp.addEventListener("input",reverify));
   $("treset").onclick=()=>{
