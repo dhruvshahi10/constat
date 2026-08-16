@@ -96,7 +96,9 @@ details.more>summary::before{content:"+";color:var(--signal);font-size:12px}
 details.more[open]>summary::before{content:"\\2212"}
 .attest{display:flex;gap:10px;align-items:flex-start;margin:18px 0 0;padding:13px 15px;
 background:var(--status-warn-wash);border:1px solid var(--line-1);
-border-left:2px solid var(--status-warn);border-radius:var(--radius-2)}
+border-left:2px solid var(--status-warn);border-radius:var(--radius-2);
+font-family:var(--font-sans);font-size:12.5px;text-transform:none;letter-spacing:0;
+color:var(--text-primary)}
 .attest input{width:auto;flex:0 0 auto;margin-top:3px}
 .attest span{font-size:12.5px;color:var(--text-primary);line-height:1.6}
 .attest em{display:block;font-style:normal;font-family:var(--font-mono);font-size:10.5px;

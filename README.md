@@ -10,13 +10,21 @@ Built as v0 of TrustOps Desk (managed customer assurance for B2B SaaS). All data
 
 Most RAG demos answer confidently. This one **refuses correctly** — which is the property that matters when the output is a material security representation in an enterprise deal.
 
-| Run metric (24-question CAIQ-style run) | Result | Gate |
+| Run metric (24-question CAIQ-style run, **deterministic mock drafter**) | Result | Gate |
 |---|---|---|
-| Cited draft coverage | **70.8%** | ≥60% target |
-| Unsupported material claims | **0** | must be 0 — release blocker |
-| Refusals (abstain/route) | 29.2% | every one names its gap and its human route |
+| Cited draft coverage | **66.7%** | ≥60% target |
+| Refusals (abstain/route) | 33.3% | every one names its gap and its human route |
+| Answers refused as ungrounded | **1** | words not traceable to the cited passage |
+| Citations dropped by the gates | 0 | fabricated source, invented location, or never retrieved |
 | Audit chain | valid | hash-chained JSONL, tamper detection tested |
 | Structure round-trip | pass | merged cells, hidden rows, formulas survive export |
+
+Two notes on reading this table honestly. Every figure comes from the deterministic
+mock drafter; no live-model run has been measured yet, so these numbers describe the
+gates, not a model's accuracy. And coverage fell from an earlier 70.8% on purpose: a
+new grounding gate now refuses an answer whose own words are not traceable to the
+passage it cites, and it caught one answer that had been drafted from evidence the
+staleness gate then removed. That answer used to ship as cited. It no longer does.
 
 ## The four planted traps — and what happened
 

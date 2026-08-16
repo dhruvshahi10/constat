@@ -221,9 +221,25 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
     exceptions = sum(1 for q in questions if q.state == QState.EXCEPTION)
     delivered_n = sum(1 for q in questions if q.state == QState.DELIVERED)
     review_n = sum(1 for q in questions if q.state == QState.GRC_REVIEW)
+    # A tripwire, not a measurement, and it should be described as one. post_gate
+    # nulls the answer whenever no citation survives, so this can only become
+    # non-zero if some future change lets an answer past that rule. It is worth
+    # keeping for exactly that reason, but it was never evidence of quality: an
+    # audit correctly called the headline "zero unsupported claims" a tautology,
+    # because the two conditions cannot co-occur by construction.
     unsupported = sum(
         1 for d in drafts.values() if d.answer is not None and not d.citations
     )
+    # These two do vary, and they are what the release rule actually rests on.
+    # The grounding gate refuses a drafted answer whose words are not traceable
+    # to the passages it cited; the citation resolver drops citations a model
+    # attached to sources or locations it was never shown.
+    ungrounded = sum(
+        1 for d in drafts.values() if "UNGROUNDED_ANSWER" in d.gate_flags)
+    citations_dropped = sum(
+        1 for d in drafts.values() for f in d.gate_flags
+        if f in ("FABRICATED_CITATION", "HALLUCINATED_LOCATION",
+                 "UNRETRIEVED_CITATION"))
     metrics = {
         "questions": n,
         "cited_draft_coverage": round(cited / n, 3),
@@ -231,7 +247,11 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         "exception_queue": exceptions,
         "auto_approved_delivered": delivered_n,
         "awaiting_human_review": review_n,
-        "unsupported_material_claims": unsupported,   # release gate: MUST be 0
+        # invariant assertion: MUST be 0, and is 0 by construction (see above)
+        "unsupported_material_claims": unsupported,
+        "ungrounded_refusals": ungrounded,
+        "citations_dropped": citations_dropped,
+        "approval_mode": approval_mode,
         "cycle_seconds": round(elapsed, 2),
         "drafter": drafter_kind,
         "audit_chain_valid": AuditLog.verify_chain(out_dir / "audit_log.jsonl"),
