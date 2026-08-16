@@ -726,7 +726,7 @@ def chain_html(chain: dict) -> str:
 # refused for expired evidence, one refused for contradicting sources, and one
 # routed to counsel without ever reaching the model.
 WORKBOOK_FILE = ROOT / "examples" / "acme_security_questionnaire__DELIVERED.xlsx"
-WORKBOOK_ROWS = ["A&A-01.1", "GRC-01.1", "AIS-01.1", "DSP-01.1", "LGL-01.1"]
+WORKBOOK_ROWS = ["GRC-01.1", "A&A-01.1", "AIS-01.1", "DSP-01.1", "LGL-01.1"]
 
 
 def _dedash(s: str) -> str:
@@ -782,7 +782,17 @@ def workbook_rowcount() -> int:
 
 
 def workbook_html() -> str:
-    """Render the real delivered rows as a compact sheet."""
+    """Render the real delivered rows as a sheet.
+
+    Two rules learned from an audit. First, nothing is truncated with a literal
+    ellipsis here: the full engine text goes into the markup and CSS clamps it,
+    so a questionnaire question never renders as placeholder-looking copy.
+    Second, a refused row shows its GAP rather than the generic abstain
+    sentence. The engine returns byte-identical response text for every
+    abstention ("Insufficient approved evidence, see exception notes"), so
+    printing that put the same sentence on two consecutive rows and hid the
+    only thing that differs: one document expired, the other two conflict.
+    """
     try:
         import openpyxl
     except ImportError:
@@ -797,7 +807,7 @@ def workbook_html() -> str:
     for r in range(1, ws.max_row + 1):
         qid = ws.cell(r, 1).value
         if qid in WORKBOOK_ROWS:
-            by_id[qid] = (ws.cell(r, 3).value or "", ws.cell(r, 4).value or "",
+            by_id[qid] = (r, ws.cell(r, 3).value or "", ws.cell(r, 4).value or "",
                           ws.cell(r, 5).value or "")
 
     e = _html.escape
@@ -806,35 +816,58 @@ def workbook_html() -> str:
         if qid not in by_id:
             print(f"  WARNING: row {qid} not in the workbook, skipped")
             continue
-        question, response, notes = (_dedash(str(v)) for v in by_id[qid])
-        if response.startswith("[ROUTED TO LEGAL]"):
-            tone, verdict = "legal", "Routed to counsel"
-            body = _clip(response.split("]", 1)[1], 70)
-        elif response.startswith("[ABSTAINED]"):
-            tone, verdict = "warn", "Refused"
-            body = _clip(response.split("]", 1)[1], 70)
-        else:
-            tone, verdict = "ok", "Cited"
-            body = _clip(response, 104)
+        rownum, question, response, notes = by_id[qid]
+        question, response, notes = (_dedash(str(v)) for v in (question, response, notes))
 
-        # the evidence pointer for a cited answer, the named gap for a refusal
-        line = ""
+        gaps = ""
+        for raw in notes.splitlines():
+            if raw.startswith("Gaps:"):
+                gaps = raw[5:].strip()
+                break
+        evidence = ""
         for raw in notes.splitlines():
             if raw.startswith("Evidence:"):
-                line = _clip(raw, 46)
+                evidence = raw.replace("Evidence:", "").strip()
                 break
-            if raw.startswith("Gaps:"):
-                line = _clip(raw[5:].split("|")[0], 74)
-                break
+
+        if response.startswith("[ROUTED TO LEGAL]"):
+            tone, verdict = "legal", "Routed to counsel"
+            body, tail = _split_gap(gaps)
+            tail = tail or "Routed to legal"
+        elif response.startswith("[ABSTAINED]"):
+            tone, verdict = "warn", "Refused"
+            body, tail = _split_gap(gaps)
+        else:
+            tone, verdict = "ok", "Cited"
+            body, tail = response, evidence
+
         out.append(
             f'<div class="wbrow" data-tone="{tone}">'
+            f'<span class="wbn" aria-hidden="true">{rownum}</span>'
             f'<span class="wbid">{e(qid)}</span>'
-            f'<p class="wbq">{e(_clip(question, 76))}</p>'
+            f'<p class="wbq">{e(question)}</p>'
             f'<div class="wbr"><span class="wbv">{e(verdict)}</span>'
             f'<p>{e(body)}</p>'
-            + (f'<span class="wbe">{e(line)}</span>' if line else "")
+            + (f'<span class="wbe">{e(tail)}</span>' if tail else "")
             + "</div></div>")
     return "".join(out)
+
+
+def _split_gap(gaps: str) -> tuple[str, str]:
+    """Split a gap into the finding and the routing instruction.
+
+    "RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state
+    claim; route to security@acme.example" becomes the finding and the route,
+    so the cell leads with what is wrong and closes with who owns it.
+    """
+    first = gaps.split("|")[0].strip()
+    if ";" in first:
+        head, _, tail = first.partition(";")
+        return head.strip().rstrip(","), tail.strip()
+    if ", route to " in first:
+        head, _, tail = first.partition(", route to ")
+        return head.strip(), "route to " + tail.strip()
+    return first, ""
 
 
 def shot_uris() -> dict[str, str]:

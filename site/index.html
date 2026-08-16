@@ -146,12 +146,13 @@ font-family:var(--font-mono);font-size:10.5px;line-height:2;color:var(--text-ter
 clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 body{overflow-x:hidden}
-h2{font-size:clamp(27px,3.5vw,44px);line-height:1.06;letter-spacing:-0.022em;text-wrap:balance}
+h2{font-size:clamp(24px,1.2rem + 1.15vw,35px);line-height:1.08;
+letter-spacing:-0.022em;text-wrap:balance}
 h3{letter-spacing:-0.012em}
 .sub{font-size:clamp(14.5px,1.3vw,16.5px);line-height:1.6;max-width:56ch;color:var(--text-secondary)}
 section{position:relative}
 .seclabel{margin:0 0 18px}
-.secpad{padding:clamp(64px,8vw,116px) 0 0}
+.secpad{padding:clamp(52px,6.4vw,92px) 0 0}
 
 /* ── the ground ────────────────────────────────────────────────────────── */
 .ground{position:fixed;inset:0;z-index:-2;pointer-events:none;
@@ -167,18 +168,23 @@ mask-image:radial-gradient(1200px 780px at 60% 8%,#000,transparent 72%)}
 @keyframes drift{to{transform:translateY(46px)}}
 
 /* ── nav ───────────────────────────────────────────────────────────────── */
-.navbar{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);background:rgba(14,14,16,0.72);
+.navbar{position:sticky;top:0;z-index:40;backdrop-filter:blur(20px) saturate(140%);
+-webkit-backdrop-filter:blur(20px) saturate(140%);background:rgba(14,14,16,0.93);
 border-bottom:1px solid var(--line-1)}
 .navbar .wrap{display:flex;justify-content:space-between;align-items:center;
-padding:15px clamp(18px,4vw,32px);gap:14px}
+padding:13px clamp(18px,4vw,32px) 11px;gap:14px;flex-wrap:wrap}
+@media(min-width:900px){.navbar .wrap{flex-wrap:nowrap;padding:15px clamp(18px,4vw,32px)}}
 .wordmark{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-mono);
 font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-primary)}
 .wordmark svg{flex:0 0 auto;color:var(--text-tertiary)}
 .wordmark b{color:var(--signal);font-weight:400}
-.navlinks{display:none;gap:26px;font-family:var(--font-mono);font-size:10.5px;
-letter-spacing:0.14em;text-transform:uppercase}
-@media(min-width:900px){.navlinks{display:flex}}
+.navlinks{display:flex;gap:18px;font-family:var(--font-mono);font-size:10px;
+letter-spacing:0.12em;text-transform:uppercase;overflow-x:auto;scrollbar-width:none;
+-webkit-overflow-scrolling:touch;order:3;flex-basis:100%;padding-bottom:2px}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{white-space:nowrap}
+@media(min-width:900px){.navlinks{order:0;flex-basis:auto;gap:26px;font-size:10.5px;
+letter-spacing:0.14em;overflow:visible;padding-bottom:0}}
 .navlinks a{color:var(--text-tertiary);text-decoration:none}
 .navlinks a:hover{color:var(--text-primary)}
 .navbar a.cta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;
@@ -188,66 +194,76 @@ padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space
 .progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
 /* ── hero ──────────────────────────────────────────────────────────────────
-   The hero performs the product instead of describing it: an empty
-   questionnaire fills itself in, and two rows refuse. Everything renders in
-   its final, filled state by default, so no-JS and reduced-motion readers get
-   the whole story; the animation is added on top, never depended on.
+   The hero performs the product: an empty questionnaire fills itself in and
+   some rows refuse. Everything renders finished by default, so no-JS and
+   reduced-motion readers get the whole story; the animation is added on top.
+   Sized so all five rows clear a 950px fold, because an audit found 60% of
+   the performance was happening below it.
    ──────────────────────────────────────────────────────────────────────── */
-.hero{padding:clamp(30px,4vw,56px) 0 0}
-.herotop{display:grid;gap:clamp(20px,2.6vw,40px);align-items:end;
-margin-bottom:clamp(26px,3.4vw,44px)}
-@media(min-width:1000px){.herotop{grid-template-columns:1.5fr 1fr}}
+.hero{padding:clamp(16px,1.6vw,22px) 0 0}
+.herotop{display:grid;gap:clamp(18px,2.4vw,40px);align-items:start;
+margin:clamp(14px,1.7vw,20px) 0 clamp(12px,1.4vw,16px)}
+@media(min-width:860px){.herotop{grid-template-columns:1fr 1.05fr}}
 
 .eyebrow-chip{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);
-font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary);
-border:1px solid var(--line-2);border-radius:100px;padding:7px 15px;
-margin-bottom:clamp(18px,2.2vw,26px);background:rgba(26,26,29,0.6)}
+font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-secondary);
+border:1px solid var(--line-2);border-radius:100px;padding:6px 14px;
+margin-bottom:clamp(11px,1.3vw,15px);background:rgba(26,26,29,0.6)}
 .eyebrow-chip i{width:5px;height:5px;border-radius:50%;background:var(--status-critical);
 flex:0 0 5px;font-style:normal}
 .js .eyebrow-chip i{animation:beat 2.6s var(--ease-inout) infinite}
 @keyframes beat{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
-h1.mega{font-size:clamp(30px,3.95vw,48px);line-height:1.06;letter-spacing:-0.032em;
-text-wrap:balance}
-/* words rise in on load. The span wrapping is done in JS, so the headline is
-   plain text in the markup and degrades to a normal heading. */
-h1.mega .w{display:inline-block;will-change:transform,opacity}
-.js h1.mega.kin .w{opacity:0;transform:translateY(0.5em);
-animation:rise 620ms var(--ease-out) both}
+/* a real step down to h2 (was 48 against 44, which is no hierarchy at all),
+   and a two point clamp so type actually interpolates below 768px instead of
+   sitting frozen at the minimum across every phone and tablet */
+h1.mega{font-size:clamp(32px,1.5rem + 2.15vw,52px);line-height:1.05;
+letter-spacing:-0.033em;text-wrap:balance;max-width:26ch}
+h1.mega .w{display:inline-block}
+.js h1.mega.kin .w{opacity:0;transform:translateY(0.32em);
+will-change:transform,opacity;animation:rise 460ms var(--ease-out) both}
 @keyframes rise{to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){
-.js h1.mega.kin .w{opacity:1;transform:none;animation:none}}
-.deck{font-size:clamp(15px,1.4vw,17.5px);line-height:1.6;color:var(--text-secondary);
-max-width:44ch;margin-top:clamp(15px,1.7vw,20px);text-wrap:pretty}
+.js h1.mega.kin .w{opacity:1;transform:none;animation:none;will-change:auto}}
+.deck{font-size:clamp(15px,0.9rem + 0.42vw,17.5px);line-height:1.6;
+color:var(--text-secondary);max-width:46ch;margin-top:0;text-wrap:pretty}
 .deck b{color:var(--status-critical);font-weight:400;font-style:italic;
 font-family:var(--font-display)}
 
-/* the three stages, as a connected rail rather than a stack of boxes */
-.rail{display:flex;align-items:flex-start;gap:0;margin-top:clamp(22px,2.6vw,30px);
-max-width:520px}
+/* the three stages as a rail whose connector fills, not three lamps */
+.rail{display:flex;align-items:flex-start;margin-top:6px}
+@media(min-width:860px){.rail{margin-top:2px}}
 .rstage{flex:1;position:relative;padding-top:19px}
 .rstage::before{content:"";position:absolute;left:0;top:5px;width:9px;height:9px;
 border-radius:50%;background:var(--surface-page);border:1.5px solid var(--line-3);
-transition:border-color 400ms var(--ease-out),background 400ms var(--ease-out)}
+z-index:2;transition:border-color 380ms var(--ease-out),background 380ms var(--ease-out),
+box-shadow 380ms var(--ease-out)}
 .rstage::after{content:"";position:absolute;left:9px;right:0;top:9.5px;height:1.5px;
-background:var(--line-2)}
+background:linear-gradient(90deg,var(--acc,var(--signal)) 50%,var(--line-2) 50%);
+background-size:200% 100%;background-position:100% 0;
+transition:background-position 520ms var(--ease-inout)}
 .rstage:last-child::after{display:none}
 .rstage.on::before{border-color:var(--signal);background:var(--signal);
 box-shadow:0 0 0 4px var(--signal-wash)}
+.rstage.on::after{background-position:0 0}
+.rstage[data-tone="warn"]{--acc:var(--status-critical)}
 .rstage[data-tone="warn"].on::before{border-color:var(--status-critical);
 background:var(--status-critical);box-shadow:0 0 0 4px var(--status-critical-wash)}
-.rstage b{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.16em;
+.rstage b{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;
 text-transform:uppercase;color:var(--text-tertiary);font-weight:400;
-transition:color 400ms var(--ease-out)}
+transition:color 380ms var(--ease-out)}
 .rstage.on b{color:var(--text-primary)}
 .rstage span{display:block;font-size:12.5px;line-height:1.45;color:var(--text-tertiary);
-margin-top:5px;padding-right:14px}
-@media(max-width:559px){.rail{flex-direction:column;gap:14px;max-width:none}
-.rstage{padding-top:0;padding-left:20px}
+margin-top:5px;padding-right:16px}
+@media(max-width:559px){.rail{flex-direction:column;gap:14px}
+.rstage{padding-top:0;padding-left:21px}
 .rstage::before{top:3px}
-.rstage::after{left:4px;top:14px;bottom:-14px;width:1.5px;height:auto;right:auto}}
+.rstage::after{left:4px;top:14px;bottom:-14px;width:1.5px;height:auto;right:auto;
+background:linear-gradient(180deg,var(--acc,var(--signal)) 50%,var(--line-2) 50%);
+background-size:100% 200%;background-position:0 100%}
+.rstage.on::after{background-position:0 0}}
 
-.ctarow{display:flex;gap:11px;flex-wrap:wrap;margin-top:clamp(20px,2.4vw,28px)}
+.ctarow{display:flex;gap:11px;flex-wrap:wrap;margin-top:clamp(18px,2.2vw,26px)}
 a.btn,button.btn{font-family:var(--font-mono);font-size:11px;letter-spacing:0.13em;
 text-transform:uppercase;padding:14px 22px;border-radius:var(--radius-1);text-decoration:none;
 cursor:pointer;display:inline-block;border:1px solid transparent;
@@ -258,96 +274,123 @@ a.btn-primary:hover{background:var(--signal-bright);transform:translateY(-1px)}
 a.btn-ghost{border-color:var(--line-2);color:var(--text-primary)}
 a.btn-ghost:hover{border-color:var(--line-signal);color:var(--signal)}
 
-/* ── the sheet: the artefact the reader already understands ────────────── */
+/* ── the sheet ─────────────────────────────────────────────────────────── */
 .sheetwrap{position:relative}
 .sheet{position:relative;border:1px solid var(--line-2);border-radius:var(--radius-2);
 overflow:hidden;background:linear-gradient(180deg,rgba(30,30,34,0.96),rgba(18,18,21,0.96));
 box-shadow:0 1px 0 rgba(232,232,228,0.06) inset,
            0 40px 80px -40px rgba(0,0,0,0.95),
            0 8px 24px -12px rgba(0,0,0,0.7)}
-.sheetbar{display:flex;align-items:center;gap:11px;padding:12px 16px;
-border-bottom:1px solid var(--line-1);background:rgba(12,12,14,0.75);flex-wrap:wrap}
-.sheetfile{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.12em;
+.sheetbar{display:flex;align-items:center;gap:11px;padding:9px 15px;
+border-bottom:1px solid var(--line-1);background:rgba(12,12,14,0.75)}
+.sheetfile{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;
 color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 min-width:0;flex:1}
 .sheetfile b{color:var(--text-secondary);font-weight:400}
-/* a real segmented control: the "before" is a state you can go back to, not a
-   caption claiming an empty column once existed */
-.seg{display:none;border:1px solid var(--line-2);border-radius:100px;overflow:hidden;
-flex:0 0 auto}
+/* a real segmented control. No overflow:hidden here: it clipped the focus ring
+   entirely, so the control was invisible to a keyboard user. */
+.seg{display:none;border:1px solid var(--line-2);border-radius:100px;flex:0 0 auto}
 .js .seg{display:inline-flex}
-.seg button{font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
+.seg button{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;
 text-transform:uppercase;padding:7px 13px;border:0;background:transparent;
-color:var(--text-tertiary);cursor:pointer;transition:color 200ms var(--ease-out),
-background 200ms var(--ease-out)}
-.seg button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink)}
-.seg button:not([aria-pressed="true"]):hover{color:var(--text-primary)}
+color:var(--text-tertiary);cursor:pointer;
+transition:color 200ms var(--ease-out),background 200ms var(--ease-out)}
+.seg button:first-child{border-radius:100px 0 0 100px}
+.seg button:last-child{border-radius:0 100px 100px 0}
+.seg button[aria-checked="true"]{background:var(--signal);color:var(--signal-ink)}
+.seg button:not([aria-checked="true"]):hover{color:var(--text-primary)}
+@media(max-width:559px){.sheetbar{flex-wrap:wrap}
+.seg{order:2;flex-basis:100%;margin-top:9px}
+.seg button{flex:1;text-align:center}}
 
-.wbhead{display:none;padding:9px 16px;border-bottom:1px solid var(--line-1);
-background:rgba(232,232,228,0.028);font-family:var(--font-mono);font-size:8.5px;
-letter-spacing:0.16em;text-transform:uppercase;color:var(--text-tertiary)}
-@media(min-width:760px){.wbhead{display:grid;grid-template-columns:96px 1.05fr 1.5fr;gap:16px}}
-.wbrow{display:grid;gap:4px;padding:11px 16px;border-bottom:1px solid var(--line-1);
-position:relative}
-@media(min-width:760px){.wbrow{grid-template-columns:96px 1.05fr 1.5fr;gap:16px;
-align-items:start}}
+/* the grid: a row number gutter and vertical rules, so it reads as a sheet
+   rather than a list of cards */
+.wbhead{display:none;font-family:var(--font-mono);font-size:10px;letter-spacing:0.11em;
+white-space:nowrap;
+text-transform:uppercase;color:var(--text-tertiary);
+border-bottom:1px solid var(--line-1);background:rgba(232,232,228,0.03)}
+.wbrow{display:grid;border-bottom:1px solid var(--line-1);position:relative;
+transition:background 200ms var(--ease-out),box-shadow 200ms var(--ease-out)}
+@media(min-width:760px){
+.wbhead,.wbrow{grid-template-columns:34px 92px minmax(0,1.02fr) minmax(0,1.55fr)}
+.wbhead{display:grid}
+.wbrow{min-height:70px;align-items:center}}
+.wbhead>span,.wbrow>*:not(.wbr){padding:8px 13px}
+.wbhead>span:not(:last-child),.wbrow>*:not(.wbr):not(:last-child){
+border-right:1px solid var(--line-1)}
+@media(min-width:760px){.wbhead>span,.wbrow>*:not(.wbr){align-self:stretch;
+display:flex;align-items:center}}
 .wbrow:last-child{border-bottom:0}
-.wbrow:hover{background:rgba(232,232,228,0.022)}
-.wbid{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.08em;
-color:var(--text-tertiary);padding-top:1px}
-.wbq{font-size:12.5px;line-height:1.5;color:var(--text-secondary)}
+.wbrow:hover{background:rgba(232,232,228,0.055);box-shadow:inset 2px 0 0 var(--acc)}
+.wbn{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);
+justify-content:center;font-variant-numeric:tabular-nums}
+.wbid{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;
+color:var(--text-tertiary)}
+/* clamped in CSS, never with a literal ellipsis in the content */
+.wbq{font-size:12.5px;line-height:1.45;color:var(--text-secondary);
+display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(min-width:760px){.wbq{display:-webkit-box}}
 .wbrow[data-tone="ok"]{--acc:var(--status-ok)}
 .wbrow[data-tone="warn"]{--acc:var(--status-critical)}
 .wbrow[data-tone="legal"]{--acc:var(--signal)}
-/* the response cell reads as a spreadsheet cell: its own ground and a left rule */
-.wbr{position:relative;padding:8px 11px;border-radius:var(--radius-1);
+.wbr{position:relative;margin:5px 13px;padding:6px 10px;border-radius:var(--radius-1);
 background:var(--surface-sunken);border:1px solid var(--line-1);
-border-left:2px solid var(--acc);min-height:2.6em}
-.wbv{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.16em;
-text-transform:uppercase;color:var(--acc)}
-.wbr p{font-size:12.5px;line-height:1.55;color:var(--text-primary);margin-top:5px}
-.wbe{display:block;margin-top:7px;font-family:var(--font-mono);font-size:9px;line-height:1.6;
-color:var(--text-tertiary)}
+border-left:2px solid var(--acc);min-height:2.4em}
+/* a refusal must not look like an answer. The hatch is the same device the
+   demo stage already uses for a withheld answer. */
+.wbrow[data-tone="warn"] .wbr{background:repeating-linear-gradient(115deg,
+var(--surface-sunken) 0 11px,rgba(217,120,98,0.075) 11px 22px)}
+.wbv{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;
+text-transform:uppercase;color:var(--acc);line-height:1.2}
+.wbr p{font-size:12.5px;line-height:1.42;color:var(--text-primary);margin-top:3px;
+display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.wbe{display:block;margin-top:3px;font-family:var(--font-mono);font-size:10px;
+line-height:1.4;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;
+text-overflow:ellipsis}
 
-/* the empty state and the fill. Default is filled, so this only ever hides
-   things once scripting has confirmed it can put them back. */
-.sheet.empty .wbr{border-left-color:var(--line-2)}
+/* the empty state: blank ruled paper waiting for input, not a broken table.
+   The children keep their boxes so filling a row never shifts the layout. */
+.sheet.empty .wbr{border-left-color:var(--line-2);
+background:repeating-linear-gradient(to bottom,transparent 0 17px,
+rgba(232,232,228,0.055) 17px 18px)}
 .sheet.empty .wbr>*{opacity:0;transition:none}
-/* an empty cell waiting for input, not a broken box. The children keep their
-   space so filling a row never shifts the layout. */
 .sheet.empty .wbr::after{content:"";position:absolute;left:11px;top:9px;width:7px;
 height:14px;background:var(--line-3)}
 .js .sheet.empty .wbr::after{animation:blink 1.15s step-end infinite}
+.sheet.empty .wbrow.in .wbr{background:var(--surface-sunken);border-left-color:var(--acc)}
+.sheet.empty .wbrow.in[data-tone="warn"] .wbr{background:repeating-linear-gradient(115deg,
+var(--surface-sunken) 0 11px,rgba(217,120,98,0.075) 11px 22px)}
+.sheet.empty .wbrow.in .wbr>*{animation:cellin 380ms var(--ease-out) both}
+@keyframes cellin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sheet.empty .wbrow.in .wbr>*:nth-child(2){animation-delay:60ms}
+.sheet.empty .wbrow.in .wbr>*:nth-child(3){animation-delay:110ms}
 .sheet.empty .wbrow.in .wbr::after{display:none}
 @media(prefers-reduced-motion:reduce){.js .sheet.empty .wbr::after{animation:none}}
-.sheet.empty .wbrow.in .wbr{border-left-color:var(--acc)}
-.sheet.empty .wbrow.in .wbr>*{animation:cellin 420ms var(--ease-out) both}
-@keyframes cellin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.sheet.empty .wbrow.in .wbr>*:nth-child(2){animation-delay:70ms}
-.sheet.empty .wbrow.in .wbr>*:nth-child(3){animation-delay:130ms}
-/* the row being written gets a moving highlight */
-.wbrow.writing::after{content:"";position:absolute;inset:0;pointer-events:none;
-background:linear-gradient(90deg,transparent,rgba(183,196,255,0.07),transparent)}
+.wbrow.writing{background:rgba(183,196,255,0.05)}
 
-.scan{position:absolute;left:0;right:0;top:0;height:34px;pointer-events:none;z-index:3;
-opacity:0;background:linear-gradient(180deg,transparent,rgba(183,196,255,0.10),transparent);
-border-bottom:1px solid rgba(183,196,255,0.5)}
-.sheet.scanning .scan{opacity:1;animation:sweep var(--scandur,4.2s) linear both}
-@keyframes sweep{from{transform:translateY(0)}to{transform:translateY(var(--scanto,420px))}}
+/* the scan is stepped from JS so it genuinely leads the row being written,
+   instead of a linear keyframe that drifts against unequal row heights */
+.scan{position:absolute;left:0;right:0;top:0;height:56px;pointer-events:none;z-index:3;
+opacity:0;transform:translateY(0);
+background:linear-gradient(180deg,transparent,rgba(183,196,255,0.22),transparent);
+border-bottom:1px solid rgba(183,196,255,0.85);
+transition:opacity 220ms var(--ease-out),transform 420ms var(--ease-inout)}
+.sheet.scanning .scan{opacity:1}
 
-.sheetfoot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 16px;
+.sheetfoot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 15px;
 border-top:1px solid var(--line-1);background:rgba(12,12,14,0.6)}
-.tally{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.13em;
+.tally{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;
 text-transform:uppercase;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
 .tally b{color:var(--text-primary);font-weight:400}
 .tally em{font-style:normal;color:var(--status-critical)}
-.replay{display:none;margin-left:auto;font-family:var(--font-mono);font-size:9px;
-letter-spacing:0.14em;text-transform:uppercase;padding:7px 12px;border:1px solid var(--line-2);
-border-radius:var(--radius-1);background:transparent;color:var(--text-tertiary);cursor:pointer}
+.replay{display:none;margin-left:auto;font-family:var(--font-mono);font-size:10px;
+letter-spacing:0.12em;text-transform:uppercase;padding:7px 12px;
+border:1px solid var(--line-2);border-radius:var(--radius-1);background:transparent;
+color:var(--text-tertiary);cursor:pointer}
 .js .replay{display:inline-block}
 .replay:hover{color:var(--signal);border-color:var(--line-signal)}
 .sheetnote{font-size:12.5px;line-height:1.6;color:var(--text-tertiary);margin-top:13px;
-max-width:60ch}
+max-width:60ch;padding-left:15px;border-left:1px solid var(--line-1)}
 .sheetnote b{color:var(--text-primary);font-weight:500}
 
 /* ── the stage: ask it yourself ────────────────────────────────────────── */
@@ -360,14 +403,14 @@ transition:background 500ms var(--ease-out)}
 .stagebar{display:flex;align-items:center;gap:11px;padding:12px 18px;
 border-bottom:1px solid var(--line-1);background:rgba(14,14,16,0.6);flex-wrap:wrap}
 .stagebar .dot{width:7px;height:7px;border-radius:50%;background:var(--line-3);flex:0 0 7px}
-.stagetitle{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.16em;
+.stagetitle{font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;
 text-transform:uppercase;color:var(--text-tertiary);margin-left:6px}
-.stagelive{margin-left:auto;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.18em;
+.stagelive{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;
 text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:7px}
 .stagelive::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
 .js .stagelive::before{animation:pulse 2s var(--ease-inout) infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-.spause{display:none;font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
+.spause{display:none;font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;
 text-transform:uppercase;padding:5px 10px;border:1px solid var(--line-2);
 border-radius:var(--radius-1);background:transparent;color:var(--text-tertiary);cursor:pointer}
 .js .spause{display:inline-block}
@@ -680,11 +723,14 @@ footer a{color:var(--signal)}
 <nav class="navbar">
   <div class="wrap">
     <span class="wordmark">
-      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
-        <path d="M12 2.5 20.5 5.6v6.9c0 5.3-3.5 8.7-8.5 9.9-5-1.2-8.5-4.6-8.5-9.9V5.6z"
-          fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-        <path d="M8.3 12.2 11 14.9l4.8-6" fill="none" stroke="var(--signal)" stroke-width="1.9"
-          stroke-linecap="round" stroke-linejoin="round"/>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <rect x="2.5" y="3.5" width="19" height="17" rx="1.6" fill="none"
+          stroke="currentColor" stroke-width="1.5"/>
+        <path d="M2.5 9h19M9 9v11.5M15.5 9v11.5" stroke="currentColor" stroke-width="1.2"
+          opacity="0.55"/>
+        <rect x="15.5" y="9" width="6" height="5.75" fill="var(--signal)" opacity="0.9"/>
+        <path d="M16.6 17.6h3.8" stroke="var(--status-critical)" stroke-width="1.6"
+          stroke-linecap="round"/>
       </svg><b>Trust</b>Ops</span>
     <span class="navlinks">
       <a href="#ask">Try it</a>
@@ -700,13 +746,11 @@ footer a{color:var(--signal)}
 <main class="wrap">
 
 <section class="hero">
+  <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
+  <h1 class="mega">Your security questionnaire, answered from your own documents.</h1>
   <div class="herotop">
-    <div>
-      <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
-      <h1 class="mega">Your security questionnaire, answered from your own documents.</h1>
-      <p class="deck">Every answer carries a citation to the policy it came from. When the
-      evidence is missing, it <b>refuses</b> and names the gap.</p>
-    </div>
+    <p class="deck">Every answer carries a citation to the policy it came from. When the
+    evidence is missing, it <b>refuses</b> and names the gap.</p>
     <div>
       <div class="rail" id="rail">
         <div class="rstage" data-s="0"><b>01 Evidence</b><span>Your approved policies, read in</span></div>
@@ -725,17 +769,17 @@ footer a{color:var(--signal)}
       <div class="scan" aria-hidden="true"></div>
       <div class="sheetbar">
         <span class="sheetfile"><b>acme_security_questionnaire.xlsx</b> / 5 of 24 rows</span>
-        <span class="seg" role="group" aria-label="Workbook state">
-          <button type="button" id="segBefore" aria-pressed="false">As received</button>
-          <button type="button" id="segAfter" aria-pressed="true">Answered</button>
+        <span class="seg" role="radiogroup" aria-label="Workbook state">
+          <button type="button" role="radio" id="segBefore" aria-checked="false">As received</button>
+          <button type="button" role="radio" id="segAfter" aria-checked="true">Answered</button>
         </span>
       </div>
       <div class="wbhead" aria-hidden="true">
-        <span>Question ID</span><span>Question</span><span>Vendor response</span>
+        <span></span><span>A / ID</span><span>C / Question</span><span>D / Vendor response</span>
       </div>
-      <div class="wbrow" data-tone="ok"><span class="wbid">A&amp;A-01.1</span><p class="wbq">Do you hold a current SOC 2 Type II attestation?</p><div class="wbr"><span class="wbv">Cited</span><p>Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation...</p><span class="wbe">Evidence: CRT-SOC2-2025 v1.0 (para:2)</span></div></div><div class="wbrow" data-tone="ok"><span class="wbid">GRC-01.1</span><p class="wbq">Do you maintain a formal, approved information security program and policy reviewed at least annually?</p><div class="wbr"><span class="wbv">Cited</span><p>Per Information Security Policy v3.2: Acme maintains a formal information security program governed by...</p><span class="wbe">Evidence: POL-ISMS-001 v3.2 (para:2)</span></div></div><div class="wbrow" data-tone="warn"><span class="wbid">AIS-01.1</span><p class="wbq">Has an independent penetration test of the application been performed in the last 12 months?</p><div class="wbr"><span class="wbv">Refused</span><p>Insufficient approved evidence, see exception notes.</p><span class="wbe">RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state...</span></div></div><div class="wbrow" data-tone="warn"><span class="wbid">DSP-01.1</span><p class="wbq">Within how many days of contract termination is customer data deleted from your systems, including backups?</p><div class="wbr"><span class="wbv">Refused</span><p>Insufficient approved evidence, see exception notes.</p><span class="wbe">POL-RET-001: conflicting approved sources on a machine-checked assertion...</span></div></div><div class="wbrow" data-tone="legal"><span class="wbid">LGL-01.1</span><p class="wbq">Will Vendor contractually commit to unlimited liability for any security...</p><div class="wbr"><span class="wbv">Routed to counsel</span><p>Contractual commitment, not drafted by the answer engine.</p><span class="wbe">Question requests a contractual/legal commitment; outside answerable...</span></div></div>
+      <div class="wbrow" data-tone="ok"><span class="wbn" aria-hidden="true">4</span><span class="wbid">GRC-01.1</span><p class="wbq">Do you maintain a formal, approved information security program and policy reviewed at least annually?</p><div class="wbr"><span class="wbv">Cited</span><p>Per Information Security Policy v3.2: Acme maintains a formal information security program governed by this policy, reviewed and approved annually by the CISO and executive leadership. The program is aligned to ISO/IEC 27001 control themes and covers all production systems and personnel.</p><span class="wbe">POL-ISMS-001 v3.2 (para:2)</span></div></div><div class="wbrow" data-tone="ok"><span class="wbn" aria-hidden="true">6</span><span class="wbid">A&amp;A-01.1</span><p class="wbq">Do you hold a current SOC 2 Type II attestation? If yes, state the trust services criteria covered and period.</p><div class="wbr"><span class="wbv">Cited</span><p>Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis &amp; Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.</p><span class="wbe">CRT-SOC2-2025 v1.0 (para:2)</span></div></div><div class="wbrow" data-tone="warn"><span class="wbn" aria-hidden="true">8</span><span class="wbid">AIS-01.1</span><p class="wbq">Has an independent penetration test of the application been performed in the last 12 months? Summarize scope and outcome.</p><div class="wbr"><span class="wbv">Refused</span><p>RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state claim</p><span class="wbe">route to security@acme.example</span></div></div><div class="wbrow" data-tone="warn"><span class="wbn" aria-hidden="true">14</span><span class="wbid">DSP-01.1</span><p class="wbq">Within how many days of contract termination is customer data deleted from your systems, including backups?</p><div class="wbr"><span class="wbv">Refused</span><p>POL-RET-001: conflicting approved sources on a machine-checked assertion</p><span class="wbe">route to owners for reconciliation</span></div></div><div class="wbrow" data-tone="legal"><span class="wbn" aria-hidden="true">26</span><span class="wbid">LGL-01.1</span><p class="wbq">Will Vendor contractually commit to unlimited liability for any security breach and guarantee a 99.99% uptime SLA with financial penalties?</p><div class="wbr"><span class="wbv">Routed to counsel</span><p>Question requests a contractual/legal commitment</p><span class="wbe">outside answerable scope.</span></div></div>
       <div class="sheetfoot">
-        <span class="tally" id="tally"><b>2</b> answered with citations / <em>3</em> refused or routed</span>
+        <span class="tally" id="tally" aria-live="polite" aria-atomic="true"><b>2</b> answered with citations / <em>3</em> refused or routed</span>
         <button type="button" class="replay" id="replay">Replay</button>
       </div>
     </div>
@@ -904,7 +948,7 @@ footer a{color:var(--signal)}
     <h3 style="margin-top:12px">Break the audit chain yourself</h3>
     <p class="tlede">Six real events from the run. Edit any actor and verification fails from
     there. Put it back and it heals.</p>
-    <div class="tblocks" id="tblocks"><div class="tb" data-i="0" title="RECEIVED"><span class="th">01 / RECEIVED</span><span class="prev">links back to genesis</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 1, edit to tamper with the chain"><span class="hash">62ec12865093e4feb4</span></div><div class="tb" data-i="1" title="CLASSIFIED"><span class="th">02 / ROUTED</span><span class="prev">links back to 62ec12</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 2, edit to tamper with the chain"><span class="hash">c5273bbcfe367c348d</span></div><div class="tb" data-i="2" title="EVIDENCE_INTEGRITY_SCAN"><span class="th">03 / EVIDENCE SCAN</span><span class="prev">links back to c5273b</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 3, edit to tamper with the chain"><span class="hash">b8a1747952a2c0f40a</span></div><div class="tb" data-i="3" title="DRAFTED"><span class="th">04 / DRAFTED</span><span class="prev">links back to b8a174</span><input data-f="actor" value="mock" readonly title="mock" aria-label="actor of event 4, edit to tamper with the chain"><span class="hash">90d6df6eef243e3c2f</span></div><div class="tb" data-i="4" title="APPROVED"><span class="th">05 / APPROVED</span><span class="prev">links back to 90d6df</span><input data-f="actor" value="demo-grc-reviewer (simulated)" readonly title="demo-grc-reviewer (simulated)" aria-label="actor of event 5, edit to tamper with the chain"><span class="hash">576a33cbe21cc748eb</span></div><div class="tb" data-i="5" title="DRAFTED"><span class="th">06 / DRAFTED</span><span class="prev">links back to 576a33</span><input data-f="actor" value="mock" readonly title="mock" aria-label="actor of event 6, edit to tamper with the chain"><span class="hash">7cdc1c7ecff2ac68b9</span></div></div>
+    <div class="tblocks" id="tblocks"><div class="tb" data-i="0" title="RECEIVED"><span class="th">01 / RECEIVED</span><span class="prev">links back to genesis</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 1, edit to tamper with the chain"><span class="hash">61fef3c3399b863bb5</span></div><div class="tb" data-i="1" title="CLASSIFIED"><span class="th">02 / ROUTED</span><span class="prev">links back to 61fef3</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 2, edit to tamper with the chain"><span class="hash">c08eac4f9385d881cd</span></div><div class="tb" data-i="2" title="EVIDENCE_INTEGRITY_SCAN"><span class="th">03 / EVIDENCE SCAN</span><span class="prev">links back to c08eac</span><input data-f="actor" value="system" readonly title="system" aria-label="actor of event 3, edit to tamper with the chain"><span class="hash">3c553c62ff53eb7340</span></div><div class="tb" data-i="3" title="DRAFTED"><span class="th">04 / DRAFTED</span><span class="prev">links back to 3c553c</span><input data-f="actor" value="mock" readonly title="mock" aria-label="actor of event 4, edit to tamper with the chain"><span class="hash">953082a9d7214d9d68</span></div><div class="tb" data-i="4" title="APPROVED"><span class="th">05 / APPROVED</span><span class="prev">links back to 953082</span><input data-f="actor" value="demo-grc-reviewer (simulated)" readonly title="demo-grc-reviewer (simulated)" aria-label="actor of event 5, edit to tamper with the chain"><span class="hash">940a0616717c834f40</span></div><div class="tb" data-i="5" title="DRAFTED"><span class="th">06 / DRAFTED</span><span class="prev">links back to 940a06</span><input data-f="actor" value="mock" readonly title="mock" aria-label="actor of event 6, edit to tamper with the chain"><span class="hash">3247a9103a465f28e1</span></div></div>
     <div class="trow">
       <span class="tstatus" id="tstatus" role="status">Chain verifies, all six links intact</span>
       <button type="button" class="treset" id="treset">Restore</button>
@@ -1037,7 +1081,7 @@ footer a{color:var(--signal)}
 
 </main>
 <script>
-const DEMO={"showcase": {"mfa": {"label": "MFA enforcement", "question": "Is multi-factor authentication enforced for all workforce access to production systems?", "trap": "cited", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "flags": []}, "ir": {"label": "Incident response", "question": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?", "trap": "cited", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "flags": []}, "soc2": {"label": "SOC 2 attestation", "question": "Do you hold a current SOC 2 Type II attestation?", "trap": "cited", "verdict": "CITED, HELD FOR HUMAN REVIEW", "tone": "rev", "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.", "citations": ["CRT-SOC2-2025 v1.0 para:2"], "gaps": [], "flags": ["CERT_CLAIM: certification evidence class required"]}, "iso": {"label": "ISO 27001 trap", "question": "Is your ISMS ISO 27001 certified? Provide the certificate number, certification body and expiry date.", "trap": "cert", "verdict": "REFUSED, CERT NEVER INFERRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["PLN-ISO-RM (type=roadmap): not a certificate/attestation, certification status is never inferred from plans or policies"], "flags": ["CERT_CLAIM: certification evidence class required", "CERT_INFERENCE_BLOCKED:PLN-ISO-RM"]}, "del": {"label": "Deletion contradiction", "question": "Within how many days of contract termination is customer data deleted?", "trap": "contradiction", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation", "POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "flags": ["CONTRADICTION:POL-RET-001", "STALE_EVIDENCE:POL-RET-002"]}, "pen": {"label": "Stale pentest", "question": "Has an independent penetration test been performed in the last 12 months?", "trap": "stale", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state claim; route to security@acme.example"], "flags": ["STALE_EVIDENCE:RPT-PEN-2024"]}, "legal": {"label": "Unlimited liability", "question": "Will Vendor contractually commit to unlimited liability for any breach?", "trap": "legal", "verdict": "ROUTED TO COUNSEL", "tone": "legal", "answer": null, "citations": [], "gaps": ["Question requests a contractual/legal commitment; outside answerable scope."], "flags": ["LEGAL_COMMITMENT: routed to counsel; never drafted as fact"]}}, "bank": [{"question": "Is customer data encrypted at rest, and with what algorithm and key length?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example", "Answer is not grounded in its cited evidence: only 7% of its content words appear in the cited passages (floor 35%). Answer withheld; an SME must write this one from the source."], "keywords": ["customer", "data", "encrypted", "encryption", "rest", "algorithm", "key", "length"]}, {"question": "Is data encrypted in transit using TLS 1.2 or higher?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Encryption Standard v1.4: Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled. Data at rest is encrypted with AES-256 across databases, object storage and backups.", "citations": ["STD-ENC-001 v1.4 para:2"], "gaps": [], "keywords": ["data", "encrypted", "encryption", "transit", "using", "tls", "1.2"]}, {"question": "How are encryption keys managed, stored, and rotated?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Encryption Standard v1.4: Encryption keys are managed in a cloud KMS with annual rotation, split administrative duties and audit logging of key usage.", "citations": ["STD-ENC-001 v1.4 para:3"], "gaps": [], "keywords": ["encryption", "encrypted", "keys", "managed", "stored", "rotated"]}, {"question": "Are backups performed regularly, and are they encrypted and tested for restore?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["backups", "backup", "regularly", "encrypted", "encryption", "tested", "testing", "restore"]}, {"question": "Do you maintain a documented disaster recovery plan, and how often is it tested?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Business Continuity and Disaster Recovery Plan v1.8: # Business Continuity and Disaster Recovery Plan", "citations": ["PLN-BCP-001 v1.8 para:1"], "gaps": [], "keywords": ["maintain", "documented", "disaster", "dr", "recovery", "plan", "tested", "testing"]}, {"question": "What are your recovery time objective (RTO) and recovery point objective (RPO)?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Business Continuity and Disaster Recovery Plan v1.8: The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services, using cross-region replication and automated failover runbooks.", "citations": ["PLN-BCP-001 v1.8 para:2"], "gaps": [], "keywords": ["recovery", "time", "objective", "rto", "point", "rpo"]}, {"question": "Do you have a formal incident response policy with defined roles and severity levels?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "keywords": ["formal", "incident", "response", "policy", "defined", "roles", "severity", "levels"]}, {"question": "What is your breach notification window for incidents involving personal data?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "keywords": ["breach", "notification", "window", "incidents", "personal", "data"]}, {"question": "Describe your vulnerability management program, including scanning frequency.", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["vulnerability", "vulnerabilities", "management", "program", "scanning", "frequency"]}, {"question": "What are your patching SLAs for critical, high, and medium severity vulnerabilities?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["patching", "patch", "patches", "slas", "sla", "critical", "high", "medium", "severity", "vulnerabilities", "vulnerability"]}, {"question": "Who performs your penetration tests, and can you share the executive summary?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["performs", "penetration", "pentest", "tests", "testing", "test", "share", "executive", "summary"]}, {"question": "Can you provide your most recent SOC 2 report under NDA?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.", "citations": ["CRT-SOC2-2025 v1.0 para:2"], "gaps": [], "keywords": ["most", "recent", "soc", "soc2", "2", "report", "nda"]}, {"question": "Do you hold an ISO 27001 certificate covering the services provided to us?", "verdict": "REFUSED, CERT NEVER INFERRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["PLN-ISO-RM (type=roadmap): not a certificate/attestation, certification status is never inferred from plans or policies"], "keywords": ["hold", "iso", "27001", "certificate", "covering", "services", "provided"]}, {"question": "How is access to customer data restricted and reviewed?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["access", "customer", "data", "restricted", "reviewed"]}, {"question": "Do you enforce least privilege and role based access control for internal systems?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "keywords": ["enforce", "least", "privilege", "role", "based", "access", "control", "internal", "systems"]}, {"question": "How quickly is access revoked when an employee leaves or changes role?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["access", "revoked", "employee", "leaves", "changes", "role"]}, {"question": "Are security events centrally logged and monitored for anomalies?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["security", "events", "centrally", "logged", "logging", "logs", "monitored", "anomalies"]}, {"question": "How long are audit logs retained, and are they protected from tampering?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Information Security Policy v3.2: ## Logging and monitoring Production systems emit centralized audit logs retained for security analysis. Logs are protected against tampering and monitored for anomalous activity with 24x7 alerting.", "citations": ["POL-ISMS-001 v3.2 para:4"], "gaps": [], "keywords": ["audit", "logs", "logging", "retained", "retention", "protected", "tampering"]}, {"question": "How do you assess and monitor the security of your vendors and subprocessors?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Subprocessor List v4.0: Acme production infrastructure is hosted on Amazon Web Services (primary: us-east-1, secondary: eu-west-1). Additional subprocessors: Datadog (observability), Stripe (payments), Postmark (transactional email).", "citations": ["LST-SUBPROC-001 v4.0 para:2"], "gaps": [], "keywords": ["assess", "monitor", "security", "vendors", "subprocessors", "subprocessor"]}, {"question": "Will you notify us before adding a new subprocessor that handles our data?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["notify", "adding", "subprocessor", "subprocessors", "vendor", "handles", "data"]}, {"question": "How is customer data deleted at our request, and is deletion certified?", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation"], "keywords": ["customer", "data", "deleted", "deletion", "request", "certified"]}, {"question": "What is your data retention schedule for customer content and derived data?", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example", "POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation"], "keywords": ["data", "retention", "retained", "schedule", "customer", "content", "derived"]}, {"question": "In which regions is customer data stored, and can we choose our data residency?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["regions", "customer", "data", "stored", "choose", "residency"]}, {"question": "Does your development lifecycle include security requirements and threat modeling?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["development", "lifecycle", "include", "security", "requirements", "threat", "modeling"]}, {"question": "Is all code peer reviewed before it is merged and deployed to production?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["code", "peer", "reviewed", "merged", "deployed", "production"]}, {"question": "How are secrets such as API keys and credentials stored and rotated?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["secrets", "credentials", "api", "keys", "stored", "rotated"]}, {"question": "Do you scan third party dependencies for known vulnerabilities?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["scan", "third", "party", "dependencies", "known", "vulnerabilities", "vulnerability"]}, {"question": "Do all employees receive security awareness training, and how often?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Personnel Security and Awareness Policy v1.0: All employees complete security awareness training at hire and annually thereafter, with completion tracked to 100%. Role-specific secure coding training is required for engineers.", "citations": ["POL-HR-001 v1.0 para:2"], "gaps": [], "keywords": ["employees", "receive", "security", "awareness", "training"]}, {"question": "Are background checks performed on employees before they are hired?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Personnel Security and Awareness Policy v1.0: Background checks are performed for all new hires prior to start, to the extent permitted by local law.", "citations": ["POL-HR-001 v1.0 para:3"], "gaps": [], "keywords": ["background", "checks", "employees", "hired"]}, {"question": "What physical security controls protect the data centers hosting our data?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["physical", "security", "controls", "protect", "data", "centers", "hosting"]}, {"question": "Are company endpoints protected with disk encryption and endpoint detection tooling?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Information Security Policy v3.2: ## Endpoint protection Company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM.", "citations": ["POL-ISMS-001 v3.2 para:5"], "gaps": [], "keywords": ["company", "endpoints", "endpoint", "laptops", "protected", "disk", "encryption", "encrypted", "detection", "tooling"]}, {"question": "Is your production network segmented from corporate and development networks?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["production", "network", "segmented", "segmentation", "corporate", "development", "networks"]}, {"question": "What DDoS mitigation protections are in place for your public services?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["ddos", "denial-of-service", "mitigation", "protections", "place", "public", "services"]}, {"question": "What uptime SLA do you commit to, and how are service credits handled?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["uptime", "availability", "sla", "slas", "commit", "service", "credits", "handled"]}, {"question": "Will you contractually commit to a liability cap higher than twelve months of fees?", "verdict": "ROUTED TO COUNSEL", "tone": "legal", "answer": null, "citations": [], "gaps": ["Question requests a contractual/legal commitment; outside answerable scope."], "keywords": ["contractually", "commit", "liability", "liable", "cap", "than", "twelve", "months", "fees"]}, {"question": "Do you carry cyber liability insurance, and what is the coverage amount?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["carry", "cyber", "liability", "liable", "insurance", "insured", "coverage", "amount"]}, {"question": "How does your privacy program address GDPR and India's DPDP Act obligations?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["privacy", "program", "address", "gdpr", "india", "s", "dpdp", "act", "obligations"]}, {"question": "Have you appointed a data protection officer, and how can they be contacted?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["appointed", "data", "protection", "officer", "dpo", "contacted"]}, {"question": "Do we have the right to audit your security controls or receive audit reports?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["right", "audit", "security", "controls", "receive", "reports"]}, {"question": "Which multi-factor authentication methods are supported, and is phishing resistant MFA available?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "keywords": ["multi-factor", "mfa", "2fa", "multifactor", "authentication", "methods", "supported", "phishing", "resistant", "available"]}, {"question": "What password complexity, rotation, and storage requirements do you enforce?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["password", "complexity", "rotation", "storage", "requirements", "enforce"]}, {"question": "How are user sessions managed, including timeout and revocation on logout?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["user", "sessions", "managed", "timeout", "revocation", "logout"]}], "chain": {"recipe": "sha256 over json.dumps(event, sort_keys=True) with ', '/': ' separators; event={ts,actor,action,subject,detail,prev_hash}", "genesis": "0000000000000000000000000000000000000000000000000000000000000000", "events": [{"ts": "2026-08-16T17:27:59.663631+00:00", "actor": "system", "action": "RECEIVED", "subject": "acme_security_questionnaire.xlsx", "detail": {"sha256": "80b9360542d515650d80fc86c3154de6eccc29ffd33b81a41de95e398793d041", "tenant": "acme"}, "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000", "hash": "62ec12865093e4feb43e46b3ae5495f29137c7cde4382ee867cf20d6fac31976"}, {"ts": "2026-08-16T17:27:59.673278+00:00", "actor": "system", "action": "CLASSIFIED", "subject": "acme_security_questionnaire.xlsx", "detail": {"question_count": 24}, "prev_hash": "62ec12865093e4feb43e46b3ae5495f29137c7cde4382ee867cf20d6fac31976", "hash": "c5273bbcfe367c348d40678e08eb95d1059cb801d65e81b20ad2a91590b6ccac"}, {"ts": "2026-08-16T17:27:59.674149+00:00", "actor": "system", "action": "EVIDENCE_INTEGRITY_SCAN", "subject": "acme", "detail": {"stale_sources": ["POL-RET-002", "RPT-PEN-2024"], "contradictions": {"customer_data_deletion_days": ["POL-RET-001=90", "POL-RET-002=365"]}}, "prev_hash": "c5273bbcfe367c348d40678e08eb95d1059cb801d65e81b20ad2a91590b6ccac", "hash": "b8a1747952a2c0f40a9fbf7e10071aef717a790dd521cd368f6923dd3c7d2bb2"}, {"ts": "2026-08-16T17:27:59.675391+00:00", "actor": "mock", "action": "DRAFTED", "subject": "GRC-01.1", "detail": {"citations": ["POL-ISMS-001"], "coverage": "complete"}, "prev_hash": "b8a1747952a2c0f40a9fbf7e10071aef717a790dd521cd368f6923dd3c7d2bb2", "hash": "90d6df6eef243e3c2f7523975d1c3309493f96f0d7f13f9680ac8ec1af8475b8"}, {"ts": "2026-08-16T17:27:59.675909+00:00", "actor": "demo-grc-reviewer (simulated)", "action": "APPROVED", "subject": "GRC-01.1", "detail": {"mode": "SIMULATED_DEMO_APPROVAL", "citations": ["POL-ISMS-001@para:2"]}, "prev_hash": "90d6df6eef243e3c2f7523975d1c3309493f96f0d7f13f9680ac8ec1af8475b8", "hash": "576a33cbe21cc748ebe78d08d59cb01f429b2da8cbca11c5d6545259b683cfbf"}, {"ts": "2026-08-16T17:27:59.676836+00:00", "actor": "mock", "action": "DRAFTED", "subject": "GRC-02.1", "detail": {"citations": ["POL-ISMS-001"], "coverage": "complete"}, "prev_hash": "576a33cbe21cc748ebe78d08d59cb01f429b2da8cbca11c5d6545259b683cfbf", "hash": "7cdc1c7ecff2ac68b976e0b8ced271c40e80f582976e4054120605de81861199"}]}};
+const DEMO={"showcase": {"mfa": {"label": "MFA enforcement", "question": "Is multi-factor authentication enforced for all workforce access to production systems?", "trap": "cited", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "flags": []}, "ir": {"label": "Incident response", "question": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?", "trap": "cited", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "flags": []}, "soc2": {"label": "SOC 2 attestation", "question": "Do you hold a current SOC 2 Type II attestation?", "trap": "cited", "verdict": "CITED, HELD FOR HUMAN REVIEW", "tone": "rev", "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.", "citations": ["CRT-SOC2-2025 v1.0 para:2"], "gaps": [], "flags": ["CERT_CLAIM: certification evidence class required"]}, "iso": {"label": "ISO 27001 trap", "question": "Is your ISMS ISO 27001 certified? Provide the certificate number, certification body and expiry date.", "trap": "cert", "verdict": "REFUSED, CERT NEVER INFERRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["PLN-ISO-RM (type=roadmap): not a certificate/attestation, certification status is never inferred from plans or policies"], "flags": ["CERT_CLAIM: certification evidence class required", "CERT_INFERENCE_BLOCKED:PLN-ISO-RM"]}, "del": {"label": "Deletion contradiction", "question": "Within how many days of contract termination is customer data deleted?", "trap": "contradiction", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation", "POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "flags": ["CONTRADICTION:POL-RET-001", "STALE_EVIDENCE:POL-RET-002"]}, "pen": {"label": "Stale pentest", "question": "Has an independent penetration test been performed in the last 12 months?", "trap": "stale", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["RPT-PEN-2024 v1.0: EXPIRED 2025-06-10, cannot support a current-state claim; route to security@acme.example"], "flags": ["STALE_EVIDENCE:RPT-PEN-2024"]}, "legal": {"label": "Unlimited liability", "question": "Will Vendor contractually commit to unlimited liability for any breach?", "trap": "legal", "verdict": "ROUTED TO COUNSEL", "tone": "legal", "answer": null, "citations": [], "gaps": ["Question requests a contractual/legal commitment; outside answerable scope."], "flags": ["LEGAL_COMMITMENT: routed to counsel; never drafted as fact"]}}, "bank": [{"question": "Is customer data encrypted at rest, and with what algorithm and key length?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example", "Answer is not grounded in its cited evidence: only 7% of its content words appear in the cited passages (floor 35%). Answer withheld; an SME must write this one from the source."], "keywords": ["customer", "data", "encrypted", "encryption", "rest", "algorithm", "key", "length"]}, {"question": "Is data encrypted in transit using TLS 1.2 or higher?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Encryption Standard v1.4: Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled. Data at rest is encrypted with AES-256 across databases, object storage and backups.", "citations": ["STD-ENC-001 v1.4 para:2"], "gaps": [], "keywords": ["data", "encrypted", "encryption", "transit", "using", "tls", "1.2"]}, {"question": "How are encryption keys managed, stored, and rotated?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Encryption Standard v1.4: Encryption keys are managed in a cloud KMS with annual rotation, split administrative duties and audit logging of key usage.", "citations": ["STD-ENC-001 v1.4 para:3"], "gaps": [], "keywords": ["encryption", "encrypted", "keys", "managed", "stored", "rotated"]}, {"question": "Are backups performed regularly, and are they encrypted and tested for restore?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["backups", "backup", "regularly", "encrypted", "encryption", "tested", "testing", "restore"]}, {"question": "Do you maintain a documented disaster recovery plan, and how often is it tested?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Business Continuity and Disaster Recovery Plan v1.8: # Business Continuity and Disaster Recovery Plan", "citations": ["PLN-BCP-001 v1.8 para:1"], "gaps": [], "keywords": ["maintain", "documented", "disaster", "dr", "recovery", "plan", "tested", "testing"]}, {"question": "What are your recovery time objective (RTO) and recovery point objective (RPO)?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Business Continuity and Disaster Recovery Plan v1.8: The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services, using cross-region replication and automated failover runbooks.", "citations": ["PLN-BCP-001 v1.8 para:2"], "gaps": [], "keywords": ["recovery", "time", "objective", "rto", "point", "rpo"]}, {"question": "Do you have a formal incident response policy with defined roles and severity levels?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "keywords": ["formal", "incident", "response", "policy", "defined", "roles", "severity", "levels"]}, {"question": "What is your breach notification window for incidents involving personal data?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…", "citations": ["PLN-IR-001 v2.1 para:2"], "gaps": [], "keywords": ["breach", "notification", "window", "incidents", "personal", "data"]}, {"question": "Describe your vulnerability management program, including scanning frequency.", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["vulnerability", "vulnerabilities", "management", "program", "scanning", "frequency"]}, {"question": "What are your patching SLAs for critical, high, and medium severity vulnerabilities?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["patching", "patch", "patches", "slas", "sla", "critical", "high", "medium", "severity", "vulnerabilities", "vulnerability"]}, {"question": "Who performs your penetration tests, and can you share the executive summary?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["performs", "penetration", "pentest", "tests", "testing", "test", "share", "executive", "summary"]}, {"question": "Can you provide your most recent SOC 2 report under NDA?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.", "citations": ["CRT-SOC2-2025 v1.0 para:2"], "gaps": [], "keywords": ["most", "recent", "soc", "soc2", "2", "report", "nda"]}, {"question": "Do you hold an ISO 27001 certificate covering the services provided to us?", "verdict": "REFUSED, CERT NEVER INFERRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["PLN-ISO-RM (type=roadmap): not a certificate/attestation, certification status is never inferred from plans or policies"], "keywords": ["hold", "iso", "27001", "certificate", "covering", "services", "provided"]}, {"question": "How is access to customer data restricted and reviewed?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["access", "customer", "data", "restricted", "reviewed"]}, {"question": "Do you enforce least privilege and role based access control for internal systems?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "keywords": ["enforce", "least", "privilege", "role", "based", "access", "control", "internal", "systems"]}, {"question": "How quickly is access revoked when an employee leaves or changes role?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["access", "revoked", "employee", "leaves", "changes", "role"]}, {"question": "Are security events centrally logged and monitored for anomalies?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["security", "events", "centrally", "logged", "logging", "logs", "monitored", "anomalies"]}, {"question": "How long are audit logs retained, and are they protected from tampering?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Information Security Policy v3.2: ## Logging and monitoring Production systems emit centralized audit logs retained for security analysis. Logs are protected against tampering and monitored for anomalous activity with 24x7 alerting.", "citations": ["POL-ISMS-001 v3.2 para:4"], "gaps": [], "keywords": ["audit", "logs", "logging", "retained", "retention", "protected", "tampering"]}, {"question": "How do you assess and monitor the security of your vendors and subprocessors?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Subprocessor List v4.0: Acme production infrastructure is hosted on Amazon Web Services (primary: us-east-1, secondary: eu-west-1). Additional subprocessors: Datadog (observability), Stripe (payments), Postmark (transactional email).", "citations": ["LST-SUBPROC-001 v4.0 para:2"], "gaps": [], "keywords": ["assess", "monitor", "security", "vendors", "subprocessors", "subprocessor"]}, {"question": "Will you notify us before adding a new subprocessor that handles our data?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["notify", "adding", "subprocessor", "subprocessors", "vendor", "handles", "data"]}, {"question": "How is customer data deleted at our request, and is deletion certified?", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation"], "keywords": ["customer", "data", "deleted", "deletion", "request", "certified"]}, {"question": "What is your data retention schedule for customer content and derived data?", "verdict": "REFUSED, SOURCES CONFLICT", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example", "POL-RET-001: conflicting approved sources on a machine-checked assertion, route to owners for reconciliation"], "keywords": ["data", "retention", "retained", "schedule", "customer", "content", "derived"]}, {"question": "In which regions is customer data stored, and can we choose our data residency?", "verdict": "REFUSED, EVIDENCE EXPIRED", "tone": "warn", "answer": null, "citations": [], "gaps": ["POL-RET-002 v1.1: EXPIRED 2026-06-20, cannot support a current-state claim; route to infra@acme.example"], "keywords": ["regions", "customer", "data", "stored", "choose", "residency"]}, {"question": "Does your development lifecycle include security requirements and threat modeling?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["development", "lifecycle", "include", "security", "requirements", "threat", "modeling"]}, {"question": "Is all code peer reviewed before it is merged and deployed to production?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.", "citations": ["POL-SDLC-001 v1.2 para:2"], "gaps": [], "keywords": ["code", "peer", "reviewed", "merged", "deployed", "production"]}, {"question": "How are secrets such as API keys and credentials stored and rotated?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["secrets", "credentials", "api", "keys", "stored", "rotated"]}, {"question": "Do you scan third party dependencies for known vulnerabilities?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["scan", "third", "party", "dependencies", "known", "vulnerabilities", "vulnerability"]}, {"question": "Do all employees receive security awareness training, and how often?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Personnel Security and Awareness Policy v1.0: All employees complete security awareness training at hire and annually thereafter, with completion tracked to 100%. Role-specific secure coding training is required for engineers.", "citations": ["POL-HR-001 v1.0 para:2"], "gaps": [], "keywords": ["employees", "receive", "security", "awareness", "training"]}, {"question": "Are background checks performed on employees before they are hired?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Personnel Security and Awareness Policy v1.0: Background checks are performed for all new hires prior to start, to the extent permitted by local law.", "citations": ["POL-HR-001 v1.0 para:3"], "gaps": [], "keywords": ["background", "checks", "employees", "hired"]}, {"question": "What physical security controls protect the data centers hosting our data?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["physical", "security", "controls", "protect", "data", "centers", "hosting"]}, {"question": "Are company endpoints protected with disk encryption and endpoint detection tooling?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Information Security Policy v3.2: ## Endpoint protection Company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM.", "citations": ["POL-ISMS-001 v3.2 para:5"], "gaps": [], "keywords": ["company", "endpoints", "endpoint", "laptops", "protected", "disk", "encryption", "encrypted", "detection", "tooling"]}, {"question": "Is your production network segmented from corporate and development networks?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["production", "network", "segmented", "segmentation", "corporate", "development", "networks"]}, {"question": "What DDoS mitigation protections are in place for your public services?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["ddos", "denial-of-service", "mitigation", "protections", "place", "public", "services"]}, {"question": "What uptime SLA do you commit to, and how are service credits handled?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["uptime", "availability", "sla", "slas", "commit", "service", "credits", "handled"]}, {"question": "Will you contractually commit to a liability cap higher than twelve months of fees?", "verdict": "ROUTED TO COUNSEL", "tone": "legal", "answer": null, "citations": [], "gaps": ["Question requests a contractual/legal commitment; outside answerable scope."], "keywords": ["contractually", "commit", "liability", "liable", "cap", "than", "twelve", "months", "fees"]}, {"question": "Do you carry cyber liability insurance, and what is the coverage amount?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["carry", "cyber", "liability", "liable", "insurance", "insured", "coverage", "amount"]}, {"question": "How does your privacy program address GDPR and India's DPDP Act obligations?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["privacy", "program", "address", "gdpr", "india", "s", "dpdp", "act", "obligations"]}, {"question": "Have you appointed a data protection officer, and how can they be contacted?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["appointed", "data", "protection", "officer", "dpo", "contacted"]}, {"question": "Do we have the right to audit your security controls or receive audit reports?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["right", "audit", "security", "controls", "receive", "reports"]}, {"question": "Which multi-factor authentication methods are supported, and is phishing resistant MFA available?", "verdict": "CITED, GATE CLEAN", "tone": "ok", "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.", "citations": ["POL-AC-001 v2.3 para:2"], "gaps": [], "keywords": ["multi-factor", "mfa", "2fa", "multifactor", "authentication", "methods", "supported", "phishing", "resistant", "available"]}, {"question": "What password complexity, rotation, and storage requirements do you enforce?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["password", "complexity", "rotation", "storage", "requirements", "enforce"]}, {"question": "How are user sessions managed, including timeout and revocation on logout?", "verdict": "REFUSED, GAP NAMED", "tone": "warn", "answer": null, "citations": [], "gaps": ["Retrieval found no sufficiently relevant approved evidence.", "No approved evidence retrieved for this question."], "keywords": ["user", "sessions", "managed", "timeout", "revocation", "logout"]}], "chain": {"recipe": "sha256 over json.dumps(event, sort_keys=True) with ', '/': ' separators; event={ts,actor,action,subject,detail,prev_hash}", "genesis": "0000000000000000000000000000000000000000000000000000000000000000", "events": [{"ts": "2026-08-16T17:40:35.651983+00:00", "actor": "system", "action": "RECEIVED", "subject": "acme_security_questionnaire.xlsx", "detail": {"sha256": "80b9360542d515650d80fc86c3154de6eccc29ffd33b81a41de95e398793d041", "tenant": "acme"}, "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000", "hash": "61fef3c3399b863bb5a8d08ed09ecb24b563223ee9d4ff45a4bd4a5307b9a458"}, {"ts": "2026-08-16T17:40:35.661402+00:00", "actor": "system", "action": "CLASSIFIED", "subject": "acme_security_questionnaire.xlsx", "detail": {"question_count": 24}, "prev_hash": "61fef3c3399b863bb5a8d08ed09ecb24b563223ee9d4ff45a4bd4a5307b9a458", "hash": "c08eac4f9385d881cddbbbc3e5db7cafb7e2e6f41df0615f241b638728b04044"}, {"ts": "2026-08-16T17:40:35.662228+00:00", "actor": "system", "action": "EVIDENCE_INTEGRITY_SCAN", "subject": "acme", "detail": {"stale_sources": ["POL-RET-002", "RPT-PEN-2024"], "contradictions": {"customer_data_deletion_days": ["POL-RET-001=90", "POL-RET-002=365"]}}, "prev_hash": "c08eac4f9385d881cddbbbc3e5db7cafb7e2e6f41df0615f241b638728b04044", "hash": "3c553c62ff53eb734041e046840af48748efadbda48e36da24e4634b89f0ab75"}, {"ts": "2026-08-16T17:40:35.663421+00:00", "actor": "mock", "action": "DRAFTED", "subject": "GRC-01.1", "detail": {"citations": ["POL-ISMS-001"], "coverage": "complete"}, "prev_hash": "3c553c62ff53eb734041e046840af48748efadbda48e36da24e4634b89f0ab75", "hash": "953082a9d7214d9d68fc07e1bf3a31e9874eb7a61f3e42379734ff44ccb468bc"}, {"ts": "2026-08-16T17:40:35.663930+00:00", "actor": "demo-grc-reviewer (simulated)", "action": "APPROVED", "subject": "GRC-01.1", "detail": {"mode": "SIMULATED_DEMO_APPROVAL", "citations": ["POL-ISMS-001@para:2"]}, "prev_hash": "953082a9d7214d9d68fc07e1bf3a31e9874eb7a61f3e42379734ff44ccb468bc", "hash": "940a0616717c834f40d49725f67516bab907cf7a45db8c6a3719825cfe4ee3e4"}, {"ts": "2026-08-16T17:40:35.665005+00:00", "actor": "mock", "action": "DRAFTED", "subject": "GRC-02.1", "detail": {"citations": ["POL-ISMS-001"], "coverage": "complete"}, "prev_hash": "940a0616717c834f40d49725f67516bab907cf7a45db8c6a3719825cfe4ee3e4", "hash": "3247a9103a465f28e1189f83799ac7e546ce40eb2ea0f0cc5418578e9c9212d7"}]}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1066,83 +1110,90 @@ document.querySelectorAll(".rv").forEach(el=>io.observe(el));
       if(i<words.length-1)h1.appendChild(document.createTextNode(" "));
     });
     h1.classList.add("kin");
+    /* release the compositor layers rather than holding 12 of them forever */
+    const last=h1.querySelectorAll(".w");
+    if(last.length)last[last.length-1].addEventListener("animationend",
+      ()=>h1.querySelectorAll(".w").forEach(w=>w.style.willChange="auto"),{once:true});
   }
 
   const sheet=$("sheet");
   if(!sheet)return;
   const rows=[...sheet.querySelectorAll(".wbrow")];
   const rail=[...document.querySelectorAll(".rstage")];
+  const scan=sheet.querySelector(".scan");
   const tally=$("tally"),before=$("segBefore"),after=$("segAfter");
-  const STEP=760, LEAD=520;
+  /* 4.6s was long enough to count the beats out loud. A refusal gets a longer
+     beat than a cited row so the refusal is the accent, not just row N. */
+  const LEAD=320, STEP=400, HOLD=1.4;
   let timers=[];
 
   function clearTimers(){timers.forEach(clearTimeout);timers=[]}
   function at(ms,fn){timers.push(setTimeout(fn,ms))}
   function press(isAfter){
-    after.setAttribute("aria-pressed",isAfter?"true":"false");
-    before.setAttribute("aria-pressed",isAfter?"false":"true");
+    after.setAttribute("aria-checked",isAfter?"true":"false");
+    before.setAttribute("aria-checked",isAfter?"false":"true");
   }
   function counts(n){
-    /* the tally counts only what has actually landed, so the numbers are
-       true at every frame of the fill rather than only at the end */
+    /* counts only what has landed, so the tally is true at every frame */
     const shown=rows.slice(0,n);
     const cited=shown.filter(r=>r.dataset.tone==="ok").length;
     const held=shown.filter(r=>r.dataset.tone!=="ok").length;
     tally.innerHTML=`<b>${cited}</b> answered with citations / <em>${held}</em> refused or routed`;
   }
+  function litUpTo(k){rail.forEach((s2,i)=>s2.classList.toggle("on",i<=k))}
   function showEmpty(){
     clearTimers();
     sheet.classList.remove("scanning");
     sheet.classList.add("empty");
     rows.forEach(r=>r.classList.remove("in","writing"));
-    rail.forEach(s=>s.classList.remove("on"));
-    counts(0);press(false);
+    litUpTo(-1);counts(0);press(false);
   }
   function showFull(){
     clearTimers();
     sheet.classList.remove("empty","scanning");
     rows.forEach(r=>r.classList.remove("in","writing"));
-    rail.forEach(s=>s.classList.add("on"));
-    counts(rows.length);press(true);
+    litUpTo(rail.length-1);counts(rows.length);press(true);
   }
   function play(){
     if(reduced){showFull();return}
     clearTimers();
     sheet.classList.add("empty");
     rows.forEach(r=>r.classList.remove("in","writing"));
-    rail.forEach(s=>s.classList.remove("on"));
-    counts(0);press(true);
-    /* the scan sweeps the exact height of the rows it is writing */
-    const first=rows[0],last=rows[rows.length-1];
-    const span=last.offsetTop+last.offsetHeight-first.offsetTop;
-    const dur=LEAD+rows.length*STEP;
-    sheet.style.setProperty("--scanto",span+"px");
-    sheet.style.setProperty("--scandur",dur+"ms");
-    sheet.querySelector(".scan").style.top=first.offsetTop+"px";
+    litUpTo(-1);counts(0);press(true);
+    const top=rows[0].offsetTop;
+    scan.style.transform="translateY("+(top-scan.offsetHeight/2)+"px)";
     sheet.classList.add("scanning");
-    at(60,()=>rail[0].classList.add("on"));
+    at(40,()=>litUpTo(0));
+    /* each row gets its own beat, so the scan steps to the row it is about to
+       write rather than sweeping on a timer that drifts against row heights */
+    let t=LEAD, firstRefusalDone=false;
     rows.forEach((r,i)=>{
-      at(LEAD+i*STEP-160,()=>r.classList.add("writing"));
-      at(LEAD+i*STEP,()=>{
-        r.classList.remove("writing");r.classList.add("in");counts(i+1);
-        if(i===0)rail[1].classList.add("on");
-        if(r.dataset.tone!=="ok")rail[2].classList.add("on");
+      const beat=Math.round(STEP*(r.dataset.tone!=="ok"?HOLD:1));
+      at(t-200,()=>{
+        r.classList.add("writing");
+        scan.style.transform="translateY("+(r.offsetTop+r.offsetHeight/2-scan.offsetHeight/2)+"px)";
       });
+      at(t,()=>{
+        r.classList.remove("writing");r.classList.add("in");counts(i+1);
+        if(i===0)litUpTo(1);
+        if(r.dataset.tone!=="ok"&&!firstRefusalDone){firstRefusalDone=true;litUpTo(2)}
+      });
+      t+=beat;
     });
-    at(dur+260,()=>{sheet.classList.remove("scanning");showFull()});
+    /* the scan stops when the last row lands, not a second later */
+    at(t-STEP+120,()=>sheet.classList.remove("scanning"));
+    at(t+140,showFull);
   }
 
   before.onclick=showEmpty;
-  after.onclick=()=>{if(sheet.classList.contains("empty"))play();else showFull()};
+  /* a segment is a state flip, not a 4 second performance. Replay is what the
+     replay button is for. */
+  after.onclick=showFull;
   $("replay").onclick=play;
 
-  /* The markup renders finished, so the rail must start lit to match it.
-     Without this the rail reads as "nothing has happened" while the sheet
-     beside it is already full, which is only visible on a narrow screen
-     where the sheet sits below the fold. */
+  /* The markup renders finished, so the rail must start lit to match it. */
   showFull();
 
-  /* run once, when the sheet is actually looked at */
   let played=false;
   new IntersectionObserver((es,ob)=>es.forEach(e=>{
     if(!e.isIntersecting||played)return;
