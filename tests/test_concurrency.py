@@ -272,8 +272,28 @@ def test_status_exposes_progress(env):
     out = runqueue.status("alpha", run_id)
     assert out["current_q"] == 0
     assert out["total_q"] > 0
+    # progress is only ever reported by the worker while the run is running,
+    # which is the state the guard in _set_progress requires
+    with db.connect() as conn:
+        conn.execute("UPDATE runs SET status='running' WHERE id=?", (run_id,))
     runqueue._set_progress(run_id, 7, out["total_q"])
     assert runqueue.status("alpha", run_id)["current_q"] == 7
+
+
+def test_progress_is_refused_on_a_terminal_run(env):
+    """An orphaned run whose budget expired keeps executing until it finishes.
+
+    Without a status guard it goes on writing progress onto a row that is
+    already errored, and the UI shows "8 of 8 complete" next to a timeout.
+    """
+    run_id = runqueue.enqueue("alpha", "Alpha", "mock")
+    with db.connect() as conn:
+        conn.execute("UPDATE runs SET status='error', error=? WHERE id=?",
+                     (runqueue.ERROR_TIMEOUT, run_id))
+    runqueue._set_progress(run_id, 8, 8)
+    out = runqueue.status("alpha", run_id)
+    assert out["current_q"] == 0, "a terminal run must not accept progress writes"
+    assert out["status"] == "error"
 
 
 # ---------------------------------------------------------------------------

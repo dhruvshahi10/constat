@@ -144,9 +144,14 @@ def status(slug: str, run_id: str) -> dict:
         if row["metrics_json"]:
             out["metrics"] = json.loads(row["metrics_json"])
         if row["status"] == "done":
-            out["files"] = ["run_report.html", "contracts.json", "audit_log.jsonl",
-                            "metrics.json",
-                            f"{Path(row['dir']).name}__DELIVERED.xlsx"]
+            # only advertise what is still on disk: prune_run_dirs keeps the
+            # newest few, so an older run's downloads would otherwise 404
+            d = Path(row["dir"]) if row["dir"] else None
+            names = ["run_report.html", "contracts.json", "audit_log.jsonl",
+                     "metrics.json", f"{d.name}__DELIVERED.xlsx" if d else ""]
+            out["files"] = ([n for n in names if n and (d / n).is_file()]
+                            if d and d.is_dir() else [])
+            out["pruned"] = not out["files"]
         safe = _safe_error(row["error"])
         if safe:
             # error_detail is deliberately not exposed: it carries absolute
@@ -159,7 +164,11 @@ def _set_progress(run_id: str, done: int, total: int) -> None:
     """Best-effort per-question progress. Never allowed to fail a run."""
     try:
         with db.connect() as conn:
-            conn.execute("UPDATE runs SET current_q=?, total_q=? WHERE id=?",
+            # status guard: an orphaned run whose budget expired must not
+            # keep writing progress onto a row that is already terminal, or the
+            # UI shows "8 of 8 complete" beside a timeout error
+            conn.execute("UPDATE runs SET current_q=?, total_q=? "
+                         "WHERE id=? AND status='running'",
                          (done, total, run_id))
     except Exception:  # noqa: BLE001 — progress is cosmetic
         pass
@@ -187,7 +196,11 @@ def _pipeline_job(run_id: str, slug: str, org: str, drafter: str, out_dir: Path,
         res = pipeline_run(qnr, tenant=slug, evidence_root=config.evidence_root(slug),
                            out_dir=out_dir, drafter_kind=drafter, today=date.today(),
                            approval_mode="human", retriever=retriever,
-                           progress=lambda done, total: _set_progress(run_id, done, total))
+                           progress=lambda done, total: _set_progress(run_id, done, total),
+                           # the budget has to stop WORK, not just stop recording
+                           # it: an abandoned run still spends the shared
+                           # provider rate limit, and N orphans multiply it by N
+                           abort=aborted)
         res.metrics["retrieval"] = retrieval_mode
         (out_dir / "metrics.json").write_text(json.dumps(res.metrics, indent=2),
                                               encoding="utf-8")

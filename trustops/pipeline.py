@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -121,13 +122,18 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         reviewer: str = "demo-grc-reviewer (simulated)",
         approval_mode: str = "simulated",
         retriever=None,
-        progress: Callable[[int, int], None] | None = None) -> RunResult:
+        progress: Callable[[int, int], None] | None = None,
+        abort: "threading.Event | None" = None) -> RunResult:
     """approval_mode: "simulated" auto-approves gate-clean complete drafts with a
     labeled stand-in reviewer (demo/CLI). "human" approves nothing: clean drafts
     rest at GRC_REVIEW until a named reviewer acts via trustops.server.review.
 
     retriever: injectable Retriever-compatible instance (e.g. SemanticRetriever);
     defaults to the lexical Retriever over the same store.
+
+    abort: optional Event. When set, the per-question loop stops after the
+    current question and the run is finalized with what it has. The worker sets
+    this when a run exceeds its wall-clock budget.
 
     progress: optional callback(questions_done, questions_total) invoked after
     each question. Observation only — it can never change the run's outcome, so
@@ -202,11 +208,37 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                          {"mode": "SIMULATED_DEMO_APPROVAL",
                           "citations": [f"{c.source_id}@{c.location}" for c in d.citations]})
         drafts[q.question_id] = d
+        if abort is not None and abort.is_set():
+            # The run budget expired and the worker has moved on. Stop doing
+            # work, not just stop recording it: an abandoned run that keeps
+            # drafting still spends the shared provider rate limit, and N
+            # orphans multiply it by N. Partial results are written below so
+            # the artifacts stay internally consistent.
+            audit.append("system", "ABORTED", tenant,
+                         {"reason": "run budget expired", "answered": done,
+                          "of": total_q})
+            break
         if progress is not None:
             try:
                 progress(done, total_q)
             except Exception:  # noqa: BLE001 — telemetry never breaks a run
                 pass
+
+    # An aborted run leaves questions with no draft at all. Every artifact
+    # downstream (export, contracts, review) assumes one draft per question, so
+    # fill the tail with explicit non-answers rather than shipping a workbook
+    # with silent blanks. A stopped run must look stopped, not look answered.
+    for q in questions:
+        if q.question_id in drafts:
+            continue
+        q.state = QState.EXCEPTION
+        drafts[q.question_id] = Draft(
+            question_id=q.question_id, answer=None, abstained=True,
+            evidence_coverage=Coverage.NONE, requires_human=True, route="SME",
+            gaps=["Run stopped before this question was processed; no answer "
+                  "was attempted."],
+            gate_flags=["RUN_ABORTED"], drafter="gate", model_version="n/a",
+            prompt_version="pre-gate-v1")
 
     # DELIVERED — export back into the original format
     delivered = out_dir / f"{questionnaire.stem}__DELIVERED.xlsx"

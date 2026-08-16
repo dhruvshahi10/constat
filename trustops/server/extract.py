@@ -73,12 +73,50 @@ def _paragraphize_page(page: str) -> str:
     return "\n\n".join(p for p in out if p)
 
 
+# A 5MB upload gate bounds what arrives on the wire, not what it becomes in
+# memory. A re-audit built two working bombs that pass that gate: a 0.41MB DOCX
+# whose document.xml inflates to 400MB (826MB peak RSS), and a 0.44MB DOCX of
+# 1.2 million paragraphs that took 68 seconds of GIL-holding CPU and 1.1GB RSS
+# before the post-extraction character check fired. Render starter is 512MB, so
+# either one is a single-request OOM kill that takes the run worker, the queue
+# and every in-flight run with it. The budget has to be enforced BEFORE and
+# DURING extraction, never after.
+MAX_PDF_PAGES = 400
+MAX_DOCX_PARAGRAPHS = 20_000
+MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024   # what a legitimate policy can expand to
+
+
+def _too_big(what: str) -> ExtractError:
+    return ExtractError(
+        f"This file expands to more than we process in one document ({what}). "
+        "Split it and upload the relevant sections.")
+
+
+def _accumulate(parts, cap: int, what: str) -> str:
+    """Join text while watching the running total, so a pathological document
+    is refused at the point it exceeds budget rather than after it is all in
+    memory."""
+    out, total = [], 0
+    for part in parts:
+        if not part:
+            continue
+        total += len(part)
+        if total > cap:
+            raise _too_big(what)
+        out.append(part)
+    return "\n\n".join(out)
+
+
 def _pdf_text(data: bytes) -> str:
     try:
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(data))
-        pages = filter(None, (p.extract_text() for p in reader.pages))
-        text = "\n\n".join(filter(None, (_paragraphize_page(p) for p in pages)))
+        n_pages = len(reader.pages)
+        if n_pages > MAX_PDF_PAGES:
+            raise _too_big(f"{n_pages} pages, limit {MAX_PDF_PAGES}")
+        pages = (p.extract_text() for p in reader.pages)
+        text = _accumulate((_paragraphize_page(p) for p in pages if p),
+                           config.MAX_EXTRACT_CHARS, "too much text")
     except ExtractError:
         raise
     except Exception as exc:  # noqa: BLE001 — pypdf raises a zoo of types
@@ -90,11 +128,35 @@ def _pdf_text(data: bytes) -> str:
     return text
 
 
+def _docx_uncompressed_size(data: bytes) -> None:
+    """Refuse a decompression bomb from the zip directory, before any parsing.
+
+    python-docx sets resolve_entities=False so XXE is closed, but nothing bounds
+    how far a deflate stream expands, and lxml materializes document.xml whole.
+    """
+    import zipfile
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            total = sum(i.file_size for i in z.infolist())
+    except zipfile.BadZipFile as exc:
+        raise ExtractError("This DOCX is not a readable Office file.") from exc
+    if total > MAX_UNCOMPRESSED_BYTES:
+        raise _too_big(f"{total // (1024 * 1024)}MB uncompressed, "
+                       f"limit {MAX_UNCOMPRESSED_BYTES // (1024 * 1024)}MB")
+
+
 def _docx_text(data: bytes) -> str:
+    _docx_uncompressed_size(data)
     try:
         import docx
         d = docx.Document(io.BytesIO(data))
-        text = "\n\n".join(p.text for p in d.paragraphs if p.text.strip())
+        paras = d.paragraphs
+        if len(paras) > MAX_DOCX_PARAGRAPHS:
+            raise _too_big(f"{len(paras)} paragraphs, limit {MAX_DOCX_PARAGRAPHS}")
+        text = _accumulate((p.text for p in paras if p.text.strip()),
+                           config.MAX_EXTRACT_CHARS, "too much text")
+    except ExtractError:
+        raise
     except Exception as exc:  # noqa: BLE001
         raise ExtractError(f"Could not read this DOCX ({type(exc).__name__}).") from exc
     if not text.strip():

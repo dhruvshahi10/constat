@@ -144,21 +144,32 @@ def delete_upload_blob(slug: str, sha256: str, filename: str) -> bool:
 
 # -- expiry -------------------------------------------------------------------
 def sweep_expired() -> int:
-    """Hard-delete expired tenants' data; keep the row for rate-limit memory."""
-    n = 0
+    """Hard-delete expired tenants' data; keep the row for rate-limit memory.
+
+    Three phases on purpose. An earlier version deleted the directory tree
+    inside the write transaction, so every signup, upload and enqueue queued
+    behind an hourly `rmtree`: a re-audit measured an 18 second sweep turning a
+    concurrent signup into a 10 second stall and then a hard 500 when the busy
+    timeout expired. The filesystem work now happens with no transaction open.
+    """
     with db.connect() as conn:
         rows = conn.execute(
             "SELECT slug FROM tenants WHERE status='active' AND expires_at<?",
             (db.now(),)).fetchall()
-        for row in rows:
-            slug = row["slug"]
-            shutil.rmtree(config.tenant_dir(slug), ignore_errors=True)
+    slugs = [r["slug"] for r in rows]
+
+    # phase 2: slow work, no lock held
+    for slug in slugs:
+        shutil.rmtree(config.tenant_dir(slug), ignore_errors=True)
+
+    # phase 3: one short transaction to record it
+    with db.connect() as conn:
+        for slug in slugs:
             conn.execute("UPDATE tenants SET status='expired' WHERE slug=?", (slug,))
             conn.execute("DELETE FROM uploads WHERE tenant=?", (slug,))
-            n += 1
         # signup_events is append-only and only ever read over a 1-day window
         conn.execute("DELETE FROM signup_events WHERE created_at<?", (db.since_days(7),))
-    return n
+    return len(slugs)
 
 
 def start_sweeper() -> threading.Thread:

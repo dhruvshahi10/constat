@@ -95,6 +95,19 @@ class Handler(BaseHTTPRequestHandler):
     timeout = config.SOCKET_TIMEOUT_S
 
     # -- connection admission -------------------------------------------------
+    def end_headers(self) -> None:
+        """Every response gets the security headers, including the ones stdlib
+        writes for us. `send_error` (malformed request line, unsupported method)
+        and the over-capacity 503 both bypass `_send`, so hooking the single
+        point every response passes through is what makes the guarantee true
+        rather than nearly true. Guarded so `_send`'s explicit headers are not
+        duplicated."""
+        if not getattr(self, "_sec_sent", False):
+            self._sec_sent = True
+            for k, v in SECURITY_HEADERS.items():
+                self.send_header(k, v)
+        super().end_headers()
+
     def setup(self) -> None:
         super().setup()
         self._slot = _conn_slots.acquire(blocking=False)
@@ -123,8 +136,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        for k, v in SECURITY_HEADERS.items():
-            self.send_header(k, v)
+        # SECURITY_HEADERS are added by end_headers() for every response
         if not self._is_local():
             # only meaningful over TLS, and pinning HSTS on localhost breaks
             # every developer's browser for that port
@@ -471,8 +483,13 @@ class Handler(BaseHTTPRequestHandler):
             done = conn.execute(
                 "SELECT id, dir FROM runs WHERE tenant=? AND status='done' "
                 "ORDER BY finished_at DESC", (slug,)).fetchall()
-        runs = [{"id": r["id"], "items": review.queue_items(Path(r["dir"]))}
-                for r in done]
+        # a pruned run has no state.json; skipping it keeps the queue usable
+        # instead of letting one old run 500 the page for the whole workspace
+        runs = []
+        for r in done:
+            if not r["dir"] or not (Path(r["dir"]) / "state.json").is_file():
+                continue
+            runs.append({"id": r["id"], "items": review.queue_items(Path(r["dir"]))})
         self._html(pages.review_page(slug, row["org"], runs), extra=self._auth_cookie(slug))
 
     def review_act(self, slug: str) -> None:

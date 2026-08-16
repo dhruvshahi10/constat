@@ -146,3 +146,42 @@ def test_multipart_rejects_garbage():
         parse(b"no boundary here", "multipart/form-data; boundary=zzz")
     with pytest.raises(MultipartError):
         parse(b"x", "text/plain")
+
+
+# --- regression: extraction must be bounded BEFORE it consumes memory --------
+# A re-audit built two bombs that pass the 5MB wire gate: a 0.41MB DOCX
+# inflating to 400MB (826MB peak RSS) and a 0.44MB DOCX of 1.2M paragraphs
+# (68s CPU, 1.1GB RSS) before the post-extraction character check fired.
+# Render starter is 512MB, so either is a single-request OOM that takes the run
+# worker and every in-flight run with it.
+
+def _zip_bomb(uncompressed_mb: int) -> bytes:
+    import io, zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", "<x/>")
+        z.writestr("word/document.xml", b"A" * (uncompressed_mb * 1024 * 1024))
+    return buf.getvalue()
+
+
+def test_docx_decompression_bomb_refused_from_the_zip_directory():
+    data = _zip_bomb(400)
+    assert len(data) < 5 * 1024 * 1024, "fixture must pass the wire-size gate"
+    with pytest.raises(extract.ExtractError, match="expands to more"):
+        extract.extract_text("bomb.docx", data)
+
+
+def test_bomb_is_refused_without_parsing_it():
+    """The refusal must come from the zip directory, not from parsing."""
+    import time
+    data = _zip_bomb(400)
+    t0 = time.perf_counter()
+    with pytest.raises(extract.ExtractError):
+        extract.extract_text("bomb.docx", data)
+    assert time.perf_counter() - t0 < 1.0, "refused too slowly to be pre-parse"
+
+
+def test_ordinary_docx_still_ingests():
+    """The bomb guard must not refuse a legitimate document."""
+    text = extract.extract_text("policy.docx", _mk_docx())
+    assert "multi-factor" in text

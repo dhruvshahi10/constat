@@ -70,3 +70,30 @@ rather than forgotten.
 - `test_runqueue.py` mutates the module-level queue without resetting it between
   tests. Inter-test pollution waiting to happen.
 - Signup email is collected but never verified.
+
+## Deferred from re-audit round 2 (2026-08-16)
+
+- **The connection cap is a lateral move, not a fix.** `MAX_CONNECTIONS` bounds
+  thread and memory growth, but the cap is global and non-queueing, so 64 held
+  sockets return 503 to every caller including `/healthz`, and Render will cycle
+  the instance on a failed health probe. A measured slowloris refreshes those
+  sockets at ~2.2/s. Proper fix: exempt `/healthz` from the cap, and either queue
+  briefly instead of rejecting, or move to a server that does not allocate a
+  thread per connection.
+- **`db.immediate()` is not reentrant.** No path nests it today, but 17 helpers
+  in `server/` open their own connection, so the trap is one refactor away.
+  `limits.signup_allowed` / `record_signup` are now dead production code that
+  `tests/test_runqueue.py` still exercises: a racy API sitting next to the atomic
+  one, which is how the next person reintroduces the bug.
+- **`upload` commits the byte budget before writing the file** (`app.py`), so an
+  ENOSPC (the exact condition the budget exists to prevent) leaves the row, the
+  doc slot and the budget consumed with no file behind them. `delete_upload` got
+  this ordering right; `upload` did not.
+- **XFF handling assumes exactly one proxy.** Putting a CDN in front of Render
+  makes the last hop the edge IP, so every client behind one edge shares a bucket
+  of three. The 200/day global cap is what actually bounds abuse.
+- **`semantic.build_index` writes `index.json` non-atomically** (plain
+  `write_text`, unlike `extract.persist` which uses tmp+replace), so two runs for
+  one tenant can race it. A torn read is swallowed and silently downgrades that
+  run to lexical retrieval, which is at least recorded in `metrics["retrieval"]`.
+- Nothing tests the connection semaphore or the expiry sweeper.
