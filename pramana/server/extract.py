@@ -258,7 +258,7 @@ def synthesize(meta: dict[str, str], body: str, tenant: str) -> tuple[str, str, 
     # an uploaded source carries no assert.* keys, and EvidenceStore's
     # contradiction gate has nothing to group on: the trap we advertise could
     # only ever fire on our own sample pack. Extraction is deliberately
-    # conservative (see trustops.assertions) because a wrong assertion invents
+    # conservative (see pramana.assertions) because a wrong assertion invents
     # a contradiction and quarantines a good document.
     for key, value in sorted(extract_assertions(body).items()):
         lines.append(f"assert.{key}: {value}")

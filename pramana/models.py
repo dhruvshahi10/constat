@@ -1,4 +1,4 @@
-"""TrustOps core data model.
+"""Pramana core data model.
 
 Mirrors the venture blueprint's minimum data model:
   source, question, draft (answer contract), approval, audit_event.

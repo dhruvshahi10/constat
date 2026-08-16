@@ -1,4 +1,4 @@
-# TrustOps positioning (internal, names competitors; the site never does)
+# Pramana positioning (internal, names competitors; the site never does)
 
 **Status: DRAFT for founder approval. Nothing here is public until Dhruv signs off.**
 
@@ -19,13 +19,13 @@ a sales call.
 
 The wedge is the remainder. 95% accurate means 1 in 20 answers is wrong, and a wrong
 answer in a security questionnaire is a material misrepresentation in an enterprise
-deal. TrustOps' release rule is not a percentage and not a promise about the model.
+deal. Pramana' release rule is not a percentage and not a promise about the model.
 It is a gate: an answer is released only if it survives citation checking and its
 words are traceable back to the passage it cites. Everything else is refused, with
 the gap named and an owner attached. Refusal is a first-class outcome, not an error
 state. The pitch line:
 
-> Most tools answer confidently. TrustOps refuses correctly.
+> Most tools answer confidently. Pramana refuses correctly.
 
 ## Proof, not claims
 

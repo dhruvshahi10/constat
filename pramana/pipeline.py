@@ -126,7 +126,7 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         abort: "threading.Event | None" = None) -> RunResult:
     """approval_mode: "simulated" auto-approves gate-clean complete drafts with a
     labeled stand-in reviewer (demo/CLI). "human" approves nothing: clean drafts
-    rest at GRC_REVIEW until a named reviewer acts via trustops.server.review.
+    rest at GRC_REVIEW until a named reviewer acts via pramana.server.review.
 
     retriever: injectable Retriever-compatible instance (e.g. SemanticRetriever);
     defaults to the lexical Retriever over the same store.
@@ -294,7 +294,7 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                    ensure_ascii=False),
         encoding="utf-8",
     )
-    # rehydration record for post-run review (trustops.server.review)
+    # rehydration record for post-run review (pramana.server.review)
     (out_dir / "state.json").write_text(json.dumps({
         "tenant": tenant,
         "drafter": drafter_kind,

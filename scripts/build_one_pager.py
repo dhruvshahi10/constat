@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from trustops import brand  # noqa: E402
+from pramana import brand  # noqa: E402
 
 PRINT_CSS = """
 /* Browsers drop background paint when printing unless the document insists.
@@ -106,13 +106,13 @@ background:var(--surface-page);padding:10px 0}
 SHEET = """
 <div class="sheet">
   <div class="mast">
-    <span class="wordmark"><b>Trust</b>Ops</span>
+    <span class="wordmark"><b>Pra</b>mana</span>
     <span class="tag">Evidence gated answers for security questionnaires</span>
   </div>
 
   <div>
     <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
-    <p class="lede">TrustOps answers security questionnaires from your own approved evidence.
+    <p class="lede">Pramana answers security questionnaires from your own approved evidence.
     Deterministic gates decide what ships, not model confidence: every released answer carries a
     citation, every refusal names its gap and routes to the right human, and nothing reaches the
     delivered workbook without a named reviewer in a tamper evident audit log.</p>
@@ -183,7 +183,7 @@ def build() -> Path:
     html = (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        "<title>TrustOps one pager</title>"
+        "<title>Pramana one pager</title>"
         f"<style>{brand.stylesheet(PRINT_CSS)}</style></head>"
         f"<body>{SHEET}</body></html>"
     )

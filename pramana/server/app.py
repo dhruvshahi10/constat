@@ -1,4 +1,4 @@
-"""TrustOps hosted server. stdlib only: ThreadingHTTPServer + route table.
+"""Pramana hosted server. stdlib only: ThreadingHTTPServer + route table.
 
 Auth model: signup mints a bearer token bound to the tenant slug (hashed at
 rest). First visit with ?k=<token> sets an HttpOnly cookie; thereafter the
@@ -85,7 +85,7 @@ ROUTES: list[tuple[str, re.Pattern, str, bool]] = [  # (method, pattern, handler
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "trustops"
+    server_version = "pramana"
     # Deliberately left at HTTP/1.0 (close-per-request): it means an aborted
     # read (e.g. a 413 refused before the body is drained) can never desync a
     # keep-alive connection.
@@ -232,7 +232,7 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 self._json({"error": "Request body was not valid JSON."}, 422)
             except Exception:  # noqa: BLE001 — boundary: log, never leak
-                sys.stderr.write(f"[trustops] 500 on {method} {path}:\n"
+                sys.stderr.write(f"[pramana] 500 on {method} {path}:\n"
                                  f"{_redact(__import__('traceback').format_exc())}\n")
                 self._json({"error": "Internal error. It has been logged."}, 500)
             return
@@ -272,7 +272,7 @@ class Handler(BaseHTTPRequestHandler):
                          getattr(code, "value", code), size)
 
     def log_message(self, fmt: str, *args) -> None:
-        sys.stderr.write("[trustops] %s %s\n"
+        sys.stderr.write("[pramana] %s %s\n"
                          % (self.address_string(), _redact(fmt % args)))
 
     # -- public routes -------------------------------------------------------
@@ -295,7 +295,7 @@ class Handler(BaseHTTPRequestHandler):
         if site.is_file():
             self._html(site.read_text(encoding="utf-8"))
         else:
-            self._html("<title>TrustOps</title><p>TrustOps hosted. Landing ships in Wave 2. "
+            self._html("<title>Pramana</title><p>Pramana hosted. Landing ships in Wave 2. "
                        "<a href='/healthz'>healthz</a></p>")
 
     def site_asset(self, rel: str) -> None:
@@ -508,7 +508,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="TrustOps hosted server")
+    ap = argparse.ArgumentParser(description="Pramana hosted server")
     ap.add_argument("--host", default=config.HOST)
     ap.add_argument("--port", type=int, default=config.PORT)
     args = ap.parse_args()
@@ -518,7 +518,7 @@ def main() -> None:
     limits.start_sweeper()
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     srv.daemon_threads = True
-    sys.stderr.write(f"[trustops] serving on http://{args.host}:{args.port}\n")
+    sys.stderr.write(f"[pramana] serving on http://{args.host}:{args.port}\n")
     srv.serve_forever()
 
 

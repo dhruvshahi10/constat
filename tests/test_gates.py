@@ -24,9 +24,9 @@ from openpyxl import load_workbook
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from trustops.evidence import EvidenceStore
-from trustops.pipeline import AuditLog, run
-from trustops.retrieve import Retriever
+from pramana.evidence import EvidenceStore
+from pramana.pipeline import AuditLog, run
+from pramana.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "data" / "evidence"

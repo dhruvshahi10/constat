@@ -20,7 +20,7 @@ import urllib.request
 from .models import Citation, Coverage, Draft, Question, Risk
 from .retrieve import Retriever
 
-PROMPT_VERSION = "trustops-contract-v1.0"
+PROMPT_VERSION = "pramana-contract-v1.0"
 
 # Hard cap on how much of any one chunk is handed to a model, and on how much of
 # it we store back as a citation excerpt. Chunking is paragraph-sized, but a
@@ -32,7 +32,7 @@ MAX_EXCERPT_CHARS = 1200
 
 _SENTENCE_END = re.compile(r"[.!?](?=\s|$)|\n")
 
-SYSTEM_CONTRACT = """You are the TrustOps answer engine. Answer ONLY from the approved tenant \
+SYSTEM_CONTRACT = """You are the Pramana answer engine. Answer ONLY from the approved tenant \
 source excerpts supplied in this request. Cite source_id and location for every factual claim. \
 If evidence is missing, stale, contradictory, or outside scope, abstain and name the gap. \
 Never infer certification, control operation, legal compliance, contract commitments, or roadmap \
@@ -195,7 +195,7 @@ class AnthropicDrafter:
         import anthropic  # lazy: not required for offline/CI use
 
         self.client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
-        self.model_version = model or os.environ.get("TRUSTOPS_MODEL", "claude-haiku-4-5-20251001")
+        self.model_version = model or os.environ.get("PRAMANA_MODEL", "claude-haiku-4-5-20251001")
         self.retriever = retriever
         self._index = chunk_index(retriever)
 

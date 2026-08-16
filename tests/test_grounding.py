@@ -20,15 +20,15 @@ from pathlib import Path
 
 import pytest
 
-from trustops import drafter as drafter_mod
-from trustops.drafter import (MAX_EXCERPT_CHARS, GeminiDrafter, MockDrafter,
+from pramana import drafter as drafter_mod
+from pramana.drafter import (MAX_EXCERPT_CHARS, GeminiDrafter, MockDrafter,
                               clip_excerpt)
-from trustops.evidence import EvidenceStore
-from trustops.gates import (GROUNDING_MIN_RATIO, is_grounded, post_gate,
+from pramana.evidence import EvidenceStore
+from pramana.gates import (GROUNDING_MIN_RATIO, is_grounded, post_gate,
                             pre_gate)
-from trustops.models import Draft, Question
-from trustops.pipeline import run
-from trustops.retrieve import Retriever
+from pramana.models import Draft, Question
+from pramana.pipeline import run
+from pramana.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "data" / "evidence"

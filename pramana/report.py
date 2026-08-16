@@ -8,7 +8,7 @@ source id, version and location, because provenance IS the product.
 Abstentions are surfaced as a headline metric: in this system a refusal is
 evidence of control, not failure.
 
-Palette, type and component vocabulary come from trustops.brand, which is the
+Palette, type and component vocabulary come from pramana.brand, which is the
 owner's Claude Design system adopted verbatim.
 """
 from __future__ import annotations
@@ -225,10 +225,10 @@ def write_report(res: RunResult, today: date) -> Path:
 
     page = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TrustOps run report, {html.escape(res.tenant)}</title>
+<title>Pramana run report, {html.escape(res.tenant)}</title>
 <style>{CSS}</style></head><body><div class="wrap">
 <header>
-<div class="eyebrow"><b>TrustOps Desk</b> / Evidence gated answer engine / v0</div>
+<div class="eyebrow"><b>Pramana Desk</b> / Evidence gated answer engine / v0</div>
 <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
 <div class="runmeta">tenant={html.escape(res.tenant)}
  &nbsp;/&nbsp; drafting engine={html.escape(_drafter_label(m['drafter']))}
@@ -282,7 +282,7 @@ change to the engine. Any failure blocks the release.</p>
 
 {nav}
 <footer>
-TrustOps v0 / synthetic tenant data only / hash chained audit log: {res.audit_path.name}
+Pramana v0 / synthetic tenant data only / hash chained audit log: {res.audit_path.name}
  / delivered artifact: {res.delivered_xlsx.name}<br>
 Release rule: an answer is released only if it survives the citation gates and its words are
 traceable to the passages it cites. Anything else is refused and named. A time saving result

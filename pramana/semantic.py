@@ -150,7 +150,7 @@ def corpus_sha(store: EvidenceStore) -> str:
 
 
 class SemanticRetriever:
-    """Drop-in for trustops.retrieve.Retriever. Same constructor arity is not
+    """Drop-in for pramana.retrieve.Retriever. Same constructor arity is not
     required by callers (pipeline injects instances), but search() is."""
 
     def __init__(self, store: EvidenceStore, index_dir: Path, embedder) -> None:

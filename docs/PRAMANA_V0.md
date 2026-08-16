@@ -1,11 +1,11 @@
-# TRUSTOPS_V0.md — Claude Code Build Directive
+# PRAMANA_V0.md — Claude Code Build Directive
 
 **Status:** v0 core is COMPLETE and green (11/11 eval suite). This directive governs everything after.
 **Prime rule:** the eval suite is the constitution. Any change that breaks `tests/test_gates.py` is rejected — fix the change, never the test, unless a DECISIONS.md entry authorizes it.
 
 ## Phase 0 — Discovery (READ-ONLY, mandatory first session)
 
-Before writing any code: read `README.md`, `trustops/*.py`, `tests/test_gates.py`, one full `runs/<stamp>/` output including `audit_log.jsonl`. Produce a ≤20-line summary of the gate architecture and the answer contract. **No edits in this session.**
+Before writing any code: read `README.md`, `pramana/*.py`, `tests/test_gates.py`, one full `runs/<stamp>/` output including `audit_log.jsonl`. Produce a ≤20-line summary of the gate architecture and the answer contract. **No edits in this session.**
 
 ## Non-negotiable invariants (CORE — never modified by feature work)
 
@@ -23,7 +23,7 @@ Before writing any code: read `README.md`, `trustops/*.py`, `tests/test_gates.py
 - Run `--drafter anthropic` against the same questionnaire; diff verdicts vs mock run.
 - Add eval: live drafter output that fails contract parse ⇒ fail-closed abstention (already coded; needs a recorded-fixture test).
 - Add per-question token/cost telemetry to `metrics.json`.
-- Add Langfuse tracing behind env flag `TRUSTOPS_LANGFUSE=1`. **Gate:** all 11 tests + new fixtures green with live drafter.
+- Add Langfuse tracing behind env flag `PRAMANA_LANGFUSE=1`. **Gate:** all 11 tests + new fixtures green with live drafter.
 
 ## Phase 2 — Review queue UI
 

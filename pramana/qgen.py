@@ -24,7 +24,7 @@ def build_questionnaire_workbook(questions: list[tuple[str, str, str]],
 
     ws.merge_cells("A1:E1")
     c = ws["A1"]
-    c.value = f"Security Questionnaire, {org} (TrustOps hosted run)"
+    c.value = f"Security Questionnaire, {org} (Pramana hosted run)"
     c.font = Font(name="Arial", bold=True, size=13, color="FFFFFF")
     c.alignment = Alignment(horizontal="center", vertical="center")
     c.fill = PatternFill("solid", fgColor="16211C")
@@ -32,7 +32,7 @@ def build_questionnaire_workbook(questions: list[tuple[str, str, str]],
 
     ws["A2"] = "internal-use"
     ws["B2"] = f"generated: {date.today().isoformat()}"
-    ws["C2"] = "origin: trustops-hosted"
+    ws["C2"] = "origin: pramana-hosted"
     ws.row_dimensions[2].hidden = True
 
     headers = ["Question ID", "Domain", "Question", "Vendor Response", "Vendor Notes / Evidence"]

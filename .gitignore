@@ -6,6 +6,6 @@ __pycache__/
 .venv/
 .DS_Store
 .claude/
-trustops-v0.zip
+pramana-v0.zip
 site/img/*.png
 .demo_master/

@@ -1,4 +1,4 @@
-"""TrustOps demo runner.
+"""Pramana demo runner.
 
   python3 run_demo.py                       # offline deterministic run
   python3 run_demo.py --drafter gemini      # live LLM run, $0 (needs GEMINI_API_KEY)
@@ -11,16 +11,16 @@ import json
 from datetime import date, datetime
 from pathlib import Path
 
-from trustops.envfile import load_env
-from trustops.pipeline import run
-from trustops.report import write_report
+from pramana.envfile import load_env
+from pramana.pipeline import run
+from pramana.report import write_report
 
 ROOT = Path(__file__).resolve().parent
 load_env(ROOT)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="TrustOps v0 — evidence-gated questionnaire engine")
+    ap = argparse.ArgumentParser(description="Pramana v0 — evidence-gated questionnaire engine")
     ap.add_argument("--tenant", default="acme")
     ap.add_argument("--drafter", default="mock", choices=["mock", "anthropic", "gemini"])
     ap.add_argument("--questionnaire",

@@ -2,7 +2,7 @@
 
 v0 is deliberately embedding-free: token overlap + topic boost is transparent,
 reproducible, and sufficient for a bounded questionnaire domain. The semantic
-index is a v1 upgrade (see docs/TRUSTOPS_V0.md), and swapping it in does not
+index is a v1 upgrade (see docs/PRAMANA_V0.md), and swapping it in does not
 change the gates — which is the point.
 
 Invariant enforced here: every returned chunk belongs to the requesting

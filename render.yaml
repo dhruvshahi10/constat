@@ -1,16 +1,16 @@
 services:
   - type: web
-    name: trustops
+    name: pramana
     runtime: docker
     plan: starter
     numInstances: 1  # global run queue + SQLite are single-process by design
     healthCheckPath: /healthz
     disk:
-      name: trustops-data
+      name: pramana-data
       mountPath: /data
       sizeGB: 1
     envVars:
       - key: GEMINI_API_KEY
         sync: false
-      - key: TRUSTOPS_DATA
+      - key: PRAMANA_DATA
         value: /data

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from trustops.evidence import EvidenceStore
-from trustops.pipeline import run
-from trustops.semantic import (HashedNgramEmbedder, SemanticRetriever,
+from pramana.evidence import EvidenceStore
+from pramana.pipeline import run
+from pramana.semantic import (HashedNgramEmbedder, SemanticRetriever,
                                build_index, best_embedder)
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -1,4 +1,4 @@
-# Deploying TrustOps (about 10 minutes, at a desk)
+# Deploying Pramana (about 10 minutes, at a desk)
 
 Written so it can be followed without rereading any conversation. Everything the
 repo can decide for itself is already decided; what is left needs a browser and a
@@ -15,7 +15,7 @@ kills the run queue. That is not a preference, it is why `render.yaml` pins
 ## 1. Create the service
 
 1. Go to render.com, sign up with GitHub.
-2. **New** then **Blueprint**. Point it at `dhruvshahi10/trustops`.
+2. **New** then **Blueprint**. Point it at `dhruvshahi10/pramana`.
 3. Render reads `render.yaml` and proposes one web service with a 1GB disk at
    `/data`. Accept it. Do not change `numInstances: 1` — the run queue, the
    review lock and SQLite are all single-process by design, and a second instance

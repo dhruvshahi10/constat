@@ -14,10 +14,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV FASTEMBED_CACHE_PATH=/opt/models
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
 
-COPY trustops/ trustops/
+COPY pramana/ pramana/
 COPY site/ site/
 COPY data/ data/
 
-ENV TRUSTOPS_DATA=/data
+ENV PRAMANA_DATA=/data
 EXPOSE 8790
-CMD ["python", "-m", "trustops.server.app", "--host", "0.0.0.0"]
+CMD ["python", "-m", "pramana.server.app", "--host", "0.0.0.0"]
