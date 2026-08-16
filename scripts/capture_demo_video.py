@@ -45,6 +45,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -56,10 +57,11 @@ PW_FFMPEG = "/opt/pw-browsers/ffmpeg-1011/ffmpeg-linux"
 
 PORT = int(os.environ.get("DEMO_PORT", "8872"))
 BASE = f"http://127.0.0.1:{PORT}"
+# A scratch dir for the throwaway tenant this script creates. It used to be a
+# hardcoded session path, which the Pramana rename then rewrote into a path that
+# had never existed. Derive it instead, so it cannot go stale again.
 DATA_DIR = Path(os.environ.get(
-    "DEMO_DATA",
-    "/tmp/claude-0/-home-user-pramana/187c9557-541a-5d75-aeb5-7fc0bc5330db/"
-    "scratchpad/viddata"))
+    "DEMO_DATA", tempfile.gettempdir() + "/pramana_viddata"))
 WORK = DATA_DIR.parent / "vidwork"
 
 OUT_VIDEO = ROOT / "site" / "img" / "demo.webm"
