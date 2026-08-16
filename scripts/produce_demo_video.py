@@ -133,12 +133,14 @@ WIPE = 12   # graphic wipe off an act card
 #            into ONE static page view -- precisely the "just transitions"
 #            read.  The dial punch already carries VALID / 0.09s in frame.
 #            (dropped caption: "AUDIT CHAIN VALID, 0.09s CYCLE")
-#   src=534  the two evidence-integrity summary cards.  Of the two report
-#            detail shots this is the weaker: it *summarises* stale and
-#            contradiction, while src=632 shows an actual ledger row refusing
-#            and naming POL-RET-001 / POL-RET-002 as the sources that did it.
-#            Act 03's stack bar already gives the 1 / 2 / 1 counts.
-#            (dropped caption: "TAINTED SOURCES, QUARANTINED")
+#   src=464  the refusal stack seen from the report-top window.  Merged into
+#            the 534 shot, which frames the same stack bar (see the note on
+#            that shot for why the 446 window cannot work).  The evidence
+#            integrity cards the 534 shot used to be about are now the bottom
+#            third of that same frame, so nothing was lost.
+#            (dropped caption: "TAINTED SOURCES, QUARANTINED" -- src=632 shows
+#            an actual ledger row naming POL-RET-001 / POL-RET-002 as the
+#            tainted sources, which is the same point made concretely.)
 
 SHOTS = [
     # --- OPENING ---------------------------------------------------------
@@ -157,9 +159,13 @@ SHOTS = [
     # --- ACT 02 : RUN ----------------------------------------------------
     dict(kind="act", n=62, num="02", name="RUN",
          sub="Ten questions, one click"),
-    # the ten questions, then the button is pressed and the run starts
+    # the ten questions, then the button is pressed and the run starts.
+    # The end mark must hold H-03..H-10 AND the button AND the "Running:"
+    # line -- the caption says "ten questions", so ten questions have to be in
+    # frame when it finishes typing.  x 88..699 keeps the question text; the
+    # crop bottoms out at src y=396 so "Running:" clears the caption bar.
     dict(kind="footage", src=210, srcn=42, trans="wipe", wipe=WIPE,
-         start=(480, 300, 1.00), end=(300, 330, 1.85),
+         start=(480, 300, 1.00), end=(394, 211, 1.57),
          caption="TEN QUESTIONS, ONE CLICK"),
     # dissolve = time passing while the run gates; land on the verdict card
     dict(kind="footage", src=300, srcn=MOVE, trans="dissolve", diss=DISS,
@@ -175,10 +181,19 @@ SHOTS = [
          caption="60.0% CITED COVERAGE"),
     # pull back off the CONTRADICTION block to reveal the whole refusal stack,
     # so the caption's three numbers are all on screen when it finishes typing.
+    #
+    # This uses the 534 window, not the 446 one, for a hard geometric reason.
+    # The stack bar spans x 76..884, so showing all three segments caps the
+    # zoom at 960/808 = 1.19.  In the 446 window the bar sits at y 500..533,
+    # and at zoom <= 1.19 no crop can lift it clear of the lower third -- the
+    # caption bar would sit straight across the numbers it is counting.  By
+    # the 534 window the page has scrolled and the bar is at y 283..315, which
+    # lands mid-frame with room to spare.
+    #
     # Dissolve, not a cut: same page, overlapping framing -- a hard cut there
     # reads as a glitch rather than as a deliberate re-frame.
-    dict(kind="footage", src=464, srcn=28, trans="dissolve", diss=DISS,
-         start=(300, 400, 1.55), end=(480, 372, 1.06),
+    dict(kind="footage", src=534, srcn=MOVE, trans="dissolve", diss=DISS,
+         start=(220, 300, 2.10), end=(480, 341, 1.16),
          caption="1 CONTRADICTION, 2 STALE, 1 LEGAL"),
 
     # --- ACT 04 : THE REPORT --------------------------------------------
@@ -188,10 +203,14 @@ SHOTS = [
     # "No answer released", the two conflicting approved sources, and the
     # "no citation released" stamp.  This is the whole thesis in one frame,
     # so it gets the longest settle of any shot in the film.
+    # Caption names the CONTRADICTION chip and the italic verdict line, both
+    # of which are in frame.  It does NOT name "H-05": at this zoom the row
+    # identifier is off to the left, and a caption must be true to the frame
+    # it is sitting on.
     dict(kind="footage", src=632, srcn=42, trans="wipe", wipe=WIPE,
          hold=90,
-         start=(478, 280, 1.15), end=(655, 245, 2.13),
-         caption="H-05: NO ANSWER RELEASED"),
+         start=(478, 280, 1.15), end=(655, 245, 2.05),
+         caption="CONTRADICTION: NO ANSWER RELEASED"),
 
     # --- CLOSING ---------------------------------------------------------
     # finished at i=34, tail fade eats the last 8: 98 frames (4.08s) of the
@@ -229,8 +248,13 @@ CLOSE_LINE = "EVERY ANSWER CITED, OR REFUSED."
 # frames of fade-to-ink at the very end so the loop back to frame 0 is soft
 TAIL_FADE = 8
 
-# encoder settings, tuned to land both files well under 2.5 MB
-X264_CRF = 26
+# Encoder settings.  The budget is 2.6 MB for the MP4; at crf 26 the 50s cut
+# landed at 1.62 MB, which left a megabyte of quality on the table.  This film
+# is 50 seconds of small UI type that the viewer is being asked to READ, and
+# crf 23 sharpens the caption and screenshot edges for ~0.6 MB.  Most of the
+# runtime is frozen frames, which cost almost nothing at any crf, so the extra
+# bits go where they are wanted -- the moves and the type.
+X264_CRF = 23
 # VP9 rather than VP8: at crf 42 it is visually indistinguishable from the
 # H.264 master on the caption frames and lands at 0.95MB against VP8's 1.68MB.
 # This is only a fallback source (Safari and Chrome both take the MP4), so

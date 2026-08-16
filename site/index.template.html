@@ -719,8 +719,13 @@ footer a{color:var(--signal)}
     <video id="demovid" controls muted loop playsinline preload="metadata"
       width="960" height="600" poster="@POSTER_URI@"
       aria-label="Screen recording of a complete TrustOps run: evidence seeded, ten questions run, verdicts landing, and the audit report opened.">
-      <source src="@VIDEO_MP4@" type="video/mp4">
-      <source src="@VIDEO_WEBM@" type="video/webm">
+      <!-- the codecs parameter is load bearing, not decoration. With a bare
+           type="video/mp4" a browser that supports the CONTAINER but not the
+           H.264 codec (Chromium built without proprietary codecs) selects this
+           source, fails to decode, and never falls through to the next one.
+           Naming avc1.640020 lets it decline accurately and take the VP9. -->
+      <source src="@VIDEO_MP4@" type='video/mp4; codecs="avc1.640020"'>
+      <source src="@VIDEO_WEBM@" type='video/webm; codecs="vp9"'>
     </video>
   </div>
 </section>
