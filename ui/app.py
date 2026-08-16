@@ -125,7 +125,8 @@ background:transparent;font-size:11.5px}
 padding:15px 17px;margin-top:12px;font-size:14px;color:var(--text-primary)}
 .spin{display:none;font-family:var(--font-mono);font-size:11px;color:var(--signal)}
 a.filelink{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--signal)}
-.small{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;color:var(--text-faint);margin-top:10px}
+/* --text-faint is hairline-only now; it fails contrast as text (see brand.py) */
+.small{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;color:var(--text-tertiary);margin-top:10px}
 """
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">

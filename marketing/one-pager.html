@@ -173,9 +173,13 @@ border:1px solid var(--line-1);border-radius:3px;overflow:hidden}
 .tcell .chip{font-size:6.2pt;padding:1mm 1.8mm}
 .tcell p{font-size:7.6pt;line-height:1.45;color:var(--text-secondary);margin-top:1.6mm}
 .duo{display:grid;grid-template-columns:1.15fr 1fr;gap:2.4mm}
-.panel{background:var(--surface-card);border:1px solid var(--line-1);border-radius:3px;
-padding:3.1mm 3.8mm}
-.panel h3{font-size:10.5pt;margin-bottom:1.4mm}
+/* the shared .panel is a run-report callout: mono caps in warn amber with an
+   amber rule. On the sheet it is an ordinary panel, so put the display face
+   back and drop the alarm colour. */
+.panel{background:var(--surface-card);border:1px solid var(--line-1);
+border-left:1px solid var(--line-1);border-radius:3px;padding:3.1mm 3.8mm;margin-bottom:0}
+.panel h3{font-family:var(--font-display);font-size:10.5pt;font-weight:400;
+letter-spacing:-0.01em;text-transform:none;color:var(--text-primary);margin-bottom:1.4mm}
 .panel p{font-size:7.8pt;line-height:1.5;color:var(--text-secondary)}
 .panel .mono{font-family:var(--font-mono);font-size:6.6pt;color:var(--text-tertiary);
 letter-spacing:0.08em}

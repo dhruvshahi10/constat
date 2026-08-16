@@ -55,6 +55,11 @@ flex-wrap:wrap;font-family:var(--font-mono);font-size:12px}
 .qcard{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);
 padding:18px 20px;margin-bottom:14px}
 .qcard h3{font-size:17px;margin:6px 0 10px}
+/* the exception chip carries a routing address list, which can be longer than
+   a phone is wide; .chip is nowrap by default, so opt this one out */
+.qcard .chip{white-space:normal;word-break:break-word;max-width:100%;text-align:left;
+align-items:flex-start}
+.qcard .chip::before{margin-top:5px}
 .qcard .body{font-size:14px;color:var(--text-primary);background:var(--surface-sunken);
 border-radius:var(--radius-1);padding:12px 14px;margin:10px 0}
 .gap{color:var(--status-warn);font-family:var(--font-mono);font-size:11.5px;line-height:1.7}
@@ -130,10 +135,19 @@ border-radius:var(--radius-2);overflow:hidden;grid-template-columns:1fr;margin-t
 """
 
 
+FAVICON = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E"
+    "%3Cpath d='M16 3 27 7v9c0 7-4.6 11.4-11 13C9.6 27.4 5 23 5 16V7z' fill='none' "
+    "stroke='%23B7C4FF' stroke-width='2.4'/%3E%3Cpath d='M11 16.5 14.5 20 21 12' fill='none' "
+    "stroke='%23B7C4FF' stroke-width='2.4'/%3E%3C/svg%3E"
+)
+
+
 def _page(title: str, body: str) -> str:
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<meta name="robots" content="noindex">'
+            f'<link rel="icon" href="{FAVICON}">'
             f"<title>{_html.escape(title)}</title>"
             f"<style>{brand.stylesheet(HOSTED_CSS)}</style></head>"
             f'<body><div class="wrap">{body}</div></body></html>')
