@@ -661,16 +661,29 @@ def media_uris() -> dict[str, str]:
     blank frame rather than breaking the page; the build says so out loud.
     """
     import base64 as _b64
+    # Preference order matters. demo_edit.* is the produced cut (title cards,
+    # punch-ins, captions) from scripts/produce_demo_video.py; demo.webm is the
+    # raw capture it was cut from. H.264 first, because iOS Safari only plays
+    # VP8 WebM from 17.4 and the founder reviews on an iPhone.
+    candidates = {
+        "VIDEO_MP4": [("site/img/demo_edit.mp4", "video/mp4")],
+        "VIDEO_WEBM": [("site/img/demo_edit.webm", "video/webm"),
+                       ("site/img/demo.webm", "video/webm")],
+        "POSTER_URI": [("site/img/demo_edit_poster.jpg", "image/jpeg"),
+                       ("site/img/demo_poster.jpg", "image/jpeg")],
+    }
     out = {}
-    for token, rel, mime in (("VIDEO_URI", "site/img/demo.webm", "video/webm"),
-                             ("POSTER_URI", "site/img/demo_poster.jpg", "image/jpeg")):
-        path = ROOT / rel
-        if not path.is_file():
-            print(f"  WARNING: {rel} missing, the film frame will be blank")
-            out[token] = ""
+    for token, opts in candidates.items():
+        for rel, mime in opts:
+            path = ROOT / rel
+            if path.is_file():
+                b64 = _b64.b64encode(path.read_bytes()).decode("ascii")
+                out[token] = f"data:{mime};base64,{b64}"
+                print(f"  {token}: {rel} ({path.stat().st_size // 1024}KB)")
+                break
         else:
-            b64 = _b64.b64encode(path.read_bytes()).decode("ascii")
-            out[token] = f"data:{mime};base64,{b64}"
+            print(f"  WARNING: no file for {token}, the film frame will be blank")
+            out[token] = ""
     return out
 
 
@@ -995,7 +1008,7 @@ def main() -> None:
                              "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
                              "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",
-                             "@VIDEO_URI@", "@POSTER_URI@") if m in page]
+                             "@VIDEO_MP4@", "@VIDEO_WEBM@", "@POSTER_URI@") if m in page]
     if leftovers:
         raise SystemExit(f"unfilled template placeholders: {leftovers}")
     (ROOT / "site" / "index.html").write_text(page, encoding="utf-8")

@@ -9,7 +9,7 @@ closing stat card.
 
 Reads   site/img/demo.webm            (VP8, 960x600, 24fps, 737 frames, silent)
 Writes  site/img/demo_edit.mp4        (H.264 High, yuv420p, faststart)  <- primary
-        site/img/demo_edit.webm       (VP8 in WebM)                     <- fallback
+        site/img/demo_edit.webm       (VP9 in WebM)                     <- fallback
         site/img/demo_edit_poster.jpg (960x600, q82)
 
 WHY IT IS BUILT THIS WAY
@@ -173,7 +173,11 @@ TAIL_FADE = 8
 
 # encoder settings, tuned to land both files well under 2.5 MB
 X264_CRF = 26
-VP8_BITRATE = "620k"
+# VP9 rather than VP8: at crf 42 it is visually indistinguishable from the
+# H.264 master on the caption frames and lands at 0.95MB against VP8's 1.68MB.
+# This is only a fallback source (Safari and Chrome both take the MP4), so
+# size matters more than the last few dB.
+VP9_CRF = "42"
 
 # --------------------------------------------------------------------------
 # ffmpeg
@@ -629,8 +633,8 @@ class Encoder:
             print("  !! no libx264 -- skipping MP4")
 
         self.procs.append(("webm", subprocess.Popen(
-            [FFMPEG, *common, "-c:v", "libvpx", "-b:v", VP8_BITRATE,
-             "-crf", "10", "-qmin", "4", "-qmax", "42", "-auto-alt-ref", "0",
+            [FFMPEG, *common, "-c:v", "libvpx-vp9", "-crf", VP9_CRF, "-b:v", "0",
+             "-row-mt", "1", "-cpu-used", "2",
              "-pix_fmt", "yuv420p", OUT_WEBM],
             stdin=subprocess.PIPE)))
 

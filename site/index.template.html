@@ -581,9 +581,15 @@ footer a{color:var(--signal)}
   configured, so every answer is the deterministic engine.</p>
   <div class="frame rv">
     <div class="fbar"><i></i><i></i><i></i><span>recorded from the browser</span></div>
-    <video id="demovid" controls muted loop playsinline preload="none"
-      width="960" height="600" poster="@POSTER_URI@" src="@VIDEO_URI@"
-      aria-label="Screen recording of a complete TrustOps run: evidence seeded, ten questions run, verdicts landing, and the audit report opened."></video>
+    <!-- two sources on purpose. H.264 first: it is what iOS Safari and Chrome
+         want, and iOS only gained WebM in 17.4. VP9 second, for browsers built
+         without the proprietary decoder. -->
+    <video id="demovid" controls muted loop playsinline preload="metadata"
+      width="960" height="600" poster="@POSTER_URI@"
+      aria-label="Screen recording of a complete TrustOps run: evidence seeded, ten questions run, verdicts landing, and the audit report opened.">
+      <source src="@VIDEO_MP4@" type="video/mp4">
+      <source src="@VIDEO_WEBM@" type="video/webm">
+    </video>
   </div>
 </section>
 

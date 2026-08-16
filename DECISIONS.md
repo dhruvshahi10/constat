@@ -143,3 +143,66 @@ Verified after the loop: all four instruments pass their Playwright probes,
 zero horizontal overflow at 1440 and 390, complete and coherent with
 JavaScript disabled, first paint 240ms on the 2.1MB file with the video
 fetching nothing until played.
+
+## 2026-08-16 Round 5: the page was a document, not a pitch
+
+Third round of design feedback and the first two had not landed. The founder:
+"Sections have too much text. When I say too much, I mean actually too much. I
+don't know how to cut off, or rather, what to cut off... if I was a buyer, I
+don't know how I would understand anything about it. Complicated, very
+complicated." And on the video: "just a scrolling video instead of transitions,
+like a video created on Premiere Pro."
+
+The audit made the complaint measurable: 2,082 visible words, 10.4 minutes of
+reading, and 888 words before the first image or video. The h1 was a policy
+statement, not a value proposition. My error, twice running, was answering
+"more visual" by adding instruments rather than deleting sentences. Adding is
+easier than cutting and it was the wrong move both times.
+
+**Lead with the artefact.** The reader already has a mental model of a
+spreadsheet, so the hero now renders five real rows of the delivered workbook,
+read from examples/acme_security_questionnaire__DELIVERED.xlsx at build time:
+two cited answers with their evidence pointers, two refusals naming the expired
+and the conflicting documents, one routed to counsel. Engine text is verbatim;
+em dashes normalize to commas at the rendering boundary only, because the brand
+gate bans them and the engine's wording is not going to be changed to suit a
+web page.
+
+**Show one worked refusal, fold the rest.** The gates section went from 497
+words to 111 by keeping the certification trap open (a founder instantly gets
+"we said we are certified, we are not yet") and folding the other three behind
+self-contained summaries.
+
+**Move the knife to the front.** "Merged cells, hidden rows and formulas
+survive untouched" was sitting at word 1,500. It is now the hero caption.
+
+**Stop printing clipboard payloads.** The three contact prefill messages were
+84 words of visible copy that only ever existed to be copied. They are off
+screen now, still real text for the clipboard and for a screen reader.
+
+Result: 890 visible words, 4.5 minute read, first visual at word 73, zero
+visible paragraphs over 25 words, nine sections down to six.
+
+**The video is now edited rather than recorded.** The system ffmpeg is
+Playwright's, built --disable-everything: no drawtext, no zoompan, no xfade.
+Installing imageio-ffmpeg brought a full static ffmpeg 7.0.2, which unlocked
+H.264 and, more usefully, rawvideo demuxing, so composed frames return
+losslessly instead of through a JPEG hop. Frames are composed in PIL with the
+brand woff2 faces converted to TTF in memory, which buys pixel-exact typography
+that a drawtext filter could not. The cut is 22.3s: title card, four act cards,
+eight eased punch-ins sited inside windows where the page is not scrolling,
+nine kinetic captions that type on, three cross-dissolves and a closing stat
+card. The producing agent re-derived every beat from motion analysis rather
+than trusting the timestamps I gave it, and found them about four seconds off.
+
+**Two video sources, deliberately.** H.264 first for iOS Safari and Chrome,
+VP9 WebM second for browsers built without the proprietary decoder. This was
+not theoretical: the MP4 failed to play in Playwright's Chromium with
+NotSupportedError, because Chromium-for-testing ships no proprietary codecs.
+VP9 at crf 42 is visually indistinguishable from the H.264 master on the
+caption frames and costs 0.95MB against VP8's 1.68MB, so the fallback is
+cheaper than the thing it replaced. The page is 3.5MB with both.
+
+Verified: 890 words, all instruments passing, 167 tests, copy gate clean on
+four pages, zero console errors, zero overflow at 1440 and 390, coherent with
+JavaScript disabled, reduced motion honoured, video autoplaying muted.
