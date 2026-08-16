@@ -1,8 +1,16 @@
-"""Tenant tokens: opaque bearer secrets, hashed at rest, HMAC-checked slugs.
+"""Tenant tokens: opaque bearer secrets, hashed at rest, slug-bound.
 
-Token format: t.<slug>.<random>. The DB stores sha256(token); comparison is
-constant-time. The slug inside the token must match the path slug, so a leaked
-cookie for one tenant is useless against another.
+Token format: t.<slug>.<random>, 192 bits of entropy from secrets.token_urlsafe.
+The DB stores sha256(token) and never the token itself; comparison goes through
+hmac.compare_digest so it is constant-time. The slug is carried inside the token
+and must equal the slug in the request path, checked before the hash is compared,
+so a leaked cookie for one tenant is inert against another.
+
+There is deliberately no keyed MAC here. An earlier version of this docstring
+claimed "HMAC-checked slugs", which was false: hmac is used only for its
+constant-time comparison helper. The security property holds without a key
+because the token is a high-entropy random secret compared against a stored
+hash; describing it as keyed would have been false assurance.
 """
 from __future__ import annotations
 

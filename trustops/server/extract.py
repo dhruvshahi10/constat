@@ -13,6 +13,7 @@ import re
 from datetime import date
 from pathlib import Path
 
+from ..assertions import extract_assertions
 from ..evidence import parse_source
 from . import config
 
@@ -28,11 +29,56 @@ class ExtractError(ValueError):
     """message is safe to show the uploader verbatim."""
 
 
+# --- PDF paragraph reconstruction --------------------------------------------
+# evidence.chunks() splits a source body on blank lines, so ONE BLANK LINE IS
+# ONE CHUNK, and a chunk is the unit of retrieval and of the citation location
+# printed in the provenance strip. pypdf hands back a page as wrapped display
+# lines joined by single newlines. Joining pages with "\n\n" and nothing else
+# therefore made a whole PDF page into a single chunk: retrieval got coarse, the
+# location "para:1" meant "somewhere on page 1", and the excerpt handed to a
+# model was a page rather than a passage. Here we rebuild paragraphs inside each
+# page so that a chunk is a paragraph again.
+#
+# Blank lines already present in the extraction are genuine author breaks and
+# are always preserved. Inside a run of consecutive lines we only introduce a
+# break where the layout says one exists: a bullet or numbered item starts, an
+# ALL CAPS or numbered heading starts, or a line both ends a sentence and is
+# noticeably shorter than the page's typical line width (the classic end-of-
+# paragraph short line). Everything else is re-joined into flowing prose.
+_BULLET_RE = re.compile(r"^\s*(?:[-–—•*·•●▪]|\(\d{1,2}\)|\d{1,2}[.)]\s|[a-z]\)\s)")
+_HEADING_RE = re.compile(r"^\s*(?:\d+(?:\.\d+)*\s+[A-Z]|[A-Z][A-Z0-9 ,/&()'\-]{4,}\s*$)")
+_SHORT_LINE_RATIO = 0.85
+
+
+def _paragraphize_page(page: str) -> str:
+    out: list[str] = []
+    for block in re.split(r"\n\s*\n", page):
+        lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
+        if not lines:
+            continue
+        widths = sorted(len(ln) for ln in lines)
+        typical = widths[len(widths) // 2] or 1
+        current: list[str] = []
+        for ln in lines:
+            if current and (_BULLET_RE.match(ln) or _HEADING_RE.match(ln)):
+                out.append(" ".join(current))
+                current = []
+            current.append(ln)
+            if (ln.endswith((".", "!", "?", ":", ";"))
+                    and len(ln) < _SHORT_LINE_RATIO * typical):
+                out.append(" ".join(current))
+                current = []
+        if current:
+            out.append(" ".join(current))
+    return "\n\n".join(p for p in out if p)
+
+
 def _pdf_text(data: bytes) -> str:
     try:
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(data))
-        text = "\n\n".join(filter(None, (p.extract_text() for p in reader.pages)))
+        pages = filter(None, (p.extract_text() for p in reader.pages))
+        text = "\n\n".join(filter(None, (_paragraphize_page(p) for p in pages)))
     except ExtractError:
         raise
     except Exception as exc:  # noqa: BLE001 — pypdf raises a zoo of types
@@ -146,6 +192,14 @@ def synthesize(meta: dict[str, str], body: str, tenant: str) -> tuple[str, str, 
     ]
     if meta["topics"]:
         lines.append(f"topics: {meta['topics']}")
+    # machine-checkable claims read out of the document itself. Without these
+    # an uploaded source carries no assert.* keys, and EvidenceStore's
+    # contradiction gate has nothing to group on: the trap we advertise could
+    # only ever fire on our own sample pack. Extraction is deliberately
+    # conservative (see trustops.assertions) because a wrong assertion invents
+    # a contradiction and quarantines a good document.
+    for key, value in sorted(extract_assertions(body).items()):
+        lines.append(f"assert.{key}: {value}")
     lines += ["---", "", body, ""]
     text = "\n".join(lines)
 

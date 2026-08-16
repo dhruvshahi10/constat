@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -49,6 +51,10 @@ class AuditLog:
         event_hash = hashlib.sha256(payload.encode()).hexdigest()
         with self.path.open("a", encoding="utf-8") as f:
             f.write(json.dumps({**event, "hash": event_hash}, ensure_ascii=False) + "\n")
+            # a tamper-evident log that loses its last events to the page cache
+            # on a hard kill is evidence of nothing; pay the fsync per event
+            f.flush()
+            os.fsync(f.fileno())
         self.prev = event_hash
 
     @classmethod
@@ -63,21 +69,36 @@ class AuditLog:
         log = cls.__new__(cls)
         log.path = path
         log.prev = GENESIS
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()]
         if lines:
             log.prev = json.loads(lines[-1])["hash"]
         return log
 
     @staticmethod
     def verify_chain(path: Path) -> bool:
+        """True only if every line links. A malformed line is a broken chain.
+
+        A process killed mid-append leaves a torn last line. That is a failed
+        verification, not a crash: raising JSONDecodeError here made resume()
+        500 forever and put the whole run permanently out of reach.
+        """
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return False
         prev = GENESIS
-        for line in path.read_text(encoding="utf-8").splitlines():
-            obj = json.loads(line)
-            claimed = obj.pop("hash")
-            if obj.get("prev_hash") != prev:
-                return False
-            payload = json.dumps(obj, sort_keys=True, ensure_ascii=False)
-            if hashlib.sha256(payload.encode()).hexdigest() != claimed:
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            try:
+                obj = json.loads(line)
+                claimed = obj.pop("hash")
+                if obj.get("prev_hash") != prev:
+                    return False
+                payload = json.dumps(obj, sort_keys=True, ensure_ascii=False)
+                if hashlib.sha256(payload.encode()).hexdigest() != claimed:
+                    return False
+            except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
                 return False
             prev = claimed
         return True
@@ -99,13 +120,18 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         drafter_kind: str = "mock", today: date | None = None,
         reviewer: str = "demo-grc-reviewer (simulated)",
         approval_mode: str = "simulated",
-        retriever=None) -> RunResult:
+        retriever=None,
+        progress: Callable[[int, int], None] | None = None) -> RunResult:
     """approval_mode: "simulated" auto-approves gate-clean complete drafts with a
     labeled stand-in reviewer (demo/CLI). "human" approves nothing: clean drafts
     rest at GRC_REVIEW until a named reviewer acts via trustops.server.review.
 
     retriever: injectable Retriever-compatible instance (e.g. SemanticRetriever);
     defaults to the lexical Retriever over the same store.
+
+    progress: optional callback(questions_done, questions_total) invoked after
+    each question. Observation only — it can never change the run's outcome, so
+    anything it raises is swallowed.
     """
     if approval_mode not in ("simulated", "human"):
         raise ValueError(f"unknown approval_mode '{approval_mode}'")
@@ -143,7 +169,8 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         audit.append("system", "EVIDENCE_INTEGRITY_SCAN", tenant, integrity)
 
     drafts: dict[str, Draft] = {}
-    for q in questions:
+    total_q = len(questions)
+    for done, q in enumerate(questions, start=1):
         d = Draft(question_id=q.question_id, answer=None)
         d = pre_gate(q, d)
         if d.route != "LEGAL":
@@ -175,6 +202,11 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                          {"mode": "SIMULATED_DEMO_APPROVAL",
                           "citations": [f"{c.source_id}@{c.location}" for c in d.citations]})
         drafts[q.question_id] = d
+        if progress is not None:
+            try:
+                progress(done, total_q)
+            except Exception:  # noqa: BLE001 — telemetry never breaks a run
+                pass
 
     # DELIVERED — export back into the original format
     delivered = out_dir / f"{questionnaire.stem}__DELIVERED.xlsx"

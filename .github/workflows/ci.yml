@@ -9,5 +9,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pytest openpyxl
+      # Install the pinned dev set, not a hand-listed subset. The upload evals
+      # need pypdf and python-docx; installing only pytest+openpyxl meant CI was
+      # silently skipping them.
+      - run: pip install -r requirements-dev.txt
       - run: python -m pytest tests/ -q

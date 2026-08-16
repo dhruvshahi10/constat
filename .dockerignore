@@ -1,0 +1,21 @@
+# Keep the build context small and keep local state out of the image.
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+runs/
+data-hosted/
+.git/
+.github/
+.pytest_cache/
+.mypy_cache/
+tests/
+docs/
+marketing/
+scripts/
+examples/
+ui/
+# NB: no blanket *.md rule — data/evidence/**/*.md is the seeded sample pack.
+.env
+.DS_Store

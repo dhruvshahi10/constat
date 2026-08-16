@@ -12,10 +12,15 @@ Every answer is a representation your company makes in a deal. 95% accurate mean
 So I built the opposite.
 
 TrustOps answers security questionnaires from your own approved documents, and its
-headline metric is not accuracy. It is zero unsupported claims, enforced by
-deterministic gates that sit outside the model:
+headline is not an accuracy number. An answer is released only when it survives the
+gates that sit outside the model:
 
 - No surviving citation, no answer. The refusal names the gap and who should fix it.
+- The answer's own words have to be traceable to the passage it cites. A citation
+  bolted onto a sentence the source does not support gets the answer refused.
+- The excerpt under an answer is your document's text, never the model's. If the
+  model invents a source or a paragraph reference, that citation is dropped before
+  the answer is even scored.
 - Certifications are never inferred. A roadmap is not a certificate.
 - Two approved policies disagree? Both are quarantined until an owner reconciles.
 - Expired pentest report? It cannot support a current claim, full stop.
@@ -23,9 +28,23 @@ deterministic gates that sit outside the model:
 - Nothing ships without a named human reviewer in a tamper-evident audit log.
 
 The part I am proudest of: you do not have to take my word for any of this.
-There is no demo call and no form gate. You sign up, upload your real policies,
-and watch ten questions get answered or refused, with citations, in about two
-minutes. The eval suite with all the planted traps is public on GitHub.
+There is no demo call and no form gate. You sign up, upload evidence, and watch ten
+questions get answered or refused, with citations, in about two minutes. The eval
+suite with all the planted traps is public on GitHub.
+
+One thing I want to be straight about, because this industry usually is not.
+
+The free demo drafts on Google Gemini's free tier, and those terms let Google use
+submitted content to improve their services. So the demo asks you for public
+evidence: your published SOC 2 report, an ISO certificate, the policies already on
+your trust center. It is a real run on real documents, just not on your secrets.
+
+For confidential evidence there are two honest options. Bring your own key, and your
+text goes to your provider account under your contract. Or take the managed tier,
+which runs on a paid provider plan with a no-training commitment I will put in
+writing. Sub-processors, in full: Google Gemini for drafting, Render for hosting.
+
+I would rather lose a signup to that paragraph than win one by being vague about it.
 
 Most tools answer confidently. This one refuses correctly.
 

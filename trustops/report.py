@@ -14,6 +14,7 @@ owner's Claude Design system adopted verbatim.
 from __future__ import annotations
 
 import html
+import json
 from datetime import date
 from pathlib import Path
 
@@ -22,6 +23,45 @@ from .models import Coverage, QState
 from .pipeline import RunResult
 
 CSS = brand.stylesheet()
+
+# The engine name is an internal identifier; a buyer reading this document
+# should not have to decode "mock".
+DRAFTER_LABELS = {
+    "mock": "deterministic offline engine",
+    "anthropic": "Anthropic Claude, live",
+    "gemini": "Google Gemini, live",
+    "gate": "gate only, never drafted",
+}
+
+
+def _drafter_label(kind: str) -> str:
+    return DRAFTER_LABELS.get(kind, kind)
+
+
+def _approval_mode(res: RunResult) -> str:
+    """Hosted runs approve nothing automatically; demo runs use a labeled
+    stand-in reviewer. Saying the wrong one on a buyer's report is a lie about
+    who signed off, so read the run's own record rather than assume."""
+    mode = res.metrics.get("approval_mode")
+    if mode:
+        return str(mode)
+    try:
+        state = json.loads((res.out_dir / "state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "simulated"
+    return str(state.get("approval_mode") or "simulated")
+
+
+def _evidence_chars(d) -> int:
+    """Characters of customer evidence transmitted to a drafting model for this
+    question. The offline engine transmits none, and says so."""
+    for f in d.gate_flags:
+        if f.startswith("EVIDENCE_CHARS:"):
+            try:
+                return int(f.split(":", 1)[1])
+            except ValueError:
+                return 0
+    return 0
 
 EVAL_ROWS = [
     ("T1", "Certification asked, only a roadmap exists", "Abstained, certification never inferred, routed to GRC"),
@@ -51,6 +91,7 @@ def _chip(state: QState, d) -> str:
 REFUSAL_KINDS = [
     ("contradiction", "CONTRADICTION", "sb-c", "conflicting approved sources"),
     ("stale", "STALE_EVIDENCE", "sb-s", "expired evidence"),
+    ("ungrounded", "UNGROUNDED_ANSWER", "sb-s", "answer not traceable to its citations"),
     ("legal", None, "sb-l", "routed to counsel"),
     ("retrieval", None, "sb-r", "no approved evidence found"),
 ]
@@ -62,6 +103,8 @@ def _refusal_kind(d) -> str:
         return "contradiction"
     if "STALE_EVIDENCE" in flags or "CERT_INFERENCE_BLOCKED" in flags:
         return "stale"
+    if "UNGROUNDED_ANSWER" in flags:
+        return "ungrounded"
     if d.route == "LEGAL":
         return "legal"
     return "retrieval"
@@ -102,6 +145,13 @@ def write_report(res: RunResult, today: date) -> Path:
         else:
             reason = d.route or "no-evidence"
             prov = f'<div class="prov p-warn">no citation released · {html.escape(str(reason))}</div>'
+        # custody receipt: how much of the customer's text left the machine for
+        # this one question. Every excerpt is capped before transmission.
+        sent = _evidence_chars(d)
+        prov += ('<div class="prov">evidence to model · '
+                 + (f"{sent:,} characters" if sent
+                    else "0 characters, drafted on-machine")
+                 + "</div>")
         rows.append(
             f'<tr><td><div class="qid">{html.escape(q.question_id)}</div></td>'
             f'<td class="dom">{html.escape(q.domain)}</td>'
@@ -124,8 +174,13 @@ def write_report(res: RunResult, today: date) -> Path:
                     f"<td><span class='pass'>PASS</span> &nbsp;{html.escape(r)}</td></tr>"
                     for t, s, r in EVAL_ROWS)
 
-    approved_note = ("Simulated named-reviewer approval was applied only to gate-clean, "
-                     "complete-coverage drafts; production replaces this with interactive GRC sign-off.")
+    if _approval_mode(res) == "human":
+        approved_note = ("Every DELIVERED answer below carries a named reviewer and note in the "
+                         "tamper-evident audit chain. Nothing reaches DELIVERED without that "
+                         "signature; everything else is still waiting on a human.")
+    else:
+        approved_note = ("Simulated named-reviewer approval was applied only to gate-clean, "
+                         "complete-coverage drafts; production replaces this with interactive GRC sign-off.")
 
     lattice = brand.run_lattice([
         (q.question_id, q.state.value,
@@ -137,6 +192,16 @@ def write_report(res: RunResult, today: date) -> Path:
     dial = brand.coverage_dial(m["cited_draft_coverage"])
     refusals = _refusal_bar(list(res.drafts.values()))
     chain_ok = m["audit_chain_valid"]
+    # Two counts the run genuinely measures, as opposed to asserts. The
+    # grounding gate refuses a drafted answer whose words are not traceable to
+    # the passages it cited; the citation resolver drops citations a model
+    # attached to sources or locations that were never retrieved.
+    grounding_refusals = sum(
+        1 for d in res.drafts.values() if "UNGROUNDED_ANSWER" in d.gate_flags)
+    dropped_citations = sum(
+        1 for d in res.drafts.values()
+        for f in d.gate_flags
+        if f in ("FABRICATED_CITATION", "HALLUCINATED_LOCATION", "UNRETRIEVED_CITATION"))
 
     page = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -145,7 +210,8 @@ def write_report(res: RunResult, today: date) -> Path:
 <header>
 <div class="eyebrow"><b>TrustOps Desk</b> / Evidence gated answer engine / v0</div>
 <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
-<div class="runmeta">tenant={html.escape(res.tenant)} &nbsp;/&nbsp; drafter={m['drafter']}
+<div class="runmeta">tenant={html.escape(res.tenant)}
+ &nbsp;/&nbsp; drafting engine={html.escape(_drafter_label(m['drafter']))}
  &nbsp;/&nbsp; run_date={today.isoformat()}
  &nbsp;/&nbsp; audit_chain={'VALID' if chain_ok else 'BROKEN'}
  &nbsp;/&nbsp; cycle={m['cycle_seconds']}s</div>
@@ -165,7 +231,11 @@ def write_report(res: RunResult, today: date) -> Path:
 <div class="stat warn"><b>{int(m['abstention_rate']*100)}%</b><span>refused by design</span></div>
 <div class="stat ok"><b>{m['auto_approved_delivered']}</b><span>delivered on clean gates</span></div>
 <div class="stat {'ok' if m['unsupported_material_claims'] == 0 else 'bad'}">
-<b>{m['unsupported_material_claims']}</b><span>unsupported claims, gate is 0</span></div>
+<b>{m['unsupported_material_claims']}</b><span>answers released without a citation</span></div>
+<div class="stat {'ok' if grounding_refusals == 0 else 'warn'}"><b>{grounding_refusals}</b>
+<span>answers refused as ungrounded</span></div>
+<div class="stat {'ok' if dropped_citations == 0 else 'warn'}"><b>{dropped_citations}</b>
+<span>citations dropped by the gates</span></div>
 <div class="stat {'ok' if chain_ok else 'bad'}"><b>{'VALID' if chain_ok else 'BROKEN'}</b>
 <span>audit chain</span></div>
 <div class="stat info"><b>{m['cycle_seconds']}s</b><span>cycle time</span></div>
@@ -186,16 +256,17 @@ doing their job, and they must survive every future change.</p>
 <tbody>{''.join(rows)}</tbody></table>
 
 <div class="seclabel"><span class="idx">04</span><span class="label">Adversarial eval suite</span><span class="rule"></span></div>
-<p class="sub">The six pre-pilot QA tests from the operating blueprint, run as pytest on every
-change. Any failure is SEV-1 and blocks release.</p>
+<p class="sub">Six adversarial tests with deliberately planted traps, re-run automatically on every
+change to the engine. Any failure blocks the release.</p>
 <table class="evals"><thead><tr><th>Test</th><th>Trap planted</th><th>Result</th></tr></thead>
 <tbody>{evals}</tbody></table>
 
 <footer>
 TrustOps v0 / synthetic tenant data only / hash chained audit log: {res.audit_path.name}
  / delivered artifact: {res.delivered_xlsx.name}<br>
-Release rule: zero unsupported material security claims. A time saving result counts only after
-factual integrity passes.
+Release rule: an answer is released only if it survives the citation gates and its words are
+traceable to the passages it cites. Anything else is refused and named. A time saving result
+counts only after factual integrity passes.
 </footer>
 </div></body></html>"""
     out = res.out_dir / "run_report.html"

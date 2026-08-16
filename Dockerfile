@@ -3,7 +3,11 @@
 FROM python:3.12-slim
 WORKDIR /app
 
-RUN pip install --no-cache-dir "openpyxl>=3.1" pypdf python-docx fastembed
+# One dependency list, exactly pinned, shared with local dev — an image that
+# resolves different versions than the venv the evals ran against is an image
+# nobody has actually tested.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # bake the retrieval model into the image: runtime has zero network egress
 # and cold start never depends on a model host being up
@@ -15,4 +19,5 @@ COPY site/ site/
 COPY data/ data/
 
 ENV TRUSTOPS_DATA=/data
+EXPOSE 8790
 CMD ["python", "-m", "trustops.server.app", "--host", "0.0.0.0"]

@@ -5,6 +5,12 @@ verbatim from dhruv-portfolio/design-system/tokens/colors.css. That export
 already carries GRC status semantics (ok / warn / critical / info) which the
 portfolio does not use; this is the product they were named for.
 
+Two deliberate deviations from that export, both for WCAG AA. --bone-3 was
+#85857E (4.27:1 on --surface-raised, a fail for normal text) and is now
+#8F8F88 (4.87:1). --bone-4 was #56564F (2.35:1 on --surface-card, a fail at
+every size) and is now #7A7A73; it is demoted to a hairline and decoration
+token and no longer carries text anyone has to read.
+
 Typefaces ship with the package as subset woff2 and are inlined as data URIs.
 Rationale: a run report is an audit artefact that must render identically
 years later, on a machine that may have no network. A webfont CDN link makes
@@ -51,7 +57,7 @@ def font_faces() -> str:
 TOKENS = """
 :root{
 --ink-0:#0E0E10;--ink-1:#141416;--ink-2:#1A1A1D;--ink-3:#222226;--ink-4:#2B2B30;
---bone-1:#E8E8E4;--bone-2:#B4B4AE;--bone-3:#85857E;--bone-4:#56564F;
+--bone-1:#E8E8E4;--bone-2:#B4B4AE;--bone-3:#8F8F88;--bone-4:#7A7A73;
 --signal:#B7C4FF;--signal-bright:#CFD8FF;--signal-deep:#6E7CC3;
 --signal-wash:rgba(183,196,255,0.09);--signal-ink:#14151F;
 --status-ok:#9BC49C;--status-warn:#D9B36A;--status-critical:#D97862;--status-info:#8FB0BE;
@@ -62,11 +68,16 @@ TOKENS = """
 --surface-page:var(--ink-1);--surface-sunken:var(--ink-0);--surface-card:var(--ink-2);
 --surface-raised:var(--ink-3);
 --text-primary:var(--bone-1);--text-secondary:var(--bone-2);--text-tertiary:var(--bone-3);
+/* --text-faint is a hairline and decoration token. It is deliberately NOT
+   used for any text that has to be read: at 4.02:1 on --surface-card it
+   fails AA for normal text. Anything a user must read uses --text-tertiary
+   or higher. */
 --text-faint:var(--bone-4);--focus-ring:var(--signal);
 --font-display:'Newsreader',Georgia,serif;
 --font-sans:'Archivo',Helvetica,Arial,sans-serif;
 --font-mono:'Fragment Mono','Courier New',monospace;
 --tracking-caps:0.16em;--radius-1:2px;--radius-2:4px;
+--ease-out:cubic-bezier(0.22,0.72,0.28,1);--ease-inout:cubic-bezier(0.62,0,0.32,1);
 }
 """
 
@@ -79,12 +90,12 @@ font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 72
 h1,h2,h3{font-family:var(--font-display);font-weight:400;letter-spacing:-0.015em;line-height:1.12}
 svg{display:block;max-width:100%}
 ::selection{background:var(--signal);color:var(--signal-ink)}
-:focus-visible{outline:1px solid var(--focus-ring);outline-offset:2px}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-1)}
 a{color:var(--signal);text-decoration-color:var(--line-signal);text-underline-offset:3px}
 
 header{border-bottom:1px solid var(--line-2);padding:56px 0 26px;margin-bottom:34px}
 .eyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.24em;text-transform:uppercase;
-color:var(--text-faint);margin-bottom:18px}
+color:var(--text-tertiary);margin-bottom:18px}
 .eyebrow b{color:var(--signal);font-weight:400}
 h1{font-size:clamp(30px,4.6vw,52px);line-height:1.02}
 h1 i{font-style:italic;color:var(--signal)}
@@ -129,12 +140,12 @@ text-transform:uppercase;margin-bottom:8px;color:var(--status-warn)}
 table{width:100%;border-collapse:collapse;background:var(--surface-card);
 border:1px solid var(--line-1);border-radius:var(--radius-2);overflow:hidden}
 th{font-family:var(--font-mono);font-size:10px;letter-spacing:0.13em;text-transform:uppercase;
-text-align:left;padding:12px;border-bottom:1px solid var(--line-2);color:var(--text-faint)}
+text-align:left;padding:12px;border-bottom:1px solid var(--line-2);color:var(--text-tertiary)}
 td{padding:14px 12px;border-bottom:1px solid var(--line-1);vertical-align:top;font-size:13.5px;
 color:var(--text-secondary)}
 tr:last-child td{border-bottom:none}
 .qid{font-family:var(--font-mono);font-size:11.5px;color:var(--text-primary);white-space:nowrap}
-.dom{color:var(--text-faint);font-size:11px;font-family:var(--font-mono)}
+.dom{color:var(--text-tertiary);font-size:11px;font-family:var(--font-mono)}
 .ans{max-width:52ch;color:var(--text-primary)}
 .gap{color:var(--status-warn);font-size:12px;margin-top:7px;font-family:var(--font-mono);line-height:1.6}
 .prov{margin-top:9px;font-family:var(--font-mono);font-size:10.5px;line-height:1.7;
@@ -154,13 +165,17 @@ background:linear-gradient(90deg,var(--status-critical-wash),transparent 70%)}
 .viz{display:grid;gap:28px;grid-template-columns:1fr;align-items:center;margin:26px 0}
 @media(min-width:820px){.viz{grid-template-columns:230px 1fr}}
 .stackbar{display:flex;height:46px;border-radius:var(--radius-1);overflow:hidden;gap:2px}
+/* a narrow segment must still say what it is: clip with an ellipsis rather
+   than silently rendering an unlabelled colour block */
 .stackbar div{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);
-font-size:10.5px;color:var(--ink-0)}
+font-size:10.5px;color:var(--ink-0);min-width:0;overflow:hidden;white-space:nowrap;
+text-overflow:ellipsis;padding:0 4px}
+.stackbar div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .sb-r{background:var(--status-warn)}.sb-s{background:var(--status-critical)}
 .sb-c{background:var(--status-info)}.sb-l{background:var(--status-ok)}
 
 footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line-1);
-font-family:var(--font-mono);font-size:10.5px;line-height:2;color:var(--text-faint)}
+font-family:var(--font-mono);font-size:10.5px;line-height:2;color:var(--text-tertiary)}
 @media(max-width:720px){td:nth-child(2),th:nth-child(2){display:none}.cells{grid-template-columns:repeat(12,1fr)}}
 """
 

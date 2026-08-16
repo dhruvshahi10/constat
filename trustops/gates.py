@@ -7,7 +7,8 @@ decide what is allowed to leave the system.
 Gate order per question:
   pre-gates  (classification): legal-commitment routing, certification-claim tagging
   post-gates (on the draft):   citation-or-abstain, approved-source-only,
-                               staleness, contradiction, certification evidence class
+                               staleness, contradiction, certification evidence
+                               class, then grounding
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from datetime import date
 
 from .evidence import EvidenceStore
 from .models import Coverage, Draft, Question, Risk
+from .retrieve import STOP, tokens
 
 # --- classification patterns -------------------------------------------------
 CERT_PAT = re.compile(
@@ -32,6 +34,70 @@ LEGAL_PAT = re.compile(
 
 # evidence classes allowed to support a certification/attestation claim
 CERT_EVIDENCE_TYPES = {"certificate", "attestation"}
+
+# --- grounding gate ----------------------------------------------------------
+# A citation surviving the gates above proves the SOURCE is citable. It does not
+# prove the ANSWER says what the source says: a model can attach a legitimate
+# source_id to a sentence it invented. This gate closes that hole by requiring
+# lexical overlap between the released answer and the text of the chunks it
+# cites, using the same tokenizer as retrieval so "a word" means one thing
+# everywhere in the system.
+#
+# Choice of 0.35: an honest questionnaire answer restates the source in the
+# answerer's own register, so it legitimately introduces framing words the
+# source does not contain ("we", "our platform", the question's own vocabulary,
+# the source title and version). Measured across every answerable question in
+# the acme evidence set, faithful answers from the deterministic drafter score
+# 0.65 to 0.94 (mean 0.82); a heavier paraphrase, which replaces roughly half
+# the vocabulary, still lands near 0.5. An answer that is genuinely about other
+# content scores 0.0 to 0.15. 0.35 sits in the empty band between those
+# populations, roughly half the observed floor for faithful text and well above
+# the ceiling for unrelated text. It is deliberately a floor, not a similarity
+# score, because the cost of a false refusal here is a queued SME review while
+# the cost of a false pass is a fabricated claim in a signed questionnaire.
+#
+# The 4-token floor exists because the ratio is too coarse to be fair on very
+# short answers: a three-word answer with one non-matching word would fail at
+# 0.33 for no good reason. Below the floor we require only that at least one
+# content word is traceable to the cited text. An answer with no content words
+# at all (a bare "Yes.") has nothing lexical to verify and is left to the
+# citation gate and the human reviewer.
+GROUNDING_MIN_RATIO = 0.35
+GROUNDING_MIN_ANSWER_TOKENS = 4
+
+
+def _content_words(text: str) -> set[str]:
+    """retrieve.tokens() is the tokenizer, so "a word" means the same thing here
+    as it does in retrieval. Its token pattern keeps trailing punctuation
+    ("backups." at the end of a sentence), which would otherwise make the last
+    word of every sentence unmatchable purely because the answer and the source
+    break their sentences in different places. Trailing separators are stripped
+    symmetrically on both sides, and the stopword list is re-applied afterwards
+    so that "Yes." is recognised as the stopword it is rather than counted as
+    an unsupported content word. Nothing else about the tokenization changes."""
+    out = {t.rstrip("./-") for t in tokens(text or "")}
+    return {t for t in out if t and len(t) > 1 and t not in STOP}
+
+
+def grounding_score(answer: str, cited_texts: list[str]) -> tuple[float, int, int]:
+    """Returns (ratio, overlapping_tokens, answer_tokens)."""
+    a = _content_words(answer)
+    cited: set[str] = set()
+    for t in cited_texts:
+        cited |= _content_words(t)
+    if not a:
+        return 1.0, 0, 0
+    overlap = len(a & cited)
+    return overlap / len(a), overlap, len(a)
+
+
+def is_grounded(answer: str, cited_texts: list[str]) -> tuple[bool, float]:
+    ratio, overlap, n = grounding_score(answer, cited_texts)
+    if n == 0:
+        return True, ratio
+    if n < GROUNDING_MIN_ANSWER_TOKENS:
+        return overlap >= 1, ratio
+    return ratio >= GROUNDING_MIN_RATIO, ratio
 
 
 def classify(q: Question) -> dict:
@@ -100,6 +166,25 @@ def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> D
     draft.citations = kept
     draft.gaps.extend(gaps)
 
+    # grounding: runs AFTER citation filtering, so it judges the answer only
+    # against evidence that is itself releasable. A model can cite a real,
+    # approved, in-force source and still have written a sentence that source
+    # does not support; that is the case this catches.
+    if kept and draft.answer is not None:
+        index = {(c.source_id, c.location): c.text for c in store.chunks()}
+        cited_texts = [index.get((c.source_id, c.location), c.excerpt) for c in kept]
+        grounded, ratio = is_grounded(draft.answer, cited_texts)
+        if not grounded:
+            draft.gate_flags.append("UNGROUNDED_ANSWER")
+            draft.gaps.append(
+                f"Answer is not grounded in its cited evidence: only {round(ratio * 100)}% "
+                f"of its content words appear in the cited passages (floor "
+                f"{round(GROUNDING_MIN_RATIO * 100)}%). Answer withheld; an SME must "
+                f"write this one from the source."
+            )
+            kept = []
+            draft.citations = []
+
     # citation-or-abstain: no surviving citations => no answer leaves the system
     if not kept:
         draft.answer = None
@@ -112,6 +197,8 @@ def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> D
                     s.owner for srcs in store.contradictions(today).values() for s in srcs
                 })
                 draft.route = "SOURCE_OWNER:" + ",".join(key_owners)
+            elif "UNGROUNDED_ANSWER" in draft.gate_flags:
+                draft.route = "SME"
             elif any(f.startswith(("STALE_EVIDENCE", "CERT_INFERENCE_BLOCKED")) for f in draft.gate_flags):
                 draft.route = "SME"
             else:

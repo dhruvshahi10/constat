@@ -2,20 +2,17 @@
 from __future__ import annotations
 
 import os
-import secrets
 from pathlib import Path
 
 DATA = Path(os.environ.get("TRUSTOPS_DATA", "./data-hosted")).resolve()
 DB_PATH = DATA / "trustops.db"
 TENANTS = DATA / "tenants"
 
-# HMAC key for tenant tokens. Render injects TRUSTOPS_SECRET (generateValue);
-# a missing value gets a per-boot random key, which invalidates tokens on
-# restart — fine for dev, unacceptable in prod, so warn loudly.
-SECRET = os.environ.get("TRUSTOPS_SECRET", "")
-EPHEMERAL_SECRET = not SECRET
-if EPHEMERAL_SECRET:
-    SECRET = secrets.token_hex(32)
+# No server-side secret is needed for auth: mint_token() draws its randomness
+# from secrets.token_urlsafe and only sha256(token) is persisted, in SQLite on
+# a durable disk. Tokens therefore survive restarts and there is nothing to
+# rotate. (render.yaml still declares TRUSTOPS_SECRET; it is unused and can be
+# dropped there whenever that file is next touched.)
 
 PORT = int(os.environ.get("PORT", "8790"))
 HOST = os.environ.get("TRUSTOPS_HOST", "127.0.0.1")
@@ -24,11 +21,24 @@ HOST = os.environ.get("TRUSTOPS_HOST", "127.0.0.1")
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_BODY_BYTES = 6 * 1024 * 1024
 MAX_DOCS_PER_TENANT = 20
+MAX_TENANT_BYTES = 60 * 1024 * 1024      # raw blobs kept per workspace
 MAX_EXTRACT_CHARS = 200_000
 RUN_QUOTA = 3
 SIGNUPS_PER_IP_PER_DAY = 3
+SIGNUPS_PER_DAY_GLOBAL = int(os.environ.get("TRUSTOPS_SIGNUPS_PER_DAY", "200"))
 GLOBAL_QUEUE_DEPTH = 32
 TENANT_TTL_DAYS = 14
+KEEP_RUN_DIRS = 5                        # newest N run output dirs per tenant
+
+# HTTP hardening
+SOCKET_TIMEOUT_S = 30                    # slowloris ceiling per connection
+MAX_CONNECTIONS = int(os.environ.get("TRUSTOPS_MAX_CONNECTIONS", "64"))
+
+# A run holding the single worker forever starves every other tenant.
+RUN_BUDGET_S = int(os.environ.get("TRUSTOPS_RUN_BUDGET_S", "420"))
+# Grace we give an over-budget run to notice it lost and stop, before the
+# worker starts the next job alongside it.
+ORPHAN_GRACE_S = int(os.environ.get("TRUSTOPS_ORPHAN_GRACE_S", "30"))
 
 HOSTED_DRAFTER = os.environ.get("TRUSTOPS_DRAFTER", "gemini")
 

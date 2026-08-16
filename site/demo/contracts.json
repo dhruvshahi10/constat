@@ -42,18 +42,18 @@
   },
   "iso": {
     "label": "ISO 27001 trap",
-    "question": "Is your organization ISO/IEC 27001 certified? Provide certificate number and expiry.",
+    "question": "Is your ISMS ISO 27001 certified? Provide the certificate number, certification body and expiry date.",
     "trap": "cert",
     "verdict": "REFUSED, CERT NEVER INFERRED",
     "tone": "warn",
     "answer": null,
     "citations": [],
     "gaps": [
-      "Retrieval found no sufficiently relevant approved evidence.",
-      "No approved evidence retrieved for this question."
+      "PLN-ISO-RM (type=roadmap): not a certificate/attestation, certification status is never inferred from plans or policies"
     ],
     "flags": [
-      "CERT_CLAIM: certification evidence class required"
+      "CERT_CLAIM: certification evidence class required",
+      "CERT_INFERENCE_BLOCKED:PLN-ISO-RM"
     ]
   },
   "del": {

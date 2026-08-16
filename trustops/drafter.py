@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -21,6 +22,16 @@ from .retrieve import Retriever
 
 PROMPT_VERSION = "trustops-contract-v1.0"
 
+# Hard cap on how much of any one chunk is handed to a model, and on how much of
+# it we store back as a citation excerpt. Chunking is paragraph-sized, but a
+# pathological source (a wall-of-text page, a table flattened into one block)
+# could otherwise put an entire document into a single prompt or into the
+# customer-facing provenance strip. 1200 characters is roughly two dense
+# paragraphs: enough to answer a questionnaire item, far short of a document.
+MAX_EXCERPT_CHARS = 1200
+
+_SENTENCE_END = re.compile(r"[.!?](?=\s|$)|\n")
+
 SYSTEM_CONTRACT = """You are the TrustOps answer engine. Answer ONLY from the approved tenant \
 source excerpts supplied in this request. Cite source_id and location for every factual claim. \
 If evidence is missing, stale, contradictory, or outside scope, abstain and name the gap. \
@@ -28,6 +39,114 @@ Never infer certification, control operation, legal compliance, contract commitm
 outcomes. Return ONLY a JSON object: {"answer": string|null, "citations": [{"source_id": str, \
 "location": str, "excerpt": str}], "abstained": bool, "gaps": [str], "risk": "low"|"medium"|"high"}. \
 No prose outside the JSON."""
+
+
+# --- excerpt custody ---------------------------------------------------------
+def clip_excerpt(text: str, limit: int = MAX_EXCERPT_CHARS) -> str:
+    """Cap text at `limit`, trimming at a sentence boundary where one is close
+    to the cap, otherwise at a word boundary. Never cuts mid-word."""
+    text = (text or "").strip()
+    if len(text) <= limit:
+        return text
+    window = text[:limit]
+    best = -1
+    for m in _SENTENCE_END.finditer(window):
+        best = m.end()
+    if best >= int(limit * 0.6):
+        return window[:best].rstrip() + " …"
+    space = window.rfind(" ")
+    cut = space if space > 0 else limit
+    return window[:cut].rstrip(" ,;:") + " …"
+
+
+def _flatten(text: str) -> str:
+    return " ".join((text or "").split())
+
+
+def chunk_index(retriever: Retriever) -> dict[tuple[str, str], str]:
+    """(source_id, location) -> real chunk text, for the whole tenant store.
+
+    This is the ground truth a model citation is resolved against. A location
+    the store has never emitted does not exist, however plausible it reads.
+    """
+    return {(c.source_id, c.location): c.text for c in retriever.store.chunks()}
+
+
+def evidence_block(retriever: Retriever, hits) -> str:
+    """The excerpts actually transmitted to the model, each capped."""
+    return "\n\n".join(
+        f"[source_id={h.chunk.source_id} version="
+        f"{retriever.store.sources[h.chunk.source_id].version} "
+        f"location={h.chunk.location}]\n{clip_excerpt(h.chunk.text)}"
+        for h in hits
+    )
+
+
+def resolve_citations(raw_citations, hits, retriever: Retriever,
+                      index: dict[tuple[str, str], str]):
+    """Resolve model-authored citations against reality.
+
+    Two separate trust problems are fixed here:
+
+      1. The model can attach a real source_id to a claim it invented, or name a
+         location that does not exist. Every (source_id, location) pair must
+         resolve to a chunk that was actually retrieved for THIS question;
+         anything else is dropped and the drop is recorded as a gap.
+      2. The model can author the excerpt itself, which would put model prose
+         into the provenance strip we sell as the customer's own document text.
+         The model's excerpt is discarded unconditionally and replaced with the
+         real chunk text from the store.
+
+    Returns (citations, gaps, flags).
+    """
+    retrieved = {(h.chunk.source_id, h.chunk.location) for h in hits}
+    retrieved_sources = {sid for sid, _ in retrieved}
+    out: list[Citation] = []
+    gaps: list[str] = []
+    flags: list[str] = []
+    seen: set[tuple[str, str]] = set()
+
+    for c in raw_citations or []:
+        if not isinstance(c, dict):
+            continue
+        sid = str(c.get("source_id") or "").strip()
+        loc = str(c.get("location") or "").strip()
+        if sid not in retrieved_sources:
+            gaps.append(
+                f"Citation to '{sid or '(unnamed source)'}' dropped: that source was not "
+                "among the excerpts retrieved for this question, so it cannot support it."
+            )
+            flags.append("FABRICATED_CITATION")
+            continue
+        if (sid, loc) not in index:
+            gaps.append(
+                f"Citation {sid}@{loc or '(no location)'} dropped: that location does not "
+                "exist in the source document."
+            )
+            flags.append("HALLUCINATED_LOCATION")
+            continue
+        if (sid, loc) not in retrieved:
+            gaps.append(
+                f"Citation {sid}@{loc} dropped: that passage exists but was not retrieved "
+                "for this question, so the drafter never saw it."
+            )
+            flags.append("UNRETRIEVED_CITATION")
+            continue
+        if (sid, loc) in seen:
+            continue
+        seen.add((sid, loc))
+        src = retriever.store.sources.get(sid)
+        out.append(Citation(
+            source_id=sid,
+            version=src.version if src else "?",
+            # the model's excerpt is never stored: provenance is the customer's
+            # own text or it is nothing
+            excerpt=clip_excerpt(_flatten(index[(sid, loc)])),
+            location=loc,
+        ))
+    # de-duplicate flags, preserve first-seen order
+    flags = list(dict.fromkeys(flags))
+    return out, gaps, flags
 
 
 class MockDrafter:
@@ -78,6 +197,7 @@ class AnthropicDrafter:
         self.client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
         self.model_version = model or os.environ.get("TRUSTOPS_MODEL", "claude-haiku-4-5-20251001")
         self.retriever = retriever
+        self._index = chunk_index(retriever)
 
     def draft(self, q: Question, tenant: str) -> Draft:
         hits = self.retriever.search(q.text, tenant=tenant, k=4)
@@ -87,18 +207,15 @@ class AnthropicDrafter:
             d.abstained = True
             d.gaps.append("Retrieval found no relevant approved evidence.")
             return d
-        evidence_block = "\n\n".join(
-            f"[source_id={h.chunk.source_id} version="
-            f"{self.retriever.store.sources[h.chunk.source_id].version} "
-            f"location={h.chunk.location}]\n{h.chunk.text}"
-            for h in hits
-        )
+        block = evidence_block(self.retriever, hits)
+        # custody receipt: exactly how much customer text left the machine
+        d.gate_flags.append(f"EVIDENCE_CHARS:{len(block)}")
         msg = self.client.messages.create(
             model=self.model_version,
             max_tokens=800,
             system=SYSTEM_CONTRACT,
             messages=[{"role": "user", "content":
-                       f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{evidence_block}"}],
+                       f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{block}"}],
         )
         raw = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
         try:
@@ -112,15 +229,11 @@ class AnthropicDrafter:
         d.abstained = bool(obj.get("abstained", d.answer is None))
         d.gaps.extend(obj.get("gaps", []))
         d.risk = Risk(obj.get("risk", "medium"))
-        for c in obj.get("citations", []):
-            sid = c.get("source_id", "")
-            src = self.retriever.store.sources.get(sid)
-            d.citations.append(Citation(
-                source_id=sid,
-                version=src.version if src else "?",
-                location=c.get("location", "?"),
-                excerpt=c.get("excerpt", "")[:280],
-            ))
+        cites, gaps, flags = resolve_citations(
+            obj.get("citations", []), hits, self.retriever, self._index)
+        d.citations = cites
+        d.gaps.extend(gaps)
+        d.gate_flags.extend(flags)
         return d
 
 
@@ -137,6 +250,7 @@ class GeminiDrafter:
         # rolling alias: survives Google retiring dated models for new accounts
         self.model_version = model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
         self.retriever = retriever
+        self._index = chunk_index(retriever)
         # free tier is ~10 req/min: self-pace instead of hammering into 429s
         self.min_interval = float(os.environ.get("GEMINI_MIN_INTERVAL", "6.5"))
         self._last_call = 0.0
@@ -180,15 +294,12 @@ class GeminiDrafter:
             d.abstained = True
             d.gaps.append("Retrieval found no relevant approved evidence.")
             return d
-        evidence_block = "\n\n".join(
-            f"[source_id={h.chunk.source_id} version="
-            f"{self.retriever.store.sources[h.chunk.source_id].version} "
-            f"location={h.chunk.location}]\n{h.chunk.text}"
-            for h in hits
-        )
+        block = evidence_block(self.retriever, hits)
+        # custody receipt: exactly how much customer text left the machine
+        d.gate_flags.append(f"EVIDENCE_CHARS:{len(block)}")
         try:
             raw = self._generate(
-                f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{evidence_block}")
+                f"QUESTION ({q.question_id}): {q.text}\n\nAPPROVED EXCERPTS:\n{block}")
         except OSError as exc:
             # transport failure (rate limit exhausted, network down): the run
             # must degrade to an abstention, never crash and never fabricate
@@ -208,15 +319,11 @@ class GeminiDrafter:
         d.abstained = bool(obj.get("abstained", d.answer is None))
         d.gaps.extend(obj.get("gaps", []))
         d.risk = Risk(obj.get("risk", "medium"))
-        for c in obj.get("citations", []):
-            sid = c.get("source_id", "")
-            src = self.retriever.store.sources.get(sid)
-            d.citations.append(Citation(
-                source_id=sid,
-                version=src.version if src else "?",
-                location=c.get("location", "?"),
-                excerpt=c.get("excerpt", "")[:280],
-            ))
+        cites, gaps, flags = resolve_citations(
+            obj.get("citations", []), hits, self.retriever, self._index)
+        d.citations = cites
+        d.gaps.extend(gaps)
+        d.gate_flags.extend(flags)
         return d
 
 
