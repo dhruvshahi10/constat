@@ -700,19 +700,23 @@ def chain_html(chain: dict) -> str:
     # attribute. CLASSIFIED as visible text trips the brand's dossier-language
     # rule, and the brand rule wins on a marketing page.
     labels = {"CLASSIFIED": "ROUTED", "EVIDENCE_INTEGRITY_SCAN": "EVIDENCE SCAN"}
-    blocks = []
+    # The hash is rendered ON the connector rather than inside the block,
+    # because that is literally what it is: the link from one event to the
+    # next. Six boxes each holding a hex string read as six unrelated cards;
+    # a chain whose links carry the hashes reads as a chain.
+    out = []
     for i, ev in enumerate(chain["events"]):
         label = labels.get(ev["action"], ev["action"].replace("_", " "))
-        prev = "genesis" if set(ev["prev_hash"]) == {"0"} else ev["prev_hash"][:6]
-        blocks.append(
-            f'<div class="tb" data-i="{i}" title="{e(ev["action"])}">'
-            f'<span class="th">{i + 1:02d} / {e(label)}</span>'
-            f'<span class="prev">links back to {e(prev)}</span>'
-            f'<input data-f="actor" value="{e(ev["actor"])}" readonly '
-            f'title="{e(ev["actor"])}" '
+        if i:
+            out.append(f'<span class="tlink" data-i="{i}" aria-hidden="true">'
+                       f'<i></i><em>{e(chain["events"][i - 1]["hash"][:6])}</em></span>')
+        out.append(
+            f'<div class="tb" data-i="{i}">'
+            f'<span class="th">{i + 1:02d} <s>/</s> {e(label)}</span>'
+            f'<input data-f="actor" value="{e(ev["actor"])}" '
             f'aria-label="actor of event {i + 1}, edit to tamper with the chain">'
-            f'<span class="hash">{e(ev["hash"][:18])}</span></div>')
-    return "".join(blocks)
+            f'<span class="hash">{e(ev["hash"][:14])}</span></div>')
+    return "".join(out)
 
 
 # --- the workbook proof ------------------------------------------------------

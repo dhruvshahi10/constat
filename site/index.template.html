@@ -53,6 +53,9 @@ max-width:46ch;margin-top:clamp(18px,2.2vw,26px);text-wrap:pretty}
 margin-bottom:clamp(20px,2.6vw,34px)}
 
 /* ── ground ────────────────────────────────────────────────────────────── */
+#amb{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;
+transition:opacity 1200ms var(--ease-out)}
+.js #amb.on{opacity:1}
 .ground{position:fixed;inset:0;z-index:-2;pointer-events:none;
 background:radial-gradient(900px 620px at 78% -8%,rgba(183,196,255,0.10),transparent 68%),
 radial-gradient(760px 520px at 4% 34%,rgba(217,120,98,0.075),transparent 70%),
@@ -149,6 +152,22 @@ align-items:baseline}}
 color:var(--text-primary);font-weight:400}
 .factline b{font-family:var(--font-display);font-size:18px;letter-spacing:-0.015em}
 .artline span,.factline span{font-size:var(--t-body);line-height:1.55;color:var(--text-secondary)}
+
+/* the beat rail: fills the band under the sheet and shows where you are */
+.beats{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+margin:clamp(18px,2.4vw,30px) 0 0;padding:0}
+.beats li{position:relative;padding-top:13px;font-family:var(--font-mono);
+font-size:9.5px;letter-spacing:0.13em;text-transform:uppercase;color:var(--text-faint);
+transition:color 320ms var(--ease-out)}
+.beats li::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+border-radius:2px;background:var(--line-2);transform-origin:left;
+transition:background 320ms var(--ease-out)}
+.beats li b{font-weight:400;margin-right:7px;color:inherit}
+.beats li.on{color:var(--text-secondary)}
+.beats li.on::before{background:var(--signal)}
+.beats li.on[data-tone="warn"]{color:var(--status-critical)}
+.beats li.on[data-tone="warn"]::before{background:var(--status-critical)}
+@media(max-width:559px){.beats li span{display:none}}
 
 /* ── the sheet ─────────────────────────────────────────────────────────── */
 .sheetwrap{position:relative}
@@ -432,33 +451,57 @@ border-color:var(--signal)}
 .tamper{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);
 border-radius:var(--radius-2);padding:clamp(20px,2.4vw,28px);margin-top:clamp(20px,2.4vw,30px)}
 .tamper h3{font-size:clamp(18px,1.8vw,22px);margin-bottom:8px}
-.tamper .tlede{font-size:13.5px;line-height:1.6;color:var(--text-secondary);
-margin-bottom:16px;max-width:60ch}
-.tblocks{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
-@media(min-width:760px){.tblocks{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1080px){.tblocks{grid-template-columns:repeat(6,1fr)}}
+.tamper .tinstruct{font-size:var(--t-lede);line-height:1.5;color:var(--text-secondary);
+max-width:60ch;font-family:var(--font-display);letter-spacing:-0.012em}
+.tamper .tinstruct b{color:var(--text-primary);font-weight:400}
+/* a chain, laid out as one. The hash rides on the connector because that is
+   what it is: the link binding an event to the one before it. Six boxes each
+   holding a hex string read as six unrelated cards. */
+.tblocks{display:grid;gap:6px;grid-template-columns:1fr;margin-top:clamp(18px,2.2vw,26px)}
+@media(min-width:640px){.tblocks{grid-template-columns:1fr auto 1fr auto 1fr}}
+@media(min-width:1080px){.tblocks{
+grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr auto 1fr}}
 .tb{position:relative;border:1px solid var(--line-1);border-radius:var(--radius-1);
 padding:11px 12px;background:var(--surface-sunken);
-transition:border-color 300ms var(--ease-out)}
-@media(min-width:1080px){
-.tb:not(:first-child)::before{content:"\2192";position:absolute;left:-9px;top:50%;
-transform:translate(-50%,-50%);color:var(--line-3);font-size:12px}}
-.tb .th{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.12em;
-text-transform:uppercase;color:var(--text-tertiary);line-height:1.6;min-height:2.6em}
-.tb .prev{display:block;font-family:var(--font-mono);font-size:8.5px;
-color:var(--text-tertiary);letter-spacing:0.04em;transition:color 300ms var(--ease-out)}
-.tb input{width:100%;font-family:var(--font-mono);font-size:10.5px;color:var(--text-primary);
-background:var(--surface-card);border:1px solid var(--line-1);border-radius:1px;
-padding:6px 7px;margin:8px 0;text-overflow:ellipsis}
-.tb .hash{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.04em;
-color:var(--status-ok);word-break:break-all;line-height:1.5;
+transition:border-color 300ms var(--ease-out),opacity 300ms var(--ease-out)}
+.tb .th{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.12em;
+text-transform:uppercase;color:var(--text-tertiary);line-height:1.5}
+.tb .th s{text-decoration:none;color:var(--line-3);margin:0 3px}
+.tb input{width:100%;font-family:var(--font-mono);font-size:11px;color:var(--text-primary);
+background:var(--surface-card);border:1px solid var(--line-2);border-radius:1px;
+padding:7px 8px;margin:8px 0 7px;text-overflow:ellipsis}
+.tb input:hover{border-color:var(--line-3)}
+.tb .hash{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.03em;
+color:var(--status-ok);word-break:break-all;line-height:1.4;
 transition:color 300ms var(--ease-out)}
 .tb.broken{border-color:var(--status-critical)}
-.tb.broken .hash,.tb.broken .prev{color:var(--status-critical)}
-.tb.broken::after{content:"LINK BROKEN";position:absolute;right:6px;top:6px;
-font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.14em;
-color:var(--status-critical);background:var(--status-critical-wash);
-padding:2px 6px;border-radius:1px}
+.tb.broken .hash{color:var(--status-critical)}
+.tb.broken::after{content:"BROKEN";position:absolute;right:7px;top:7px;
+font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.14em;
+color:var(--status-critical);background:var(--status-critical-wash);padding:2px 5px;
+border-radius:1px}
+
+/* the connector. It carries the hash, and it visibly severs. */
+.tlink{display:none;align-items:center;justify-content:center;flex-direction:column;
+gap:3px;padding:0 4px;min-width:62px}
+@media(min-width:640px){.tlink{display:flex}}
+@media(min-width:640px) and (max-width:1079px){
+.tlink[data-i="2"],.tlink[data-i="4"]{display:none}}
+.tlink i{position:relative;display:block;width:100%;height:1px;
+background:var(--status-ok);opacity:0.5;transition:background 300ms var(--ease-out)}
+.tlink em{font-family:var(--font-mono);font-size:8.5px;font-style:normal;
+letter-spacing:0.04em;color:var(--text-faint);transition:color 300ms var(--ease-out)}
+.tlink.cut i{background:var(--status-critical);opacity:1}
+/* the severed link: the rule is interrupted by a gap and two ragged ends */
+.tlink.cut i::before,.tlink.cut i::after{content:"";position:absolute;top:-3px;
+width:1px;height:7px;background:var(--status-critical)}
+.tlink.cut i::before{left:calc(50% - 4px);transform:rotate(18deg)}
+.tlink.cut i::after{left:calc(50% + 4px);transform:rotate(18deg)}
+.tlink.cut{position:relative}
+.tlink.cut i{background:linear-gradient(90deg,var(--status-critical) 0 44%,
+transparent 44% 56%,var(--status-critical) 56% 100%)}
+.tlink.cut em{color:var(--status-critical)}
+
 .trow{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:16px}
 .tstatus{font-family:var(--font-mono);font-size:11px;letter-spacing:0.15em;
 text-transform:uppercase;color:var(--status-ok)}
@@ -595,6 +638,7 @@ footer a{color:var(--signal)}
 <body>
 <script>document.documentElement.classList.add("js")</script>
 <div class="ground" aria-hidden="true"></div>
+<canvas id="amb" aria-hidden="true"></canvas>
 
 <nav class="navbar">
   <div class="wrap">
@@ -660,6 +704,13 @@ footer a{color:var(--signal)}
             <button type="button" class="replay" id="replay">Replay</button>
           </div>
         </div>
+        <ol class="beats" id="beats" aria-hidden="true">
+          <li><b>01</b><span>Cited</span></li>
+          <li><b>02</b><span>Cited</span></li>
+          <li><b>03</b><span>Expired</span></li>
+          <li><b>04</b><span>Conflict</span></li>
+          <li><b>05</b><span>Counsel</span></li>
+        </ol>
       </div>
     </div>
   </div>
@@ -779,8 +830,8 @@ footer a{color:var(--signal)}
     <h2 class="rv">Proof you can break<br>with your own hands.</h2>
 
     <div class="tamper rv" id="tamper">
-      <p class="tlede">Six real events from the run. Edit any actor and verification fails from
-      there. Put it back and it heals.</p>
+      <p class="tinstruct"><b>Change one name.</b> Every hash covers the event before it,
+      so the chain breaks from there and cannot be repaired by anything downstream.</p>
       <div class="tblocks" id="tblocks"><!--@CHAIN@--></div>
       <div class="trow">
         <span class="tstatus" id="tstatus" role="status">Chain verifies, all six links intact</span>
@@ -924,6 +975,72 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/* ── ambient: a questionnaire the size of the page ───────────────────────
+   A faint grid of cells where answers quietly land and some get struck. It is
+   the product's own image rather than decoration, it costs about sixty lines
+   and no library, and it stops entirely when off screen or under reduced
+   motion. */
+(function(){
+  const cv=document.getElementById("amb");
+  if(!cv||reduced)return;
+  const cx=cv.getContext("2d",{alpha:true});
+  const CELL=94, PAD=1;
+  let w=0,h=0,cols=0,rows=0,cells=[],raf=0,vis=true,t0=0;
+  const SIG="183,196,255", RED="217,120,98";
+  function build(){
+    w=cv.width=innerWidth; h=cv.height=innerHeight;
+    cols=Math.ceil(w/CELL)+1; rows=Math.ceil(h/CELL)+1;
+    cells=[];
+    for(let i=0;i<cols*rows;i++)
+      cells.push({s:0,life:0,tone:0,next:1200+Math.random()*9000});
+  }
+  function draw(ts){
+    if(!t0)t0=ts;
+    const dt=Math.min(48,ts-t0);t0=ts;
+    const drift=(ts*0.006)%CELL;
+    cx.clearRect(0,0,w,h);
+    /* the ruled grid */
+    cx.strokeStyle="rgba(232,232,228,0.032)";cx.lineWidth=1;
+    cx.beginPath();
+    for(let y=-CELL+drift;y<h+CELL;y+=CELL){cx.moveTo(0,y|0);cx.lineTo(w,y|0)}
+    for(let x=0;x<w+CELL;x+=CELL){cx.moveTo(x|0,0);cx.lineTo(x|0,h)}
+    cx.stroke();
+    /* cells that answer, and cells that refuse */
+    for(let i=0;i<cells.length;i++){
+      const c=cells[i];
+      c.next-=dt;
+      if(c.next<=0&&c.life<=0){c.life=2600;c.tone=Math.random()<0.28?1:0;c.next=9000+Math.random()*26000}
+      if(c.life>0){
+        c.life-=dt;
+        const p=c.life/2600, a=Math.sin(p*Math.PI)*0.5;
+        const col=c.tone?RED:SIG;
+        const x=(i%cols)*CELL, y=((i/cols)|0)*CELL-CELL+drift;
+        cx.fillStyle=`rgba(${col},${(a*0.09).toFixed(3)})`;
+        cx.fillRect(x+PAD,y+PAD,CELL-PAD*2,CELL-PAD*2);
+        if(c.tone){ /* a struck cell gets a rule through it */
+          cx.strokeStyle=`rgba(${col},${(a*0.5).toFixed(3)})`;cx.lineWidth=1.4;
+          cx.beginPath();cx.moveTo(x+12,y+CELL/2);cx.lineTo(x+CELL-12,y+CELL/2);cx.stroke();
+        }else{
+          cx.fillStyle=`rgba(${col},${(a*0.45).toFixed(3)})`;
+          cx.fillRect(x+12,y+CELL/2-1,CELL-34,2);
+        }
+      }
+    }
+    raf=vis?requestAnimationFrame(draw):0;
+  }
+  function start(){if(!raf){t0=0;raf=requestAnimationFrame(draw)}}
+  build();cv.classList.add("on");start();
+  addEventListener("resize",()=>{build()},{passive:true});
+  /* only paint while the hero is actually on screen */
+  const hero=document.querySelector(".band.first");
+  if(hero)new IntersectionObserver(es=>es.forEach(e=>{
+    vis=e.isIntersecting;
+    cv.style.opacity=vis?"1":"0";
+    if(vis)start();
+  }),{threshold:0}).observe(hero);
+  document.addEventListener("visibilitychange",()=>{vis=!document.hidden;if(vis)start()});
+})();
+
 /* reveal on scroll */
 const io=new IntersectionObserver(es=>es.forEach(e=>{
   if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}
@@ -959,6 +1076,8 @@ document.querySelectorAll(".rv").forEach(el=>io.observe(el));
   const scan=sheet.querySelector(".scan");
   const tally=$("tally"),before=$("segBefore"),after=$("segAfter");
   const step=document.getElementById("pinstep");
+  const beatEls=[...document.querySelectorAll("#beats li")];
+  beatEls.forEach((el,i)=>{if(i>=2)el.dataset.tone="warn"});
   const wrap=document.getElementById("pinwrap");
   /* the caption for each state of the fill: this is the emotional beat list */
   const BEATS=[
@@ -1001,6 +1120,7 @@ document.querySelectorAll(".rv").forEach(el=>io.observe(el));
     }
     sheet.classList.toggle("scanning",n<rows.length);
     counts(n);beat(n);press(n>0);
+    if(beatEls.length)beatEls.forEach((el,i)=>el.classList.toggle("on",i<n));
   }
   function showEmpty(){render(0)}
   function showFull(){render(rows.length)}
@@ -1260,6 +1380,7 @@ async function sha256(s){
 if(CHAIN&&$("tblocks")){
   const blocks=[...document.querySelectorAll("#tblocks .tb")];
   const inputs=blocks.map(b=>b.querySelector("input"));
+  const links=[...document.querySelectorAll("#tblocks .tlink")];
   inputs.forEach(inp=>inp.removeAttribute("readonly"));
   let seq=0;
   async function reverify(){
@@ -1277,7 +1398,12 @@ if(CHAIN&&$("tblocks")){
     }
     blocks.forEach((b,i)=>{
       b.classList.toggle("broken",broken>=0&&i>=broken);
-      b.querySelector(".hash").textContent=(shown[i]||"").slice(0,18);
+      b.querySelector(".hash").textContent=(shown[i]||"").slice(0,14);
+    });
+    links.forEach(l=>{
+      const i=+l.dataset.i;
+      l.classList.toggle("cut",broken>=0&&i>=broken);
+      l.querySelector("em").textContent=(shown[i-1]||"").slice(0,6);
     });
     const st=$("tstatus");
     const msg=broken<0?"Chain verifies, all six links intact"
