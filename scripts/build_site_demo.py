@@ -417,6 +417,46 @@ def chips_html(out: dict) -> str:
         for k, v in out.items())
 
 
+def ticker_html(out: dict) -> str:
+    """The verdict ledger, built at build time so it survives with JS off.
+
+    The track is the same row twice because the marquee translates by -50%;
+    one copy would snap back visibly at the wrap.
+    """
+    e = _html.escape
+    items = "".join(
+        f'<div class="litem" data-t="{e(v["tone"])}">'
+        f'<span class="lv">{e(v["verdict"])}</span>'
+        f'<span class="lq">{e(v["label"])}</span></div>'
+        for v in out.values())
+    row = f'<div class="lrow">{items}</div>'
+    return row + row
+
+
+# Product screenshots, taken from a real hosted run and inlined as data URIs so
+# the page stays one self-contained file with zero external requests. Missing
+# files are not fatal: the build says so and the frames render empty rather than
+# breaking, because a stale screenshot is worse than an absent one.
+SHOTS = {"SHOT_REPORT": "report", "SHOT_REVIEW": "review", "SHOT_WORKSPACE": "workspace"}
+
+
+def shot_uris() -> dict[str, str]:
+    path = ROOT / "site" / "img" / "shots.json"
+    if not path.is_file():
+        print("  WARNING: site/img/shots.json missing, product frames will be blank")
+        return {k: "" for k in SHOTS}
+    blobs = json.loads(path.read_text(encoding="utf-8"))
+    out = {}
+    for token, key in SHOTS.items():
+        b64 = blobs.get(key)
+        if not b64:
+            print(f"  WARNING: no screenshot for {key!r}")
+            out[token] = ""
+        else:
+            out[token] = f"data:image/jpeg;base64,{b64}"
+    return out
+
+
 
 # --- static, single-file variant ---------------------------------------------
 # The hosted page depends on a backend for exactly two things: POST /api/signup
@@ -432,7 +472,7 @@ def chips_html(out: dict) -> str:
 # once, from the same TERMS_BODY and PRIVACY_BODY the hosted pages use, so there
 # is still one source of truth.
 
-STATIC_SIGNUP = """<section id="signup">
+STATIC_SIGNUP = """<section id="signup" class="secpad">
   <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
   <h2 class="rv">The interactive workspace is not live yet</h2>
   <p class="sub rv">Everything above is a real recorded run of the engine, replayed unchanged.
@@ -446,12 +486,57 @@ STATIC_SIGNUP = """<section id="signup">
 """
 
 
-def _static_legal_section(anchor, idx, label, heading, body):
-    return (f'<section id="{anchor}">'
-            f'<div class="seclabel rv"><span class="idx">{idx}</span>'
-            f'<span class="label">{label}</span><span class="rule"></span></div>'
-            f'<h2 class="rv">{heading}</h2>'
-            f'<div class="legalwrap">{DRAFT_NOTE}{body}</div></section>')
+# Inlining both legal documents as open sections made them roughly half the
+# rendered page, which turned a marketing site into a document. They are still
+# present in full, in the same file, from the same source of truth; they are
+# just folded. <details> was chosen over a <dialog> because it needs no
+# JavaScript to open: with scripting off the summary is still a working control.
+STATIC_LEGAL_CSS = """
+.legalset{display:grid;gap:12px;margin-top:clamp(28px,3.6vw,44px)}
+.legaldoc{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);
+border-radius:var(--radius-2);overflow:hidden}
+.legaldoc>summary{list-style:none;cursor:pointer;padding:clamp(18px,2.2vw,24px);
+display:flex;align-items:center;gap:14px;font-family:var(--font-display);
+font-size:clamp(18px,1.9vw,23px);letter-spacing:-0.015em}
+.legaldoc>summary::-webkit-details-marker{display:none}
+.legaldoc>summary::after{content:"Open";margin-left:auto;font-family:var(--font-mono);
+font-size:9.5px;letter-spacing:0.17em;text-transform:uppercase;color:var(--text-tertiary);
+border:1px solid var(--line-2);border-radius:var(--radius-1);padding:6px 11px}
+.legaldoc[open]>summary::after{content:"Close";color:var(--signal);border-color:var(--line-signal)}
+.legaldoc>summary:hover{background:rgba(232,232,228,0.03)}
+.legaldoc .legalwrap{padding:0 clamp(18px,2.2vw,24px) clamp(20px,2.4vw,28px);
+border-top:1px solid var(--line-1);max-width:74ch}
+.legaldoc .legalwrap>*:first-child{margin-top:20px}
+"""
+
+STATIC_LEGAL_JS = """/* a link to #terms or #privacy opens the folded document it names */
+function openLegal(){
+  const d=document.getElementById(location.hash.slice(1));
+  if(d&&d.tagName==="DETAILS"){d.open=true;d.scrollIntoView({block:"start"})}
+}
+addEventListener("hashchange",openLegal);openLegal();
+
+"""
+
+
+def _static_legal_doc(anchor, heading, body):
+    return (f'<details class="legaldoc rv" id="{anchor}">'
+            f'<summary>{heading}</summary>'
+            f'<div class="legalwrap">{DRAFT_NOTE}{body}</div></details>')
+
+
+def _static_legal_section():
+    return ('<section id="legal" class="secpad">'
+            '<div class="seclabel rv"><span class="idx">08</span>'
+            '<span class="label">The documents</span><span class="rule"></span></div>'
+            '<h2 class="rv">Terms and data handling</h2>'
+            '<p class="sub rv">Both are here in full rather than on a separate page, because this '
+            'whole site is one file with nothing to fetch. Both are founder drafted and pending '
+            'review by counsel, which is stated inside them too.</p>'
+            '<div class="legalset">'
+            + _static_legal_doc("terms", "Terms of use", TERMS_BODY)
+            + _static_legal_doc("privacy", "Privacy and data handling", PRIVACY_BODY)
+            + '</div></section>')
 
 
 def build_static(page: str) -> str:
@@ -459,29 +544,37 @@ def build_static(page: str) -> str:
     import re as _re
 
     # 1. replace the signup section (from its opening tag to its closing tag)
-    start = page.index('<section id="signup">')
+    start = page.index('<section id="signup"')
     end = page.index("</section>", start) + len("</section>")
     page = page[:start] + STATIC_SIGNUP + page[end:]
 
-    # 2. inline both legal documents as sections, before the footer
-    legal = (_static_legal_section("terms", "08", "Terms", "Terms of use", TERMS_BODY)
-             + _static_legal_section("privacy", "09", "Privacy",
-                                     "Privacy and data handling", PRIVACY_BODY))
-    page = page.replace("<footer>", legal + "\n<footer>", 1)
+    # 2. inline both legal documents, folded, before the footer
+    page = page.replace("<footer>", _static_legal_section() + "\n<footer>", 1)
 
-    # 3. point every legal link at those sections
+    # 3. point every legal link at those documents
     page = page.replace('href="/site/legal/terms.html"', 'href="#terms"')
     page = page.replace('href="/site/legal/privacy.html"', 'href="#privacy"')
 
-    # 4. drop the JS that talks to the backend. The signup handlers reference
+    # 4. the folded documents need one handler, and it has to be inserted above
+    #    the signup block so that step 5 does not cut it away again
+    marker = "/* \u2500\u2500 signup \u2500"
+    # This has bitten once already: a CSS section header used the same words, so
+    # replace(count=1) hit the stylesheet and the cut below removed the wrong
+    # span. The marker has to be unique in the file or the build is guessing.
+    if page.count(marker) != 1:
+        raise SystemExit(f"expected exactly one {marker!r}, found {page.count(marker)}")
+    page = page.replace(marker, STATIC_LEGAL_JS + marker, 1)
+
+    # 5. drop the JS that talks to the backend. The signup handlers reference
     #    elements that no longer exist, so leaving them throws on load.
-    # the block is delimited by its box-drawing comment and runs to </script>
-    start_js = page.index("/* \u2500\u2500 signup \u2500")
+    start_js = page.index(marker)
     end_js = page.index("</script>", start_js)
     page = page[:start_js] + page[end_js:]
 
-    # 5. add the legal typography the hosted legal pages carry in LEGAL_CSS
-    page = page.replace("/* reveal-on-scroll */", LEGAL_CSS + "\n/* reveal-on-scroll */", 1)
+    # 6. add the legal typography the hosted legal pages carry, plus the
+    #    disclosure styling that only the static build needs
+    page = page.replace("/* \u2500\u2500 reveal \u2500", LEGAL_CSS + STATIC_LEGAL_CSS
+                        + "\n/* \u2500\u2500 reveal \u2500", 1)
 
     for banned in ("/api/signup", "/site/legal/", "[CALENDAR_LINK]", "[JURISDICTION]"):
         if banned in page:
@@ -516,11 +609,15 @@ def main() -> None:
     page = template.replace("/*@CSS@*/", brand.stylesheet())
     page = page.replace("/*@DEMO@*/", json.dumps(out, ensure_ascii=False))
     page = page.replace("<!--@CHIPS@-->", chips_html(out))
+    page = page.replace("<!--@TICKER@-->", ticker_html(out))
+    for token, uri in shot_uris().items():
+        page = page.replace(f"@{token}@", uri)
     first_key = next(iter(out))
     for name, html in prerender(out[first_key]).items():
         page = page.replace(f"<!--@{name}@-->", html)
-    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@Q0@", "@VERDICT0@",
-                             "@ANSWER0@", "@PROV0@", "@GAPS0@") if m in page]
+    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@TICKER@", "@Q0@", "@VERDICT0@",
+                             "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
+                             "@SHOT_REVIEW@", "@SHOT_WORKSPACE@") if m in page]
     if leftovers:
         raise SystemExit(f"unfilled template placeholders: {leftovers}")
     (ROOT / "site" / "index.html").write_text(page, encoding="utf-8")

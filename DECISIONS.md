@@ -24,3 +24,53 @@
 - 2026-08-16 — Jurisdiction resolved to India without asking the founder again. He said he did not know how to tackle it, which was fair: I had posed a legal-sounding question when it was a factual one, and the fact was already published in his own portfolio (Bengaluru and Delhi NCR, plus an existing reference to India DPDP). Governing law and venue are India; the privacy page names the DPDP Act 2023 and the Data Protection Board of India as the complaint route, with GDPR retained for EU and UK visitors. The founder-drafted banner stays: a security reviewer would rather see it than a false claim of counsel.
 - 2026-08-16 — Every contact CTA moved to LinkedIn, with one deliberate exception. LinkedIn has no reliable URL parameter to prefill a message body, so promising a prefilled DM would have shipped a dead button; instead the page offers three intent-tagged messages that copy to the clipboard, are selectable text when the clipboard is blocked, and open the profile. The exception is data-rights requests, which keep an email address, because telling a data subject their only channel for a DPDP or GDPR right is a social DM would not survive scrutiny.
 - 2026-08-16 — Added a --static single-file build rather than relative legal links. The absolute /site/legal/ href form made static hosting unresolvable (publishing site/ as root 404s the legal links; publishing the repo root buries index.html), and a published artifact is one file where a separate legal/terms.html cannot exist at all. Inlining Terms and Privacy as #terms and #privacy sections from the same TERMS_BODY and PRIVACY_BODY constants fixes every case at once and keeps one source of truth. The static build asserts it contains no /api/signup, no /site/legal/ and no placeholders, so it cannot silently regress into needing a backend.
+
+## 2026-08-16 The landing page was a research paper, and it was my fault
+
+The founder's verdict on the first published landing page: "very less visual,
+very less 2026 modern UI... It looks like a research paper." He was right, and
+the diagnosis was specific rather than a matter of taste.
+
+1. Roughly half the rendered page was inlined legal text, which I had added the
+   same round when `build_static` learned to inline Terms and Privacy as open
+   sections. Solving the single-file problem made the marketing page a document.
+2. Six consecutive sections shared one shape: eyebrow, heading, paragraph, row
+   of bordered cards. That repetition is the generic pattern, and no amount of
+   good copy survives it.
+3. There were zero images, on a product that has three working screens.
+
+What changed, and why each one is a claim rather than a decoration:
+
+- **The page performs a refusal instead of describing one.** Each of the four
+  traps now shows the confident answer a competitor would have shipped, struck
+  through in the refusal colour as the card arrives, with the gate's stamp
+  landing on it. The gate reasoning is plain text underneath, always visible;
+  the hover-to-reveal redaction bars are gone, which also retires the finding
+  that they were unreachable on touch.
+- **`--status-critical` is promoted to a co-lead colour.** The product's
+  argument is the refusal, so the refusal needed a colour of its own rather than
+  a chip on a grey card. Signal still leads for what gets released.
+- **Real screenshots.** `site/img/*.jpg` are captures of a live hosted run
+  (tenant "Northwind Systems"), inlined as data URIs from `site/img/shots.json`
+  so the page remains one self-contained file with zero external requests. The
+  full-resolution PNG sources are gitignored; the JPEGs are the committed
+  originals.
+- **Legal is folded.** The static build now emits both documents inside
+  `<details>` rather than as open sections. `<details>` over `<dialog>` because
+  it needs no JavaScript to open, and an in-page anchor link opens the document
+  it names through one small handler. Both texts are still present in full, from
+  the same `TERMS_BODY` / `PRIVACY_BODY` the hosted pages use.
+- **The struck line and the stamp are drawn by default and hidden only when
+  scripting is on.** Without that inversion, a no-JS reader saw four cards whose
+  entire point was invisible.
+
+One build hazard hardened: `build_static` locates the backend JS by a
+box-drawing comment marker, and a CSS section header using the same words made
+`replace(count=1)` hit the stylesheet instead. It has now bitten twice, so the
+build asserts the marker occurs exactly once rather than guessing.
+
+Verified: 167 tests passing, brand copy gate clean on all four rendered pages
+(one rewrite needed, "classified" tripped the dossier-language rule), zero
+horizontal overflow and zero console errors at 1440px and 390px, both legal
+disclosures reachable with scripting disabled, and the hosted build unchanged
+in the way that matters (signup form intact, legal links still absolute).

@@ -9,190 +9,361 @@
 <style>
 /*@CSS@*/
 
-/* ── landing-specific ──────────────────────────────────── */
+/* ══ landing ═══════════════════════════════════════════════════════════════
+   The page performs a refusal rather than describing one. Two colours lead:
+   signal for what gets released, status-critical for what gets struck. Every
+   label, verdict and stamp is mono; every heading is Newsreader, large.
+   ════════════════════════════════════════════════════════════════════════ */
+
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
 clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
-.nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0;
-border-bottom:1px solid var(--line-1);gap:14px;flex-wrap:wrap}
+body{overflow-x:hidden}
+h2{font-size:clamp(30px,4.2vw,52px);line-height:1.04;letter-spacing:-0.022em;text-wrap:balance}
+h3{letter-spacing:-0.012em}
+.sub{font-size:clamp(14.5px,1.35vw,17px);line-height:1.6;max-width:62ch;color:var(--text-secondary)}
+section{position:relative}
+.seclabel{margin:0 0 22px}
+.secpad{padding:clamp(76px,10vw,150px) 0 0}
+
+/* ── the ground ────────────────────────────────────────────────────────────
+   A drifting field of document rules with a signal bloom over it. This is the
+   product's own material: ruled paper, redaction, a scan pass. Fixed, cheap,
+   and it stops the page reading as a white paper on a dark background. */
+.ground{position:fixed;inset:0;z-index:-2;pointer-events:none;
+background:
+  radial-gradient(900px 620px at 78% -8%,rgba(183,196,255,0.10),transparent 68%),
+  radial-gradient(760px 520px at 4% 34%,rgba(217,120,98,0.075),transparent 70%),
+  var(--surface-page)}
+.ground::after{content:"";position:absolute;inset:-120px 0;
+background:repeating-linear-gradient(to bottom,rgba(232,232,228,0.045) 0 1px,transparent 1px 46px);
+-webkit-mask-image:radial-gradient(1200px 780px at 60% 8%,#000,transparent 72%);
+mask-image:radial-gradient(1200px 780px at 60% 8%,#000,transparent 72%)}
+.js .ground::after{animation:drift 34s linear infinite}
+@keyframes drift{to{transform:translateY(46px)}}
+
+/* ── nav ───────────────────────────────────────────────────────────────── */
+.navbar{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);background:rgba(14,14,16,0.72);
+border-bottom:1px solid var(--line-1)}
+.navbar .wrap{display:flex;justify-content:space-between;align-items:center;
+padding:15px clamp(18px,4vw,32px);gap:14px}
 .wordmark{font-family:var(--font-mono);font-size:13px;letter-spacing:0.22em;
 text-transform:uppercase;color:var(--text-primary)}
 .wordmark b{color:var(--signal);font-weight:400}
-.nav a.cta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.12em;
+.navlinks{display:none;gap:26px;font-family:var(--font-mono);font-size:10.5px;
+letter-spacing:0.14em;text-transform:uppercase}
+@media(min-width:900px){.navlinks{display:flex}}
+.navlinks a{color:var(--text-tertiary);text-decoration:none}
+.navlinks a:hover{color:var(--text-primary)}
+.navbar a.cta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;
 text-transform:uppercase;color:var(--signal-ink);background:var(--signal);
-padding:9px 14px;border-radius:var(--radius-1);text-decoration:none}
-.nav a.cta:hover{background:var(--signal-bright)}
+padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space:nowrap}
+.navbar a.cta:hover{background:var(--signal-bright)}
+.progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
-.hero{display:grid;gap:44px;padding:72px 0 64px;grid-template-columns:1fr;align-items:center}
-@media(min-width:960px){.hero{grid-template-columns:1.05fr 1fr}}
-.hero h1{font-size:clamp(38px,5.4vw,64px);line-height:1.02;letter-spacing:-0.02em;text-wrap:balance}
-.hero h1 i{font-style:italic;color:var(--signal)}
-.hero .deck{font-size:clamp(16px,1.8vw,19px);line-height:1.55;color:var(--text-secondary);
-margin-top:20px;max-width:52ch;text-wrap:pretty}
-.ctarow{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-a.btn{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
-padding:13px 20px;border-radius:var(--radius-1);text-decoration:none;
-transition:background 240ms var(--ease-out),border-color 240ms var(--ease-out)}
+/* ── hero ──────────────────────────────────────────────────────────────── */
+.hero{padding:clamp(58px,9vw,132px) 0 0}
+.kicker{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);
+font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-tertiary);
+border:1px solid var(--line-2);border-radius:100px;padding:7px 15px;margin-bottom:clamp(22px,3vw,34px)}
+.kicker i{width:5px;height:5px;border-radius:50%;background:var(--status-ok);flex:0 0 5px;font-style:normal}
+.js .kicker i{animation:pulse 2.4s var(--ease-inout) infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(155,196,156,0.5)}
+50%{opacity:.65;box-shadow:0 0 0 6px rgba(155,196,156,0)}}
+
+h1.mega{font-size:clamp(44px,8.4vw,110px);line-height:0.95;letter-spacing:-0.036em;
+max-width:15ch;text-wrap:balance}
+h1.mega em{font-style:italic;color:var(--status-critical);position:relative;white-space:nowrap}
+/* the headline strikes its own second clause, once, on load */
+h1.mega em::after{content:"";position:absolute;left:-0.04em;right:-0.04em;top:56%;height:3px;
+background:var(--status-critical);transform:scaleX(0);transform-origin:left}
+.js h1.mega em::after{animation:strike 620ms var(--ease-inout) 900ms both}
+@keyframes strike{to{transform:scaleX(1)}}
+
+.herogrid{display:grid;gap:clamp(26px,4vw,58px);align-items:start;margin-top:clamp(24px,3.4vw,38px)}
+@media(min-width:940px){.herogrid{grid-template-columns:1.35fr 1fr}}
+.deck{font-size:clamp(15.5px,1.55vw,19.5px);line-height:1.55;color:var(--text-secondary);
+max-width:50ch;text-wrap:pretty}
+.ctarow{display:flex;gap:11px;flex-wrap:wrap;margin-top:clamp(22px,2.6vw,30px)}
+a.btn,button.btn{font-family:var(--font-mono);font-size:11px;letter-spacing:0.13em;
+text-transform:uppercase;padding:14px 22px;border-radius:var(--radius-1);text-decoration:none;
+cursor:pointer;display:inline-block;border:1px solid transparent;
+transition:background 240ms var(--ease-out),border-color 240ms var(--ease-out),
+color 240ms var(--ease-out),transform 240ms var(--ease-out)}
 a.btn-primary{background:var(--signal);color:var(--signal-ink)}
-a.btn-primary:hover{background:var(--signal-bright)}
-/* the no-upload path is a peer of signup, not a footnote: same size, same
-   weight, only the fill differs */
-a.btn-alt{border:1px solid var(--signal);color:var(--signal);background:var(--signal-wash)}
-a.btn-alt:hover{background:rgba(183,196,255,0.18)}
-a.btn-ghost{border:1px solid var(--line-2);color:var(--text-primary)}
-a.btn-ghost:hover{border-color:var(--line-signal)}
-.herolinks{margin-top:16px;font-family:var(--font-mono);font-size:11px}
-.hero-note{font-family:var(--font-mono);font-size:10.5px;line-height:1.8;
-color:var(--text-tertiary);margin-top:18px;max-width:56ch}
+a.btn-primary:hover{background:var(--signal-bright);transform:translateY(-1px)}
+a.btn-alt{border-color:var(--line-signal);color:var(--signal);background:var(--signal-wash)}
+a.btn-alt:hover{background:rgba(183,196,255,0.18);transform:translateY(-1px)}
+a.btn-ghost{border-color:var(--line-2);color:var(--text-primary)}
+a.btn-ghost:hover{border-color:var(--line-signal);color:var(--signal)}
 
-/* demo frame with registration ticks + scan reveal */
-.demoframe{position:relative;background:var(--surface-card);border:1px solid var(--line-1);
-border-radius:var(--radius-2);padding:22px;min-height:380px;display:flex;flex-direction:column}
-.p-ticks{position:relative}
-.p-ticks::before,.p-ticks::after{content:"";position:absolute;inset:-7px;pointer-events:none;
-background-repeat:no-repeat;
-background-image:linear-gradient(var(--line-3),var(--line-3)),linear-gradient(var(--line-3),var(--line-3)),
-linear-gradient(var(--line-3),var(--line-3)),linear-gradient(var(--line-3),var(--line-3))}
-.p-ticks::before{background-size:12px 1px,1px 12px,12px 1px,1px 12px;
-background-position:left top,left top,right top,right top}
-.p-ticks::after{background-size:12px 1px,1px 12px,12px 1px,1px 12px;
-background-position:left bottom,left bottom,right bottom,right bottom}
-.scanline{position:absolute;left:0;right:0;top:0;height:1px;background:var(--signal);
-opacity:0;pointer-events:none}
-.js .scanline{animation:scan 900ms var(--ease-inout) 300ms 1 both}
-@keyframes scan{0%{opacity:0.9;transform:translateY(0)}100%{opacity:0;transform:translateY(378px)}}
-/* the provenance disclaimer belongs where a reader meets the frame, not
-   buried at 9.5px in the gutter under it */
-.d-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;
-text-transform:uppercase;color:var(--text-tertiary);padding-bottom:14px;margin-bottom:16px;
-border-bottom:1px solid var(--line-1);line-height:1.8}
-.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
-.chips button{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;padding:6px 10px;
-border:1px solid var(--line-1);border-radius:var(--radius-1);background:transparent;
-color:var(--text-tertiary);cursor:pointer;transition:color 240ms var(--ease-out),border-color 240ms var(--ease-out)}
+/* the counter block: four numbers from the recorded run, set in display type */
+.counts{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-1);
+border:1px solid var(--line-1);border-radius:var(--radius-2);overflow:hidden}
+.count{background:rgba(26,26,29,0.78);padding:clamp(15px,1.7vw,22px)}
+.count b{display:block;font-family:var(--font-display);font-weight:300;
+font-size:clamp(30px,3.5vw,46px);line-height:1;letter-spacing:-0.03em;
+font-variant-numeric:tabular-nums}
+.count span{display:block;margin-top:9px;font-family:var(--font-mono);font-size:9.5px;
+letter-spacing:0.13em;text-transform:uppercase;color:var(--text-tertiary);line-height:1.6}
+.count.sig b{color:var(--signal)}
+.count.red b{color:var(--status-critical)}
+.count.ok b{color:var(--status-ok)}
+
+/* ── the stage: the recorded run, given the room it deserves ───────────── */
+.stage{position:relative;margin-top:clamp(40px,6vw,84px);
+background:linear-gradient(180deg,rgba(26,26,29,0.94),rgba(14,14,16,0.94));
+border:1px solid var(--line-2);border-radius:var(--radius-2);overflow:hidden;
+--acc:var(--signal);transition:box-shadow 600ms var(--ease-out)}
+.stage::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--acc);
+transition:background 500ms var(--ease-out)}
+.stagebar{display:flex;align-items:center;gap:11px;padding:12px 18px;
+border-bottom:1px solid var(--line-1);background:rgba(14,14,16,0.6);flex-wrap:wrap}
+.stagebar .dot{width:7px;height:7px;border-radius:50%;background:var(--line-3);flex:0 0 7px}
+.stagetitle{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.16em;
+text-transform:uppercase;color:var(--text-tertiary);margin-left:6px}
+.stagelive{margin-left:auto;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.18em;
+text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:7px}
+.stagelive::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.js .stagelive::before{animation:pulse 2s var(--ease-inout) infinite}
+.scanline{position:absolute;left:0;right:0;top:0;height:1px;background:var(--signal);opacity:0;
+pointer-events:none;z-index:3}
+.js .scanline{animation:scan 1100ms var(--ease-inout) 260ms 1 both}
+@keyframes scan{0%{opacity:0.85;transform:translateY(0)}100%{opacity:0;transform:translateY(520px)}}
+
+.stagebody{display:grid;grid-template-columns:1fr}
+@media(min-width:860px){.stagebody{grid-template-columns:210px 1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:7px;padding:16px 18px;border-bottom:1px solid var(--line-1)}
+@media(min-width:860px){.chips{flex-direction:column;flex-wrap:nowrap;gap:2px;
+border-bottom:0;border-right:1px solid var(--line-1);padding:12px 10px}}
+.chips button{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;
+padding:9px 11px;border:1px solid var(--line-1);border-radius:var(--radius-1);
+background:transparent;color:var(--text-tertiary);cursor:pointer;text-align:left;
+transition:color 200ms var(--ease-out),border-color 200ms var(--ease-out),
+background 200ms var(--ease-out)}
+@media(min-width:860px){.chips button{border-color:transparent;border-left:2px solid transparent;
+border-radius:0}}
 .chips button:hover{color:var(--text-primary);border-color:var(--line-signal)}
-.chips button.on{color:var(--signal);border-color:var(--line-signal);background:var(--signal-wash)}
-.q-line{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text-primary);
-min-height:44px}
-.q-line .caret{display:inline-block;width:7px;height:15px;background:var(--signal);
-vertical-align:text-bottom;margin-left:2px}
+@media(min-width:860px){.chips button:hover{border-color:transparent;border-left-color:var(--line-3);
+background:rgba(232,232,228,0.03)}}
+.chips button.on{color:var(--acc);border-color:var(--acc);background:rgba(232,232,228,0.04)}
+@media(min-width:860px){.chips button.on{border-color:transparent;border-left-color:var(--acc)}}
+
+.stagemain{padding:clamp(20px,2.6vw,34px);min-height:400px}
+.slabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.19em;text-transform:uppercase;
+color:var(--text-tertiary);display:block;margin-bottom:9px}
+.q-line{font-family:var(--font-display);font-size:clamp(19px,2.2vw,28px);line-height:1.28;
+letter-spacing:-0.015em;color:var(--text-primary);min-height:2.6em;text-wrap:pretty}
+.q-line .caret{display:inline-block;width:9px;height:0.78em;background:var(--acc);
+vertical-align:baseline;margin-left:3px}
 .js .caret{animation:blink 1s step-end infinite}
 @keyframes blink{50%{opacity:0}}
-.verdict-chip{margin:16px 0 12px;opacity:1;transition:opacity 240ms var(--ease-out)}
-.d-answer{font-size:14px;line-height:1.6;color:var(--text-primary);background:var(--surface-sunken);
-border-radius:var(--radius-1);padding:13px 15px}
-.d-answer em{color:var(--text-tertiary)}
-.d-prov{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--text-tertiary);
-border-left:2px solid var(--status-ok);padding-left:9px;margin-top:12px}
-.d-prov.warn{border-left-color:var(--status-warn)}
-.d-gap{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--status-warn);margin-top:10px}
 
-/* contact intents */
-.intents{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:30px}
-.intent{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);
-padding:20px;display:flex;flex-direction:column;gap:12px}
-.intent h3{font-size:17px;line-height:1.25}
-.imsg{font-size:13.5px;line-height:1.6;color:var(--text-secondary);background:var(--surface-sunken);
-border-radius:var(--radius-1);padding:12px 14px;user-select:all}
-.irow{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;align-items:center}
-.icopy{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;
-padding:11px 15px;border:1px solid var(--line-2);border-radius:var(--radius-1);
-background:transparent;color:var(--text-primary);cursor:pointer}
-.icopy:hover{border-color:var(--line-signal);color:var(--signal)}
-.icopy[data-done="1"]{color:var(--status-ok);border-color:var(--status-ok)}
+.verdictrow{margin:clamp(20px,2.4vw,28px) 0 clamp(18px,2vw,24px);
+padding-top:clamp(18px,2vw,24px);border-top:1px solid var(--line-1)}
+.verdictrow .chip{font-size:11.5px;padding:8px 14px;letter-spacing:0.15em}
+.verdictrow .chip::before{width:6px;height:6px}
+.d-answer{font-size:clamp(14.5px,1.4vw,16.5px);line-height:1.62;color:var(--text-primary);
+background:var(--surface-sunken);border:1px solid var(--line-1);border-radius:var(--radius-1);
+padding:16px 18px}
+/* a refusal shows a redacted block, not a shrug. It is what the product did. */
+.d-answer .none{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);
+font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--status-critical)}
+.d-answer .none::after{content:"";flex:1;height:15px;border-radius:1px;
+background:repeating-linear-gradient(115deg,var(--surface-raised) 0 9px,rgba(217,120,98,0.16) 9px 18px)}
+.d-prov{font-family:var(--font-mono);font-size:11px;line-height:1.85;color:var(--text-tertiary);
+border-left:2px solid var(--status-ok);padding-left:11px;margin-top:15px}
+.d-prov.warn{border-left-color:var(--status-critical)}
+.d-gap{font-family:var(--font-mono);font-size:11px;line-height:1.8;color:var(--status-warn);
+margin-top:9px;display:flex;gap:8px}
 
-/* reveal-on-scroll */
-.js .rv{opacity:0;transform:translateY(14px);
-transition:opacity 480ms var(--ease-out),transform 480ms var(--ease-out)}
-.js .rv.is-in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){
-.js .rv{opacity:1;transform:none;transition:none}
-.js .scanline,.js .caret{animation:none}}
+/* ── the ledger: all seven verdicts, moving ────────────────────────────── */
+.ledger{margin-top:clamp(52px,7vw,96px);border-top:1px solid var(--line-1);
+border-bottom:1px solid var(--line-1);overflow:hidden;
+-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.ltrack{display:flex;width:max-content}
+.js .ltrack{animation:roll 58s linear infinite}
+.ledger:hover .ltrack{animation-play-state:paused}
+@keyframes roll{to{transform:translateX(-50%)}}
+.lrow{display:flex}
+.litem{display:flex;align-items:center;gap:13px;padding:16px 30px;
+border-right:1px solid var(--line-1);white-space:nowrap}
+.litem .lv{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase}
+.litem .lq{font-size:13.5px;color:var(--text-tertiary)}
+.litem[data-t="ok"] .lv{color:var(--status-ok)}
+.litem[data-t="warn"] .lv{color:var(--status-critical)}
+.litem[data-t="rev"] .lv{color:var(--status-warn)}
+.litem[data-t="legal"] .lv{color:var(--signal)}
 
-/* trap cards */
-.traps{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:30px}
-.trap{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);
-padding:20px;display:flex;flex-direction:column;gap:12px}
-.trap h3{font-size:18px;line-height:1.25}
-.trap .q{font-size:13px;color:var(--text-secondary);line-height:1.55}
-/* a real button, so it works on tap, Enter and Space, and an inset hairline so
-   the covered shape reads as deliberate rather than as a rendering fault */
-button.p-redact{display:block;width:100%;text-align:left;background:var(--surface-raised);
-color:transparent;border:0;border-radius:1px;cursor:pointer;
-box-shadow:inset 0 0 0 1px var(--line-2);
-transition:color 320ms var(--ease-out),background-color 320ms var(--ease-out),
-box-shadow 320ms var(--ease-out);
-font-family:var(--font-mono);font-size:11px;line-height:1.7;padding:5px 7px;
-letter-spacing:normal;text-transform:none}
-@media(hover:hover){button.p-redact:hover{color:var(--status-warn);background:transparent;
-box-shadow:inset 0 0 0 1px transparent}}
-button.p-redact[aria-expanded="true"]{color:var(--status-warn);background:transparent;
-box-shadow:inset 0 0 0 1px transparent}
-.trap .hint{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;
-text-transform:uppercase;color:var(--text-tertiary);margin-top:auto}
-.h-tap{display:none}
-@media(hover:none){.h-hover{display:none}.h-tap{display:inline}}
-/* on a narrow screen there is no hover and no room for a discovery game:
-   show the gate reasoning outright */
-@media(max-width:700px){
-button.p-redact{color:var(--status-warn);background:transparent;box-shadow:none;
-padding-left:0;cursor:default}
-.trap .hint{display:none}}
+/* ── the gate sequence: pinned rail, struck drafts ─────────────────────── */
+.gseq{display:grid;gap:clamp(26px,3.4vw,54px);margin-top:clamp(30px,4vw,52px)}
+@media(min-width:1000px){.gseq{grid-template-columns:0.72fr 1fr;align-items:start}}
+.grail{position:relative}
+@media(min-width:1000px){.grail{position:sticky;top:110px}}
+.gbig{font-family:var(--font-display);font-size:clamp(78px,11vw,164px);line-height:0.82;
+font-weight:200;letter-spacing:-0.05em;color:var(--status-critical);
+font-variant-numeric:tabular-nums;transition:color 400ms var(--ease-out)}
+.gname{font-family:var(--font-display);font-size:clamp(24px,2.6vw,34px);line-height:1.1;
+margin-top:16px;letter-spacing:-0.02em}
+.gtick{display:flex;gap:7px;margin-top:24px}
+.gtick i{width:34px;height:2px;background:var(--line-2);border-radius:2px;font-style:normal;
+transition:background 320ms var(--ease-out)}
+.gtick i.on{background:var(--status-critical)}
+.grailnote{font-family:var(--font-mono);font-size:10.5px;line-height:1.9;color:var(--text-tertiary);
+margin-top:26px;max-width:34ch}
 
-/* how it works */
-.steps{margin-top:28px;display:flex;flex-direction:column}
-.step{display:flex;gap:16px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--line-1)}
-.step:last-child{border-bottom:0}
-.step .n{font-family:var(--font-mono);font-size:11px;color:var(--signal);flex:0 0 26px}
-.step .t{font-size:15.5px;font-weight:500;white-space:nowrap}
-.step .leader{flex:1;border-bottom:1px dotted var(--line-2);margin:0 6px 5px}
-.step .d{font-size:13px;color:var(--text-tertiary);text-align:right;max-width:46ch}
-@media(max-width:700px){.step{flex-wrap:wrap}.step .d{text-align:left}.step .leader{display:none}}
+.gcards{display:flex;flex-direction:column;gap:clamp(16px,2vw,26px)}
+.gcard{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:clamp(20px,2.4vw,30px);position:relative;overflow:hidden}
+.gcard::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;
+background:var(--status-critical);opacity:0.5}
+.gcard .gk{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.19em;
+text-transform:uppercase;color:var(--text-tertiary)}
+.gcard h3{font-size:clamp(19px,2vw,25px);margin:9px 0 14px}
+.gcard .gq{font-family:var(--font-display);font-style:italic;font-size:clamp(15px,1.5vw,18px);
+line-height:1.45;color:var(--text-secondary);padding-left:14px;
+border-left:1px solid var(--line-2);margin-bottom:20px;text-wrap:pretty}
+/* the draft a confident tool would ship, struck out in front of you */
+.draftbox{position:relative;background:var(--surface-sunken);border:1px solid var(--line-1);
+border-radius:var(--radius-1);padding:15px 17px}
+.draftbox .dl{font-family:var(--font-mono);font-size:9px;letter-spacing:0.18em;
+text-transform:uppercase;color:var(--text-tertiary);display:block;margin-bottom:9px}
+/* The struck line and the stamp are the content of this card, not decoration,
+   so they are drawn by default. Only when scripting is on do they start hidden
+   and get drawn as the card arrives. */
+.struck{position:relative;display:inline;font-size:14.5px;line-height:1.75;
+color:var(--text-tertiary);background-image:linear-gradient(var(--status-critical),var(--status-critical));
+background-repeat:no-repeat;background-position:0 0.62em;background-size:100% 2px}
+.js .struck{background-size:0 2px;transition:background-size 700ms var(--ease-inout) 120ms}
+.js .gcard.is-in .struck{background-size:100% 2px}
+@media(prefers-reduced-motion:reduce){.js .struck{background-size:100% 2px;transition:none}}
+.stamp{position:absolute;right:12px;bottom:-13px;font-family:var(--font-mono);font-size:10px;
+letter-spacing:0.24em;text-transform:uppercase;color:var(--status-critical);
+border:2px solid var(--status-critical);border-radius:2px;padding:6px 11px;
+background:rgba(20,20,22,0.94);transform:rotate(-6deg)}
+.js .gcard .stamp{opacity:0}
+.js .gcard.is-in .stamp{animation:thud 420ms var(--ease-out) 620ms both}
+@keyframes thud{0%{opacity:0;transform:rotate(-16deg) scale(1.7)}
+70%{opacity:1;transform:rotate(-5deg) scale(0.96)}
+100%{opacity:1;transform:rotate(-6deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){.js .gcard .stamp{opacity:1;animation:none}}
+.gwhy{font-size:14px;line-height:1.62;color:var(--text-secondary);margin-top:26px;text-wrap:pretty}
+.gwhy b{color:var(--text-primary);font-weight:500}
 
-/* custody diagram */
-.custody{display:grid;gap:1px;background:var(--line-1);border:1px solid var(--line-1);
-border-radius:var(--radius-2);overflow:hidden;margin-top:30px;grid-template-columns:1fr}
-@media(min-width:820px){.custody{grid-template-columns:1fr 1fr 1fr}}
-.cust{background:var(--surface-card);padding:22px}
-.cust h3{font-size:17px;margin-bottom:10px}
-.cust p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
-.cust .tag{margin-top:14px}
+/* ── product frames ────────────────────────────────────────────────────── */
+.shots{display:flex;flex-direction:column;gap:clamp(40px,6vw,96px);margin-top:clamp(34px,4.4vw,60px)}
+.shot{display:grid;gap:clamp(20px,3vw,44px);align-items:center}
+/* alternating sides, but the frame keeps the wider column both ways: swapping
+   only the order shrank every second screenshot */
+@media(min-width:980px){
+.shot{grid-template-columns:1fr 1.35fr}
+.shot.flip{grid-template-columns:1.35fr 1fr}
+.shot.flip .shotcopy{order:2}
+.shot.flip .frame{order:1}}
+.shotcopy h3{font-size:clamp(22px,2.4vw,32px);margin:12px 0 12px;letter-spacing:-0.02em}
+.shotcopy p{font-size:14.5px;line-height:1.62;color:var(--text-secondary);max-width:44ch;text-wrap:pretty}
+.shotmeta{font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+color:var(--text-tertiary);margin-top:18px;line-height:2}
+.frame{border:1px solid var(--line-2);border-radius:var(--radius-2);overflow:hidden;
+background:var(--surface-card);box-shadow:0 34px 80px -30px rgba(0,0,0,0.85);will-change:transform}
+.fbar{display:flex;align-items:center;gap:7px;padding:9px 13px;border-bottom:1px solid var(--line-1);
+background:rgba(14,14,16,0.72)}
+.fbar i{width:6px;height:6px;border-radius:50%;background:var(--line-3);font-style:normal;flex:0 0 6px}
+.fbar span{font-family:var(--font-mono);font-size:9px;letter-spacing:0.13em;color:var(--text-tertiary);
+margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame img{display:block;width:100%;height:auto}
 
-/* tiers */
-.tiers{display:grid;gap:1px;background:var(--line-1);border:1px solid var(--line-1);
-border-radius:var(--radius-2);overflow:hidden;margin-top:30px;grid-template-columns:1fr}
-@media(min-width:820px){.tiers{grid-template-columns:1fr 1fr 1fr}}
-.tier{background:var(--surface-card);padding:22px;display:flex;flex-direction:column;gap:10px}
-.tier h3{font-size:17px}
-.tier p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
-.tier .who{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;
-text-transform:uppercase;color:var(--text-tertiary);margin-top:auto;padding-top:10px;
-border-top:1px solid var(--line-1)}
+/* ── custody flow ──────────────────────────────────────────────────────── */
+.flow{display:grid;gap:14px;margin-top:clamp(30px,4vw,50px);align-items:stretch}
+@media(min-width:900px){.flow{grid-template-columns:1fr auto 1fr auto 1fr}}
+.node{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:clamp(18px,2.2vw,26px);display:flex;flex-direction:column;gap:11px}
+.node.wall{border-color:var(--line-signal);background:var(--signal-wash)}
+.node h3{font-size:clamp(17px,1.7vw,21px)}
+.node p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
+.node .tag{margin-top:auto;padding-top:6px}
+.arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+padding:6px 0;min-width:118px}
+.arrow .line{width:100%;height:1px;background:linear-gradient(90deg,var(--line-2),var(--line-signal));
+position:relative}
+.arrow .line::after{content:"";position:absolute;right:0;top:-3px;border:3.5px solid transparent;
+border-left-color:var(--line-signal)}
+.js .arrow .line::before{content:"";position:absolute;top:-1px;width:26px;height:3px;
+background:var(--signal);border-radius:2px;animation:travel 3.4s var(--ease-inout) infinite}
+@keyframes travel{0%{left:0;opacity:0}12%{opacity:0.85}88%{opacity:0.85}100%{left:calc(100% - 26px);opacity:0}}
+.arrow em{font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+color:var(--signal);font-style:normal;text-align:center;line-height:1.7}
+/* the second arrow is a path that does not exist, so it is drawn as one:
+   dashed, no head, and barred across the middle */
+.arrow.blocked .line{height:0;background:none;
+border-top:1px dashed rgba(217,120,98,0.55)}
+.arrow.blocked .line::after{content:"";left:50%;right:auto;top:-8px;border:0;
+width:1px;height:16px;background:var(--status-critical);transform:translateX(-50%)}
+.arrow.blocked em{color:var(--status-critical)}
+.js .arrow.blocked .line::before{display:none}
+@media(max-width:899px){.arrow{min-width:0;flex-direction:row}.arrow .line{flex:1}}
 
-/* deliverables */
-.dels{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:30px}
-.del{background:var(--surface-card);border:1px solid var(--line-1);border-radius:var(--radius-2);padding:20px}
-.del h3{font-size:17px;margin-bottom:8px}
-.del p{font-size:13px;line-height:1.6;color:var(--text-secondary)}
+/* ── tiers ─────────────────────────────────────────────────────────────── */
+.tiers{display:grid;gap:14px;margin-top:clamp(30px,4vw,50px);grid-template-columns:1fr}
+@media(min-width:880px){.tiers{grid-template-columns:1fr 1fr 1fr}}
+.tier{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:clamp(20px,2.4vw,28px);display:flex;flex-direction:column;gap:12px}
+.tier.lead{border-color:var(--line-signal);background:linear-gradient(180deg,var(--signal-wash),rgba(26,26,29,0.8))}
+.tier h3{font-size:clamp(19px,1.9vw,23px)}
+.tier p{font-size:13.5px;line-height:1.62;color:var(--text-secondary)}
+.tier .who{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.14em;
+text-transform:uppercase;color:var(--text-tertiary);margin-top:auto;padding-top:14px;
+border-top:1px solid var(--line-1);line-height:1.8}
+
+/* ── deliverables, as unequal cells with the artefact drawn ────────────── */
+.bento{display:grid;gap:14px;margin-top:clamp(30px,4vw,50px);grid-template-columns:1fr}
+@media(min-width:900px){.bento{grid-template-columns:1.25fr 1fr 1fr}}
+.del{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:clamp(20px,2.4vw,28px);display:flex;flex-direction:column;gap:13px;overflow:hidden}
+.del h3{font-size:clamp(18px,1.8vw,22px)}
+.del p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
 .del .mono{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);
-letter-spacing:0.08em;margin-top:12px;display:block}
+letter-spacing:0.1em;margin-top:auto;padding-top:12px;border-top:1px solid var(--line-1)}
+.mini{margin-top:4px}
+/* a workbook: the answer column written in, the structure untouched */
+.mgrid{display:grid;grid-template-columns:34px repeat(3,1fr);gap:2px}
+.mgrid i{height:15px;background:var(--surface-raised);border-radius:1px;font-style:normal}
+.mgrid i.h{background:var(--line-2)}
+.mgrid i.w{background:var(--signal-wash);box-shadow:inset 0 0 0 1px var(--line-signal)}
+/* a report: the refusal split, drawn to the real numbers */
+.mbar{display:flex;height:34px;border-radius:1px;overflow:hidden;gap:2px}
+.mbar i{font-style:normal}
+.mbar i:nth-child(1){flex:6;background:var(--status-ok);opacity:.65}
+.mbar i:nth-child(2){flex:1;background:var(--status-critical);opacity:.8}
+.mbar i:nth-child(3){flex:2;background:var(--status-warn);opacity:.7}
+.mbar i:nth-child(4){flex:1;background:var(--signal);opacity:.7}
+.mlegend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--font-mono);font-size:9px;
+letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary);margin-top:9px}
+/* a chain: blocks linked by their previous hash */
+.mchain{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8.5px;
+color:var(--text-tertiary);flex-wrap:wrap}
+.mchain b{font-weight:400;border:1px solid var(--line-2);border-radius:1px;padding:5px 6px;
+color:var(--status-ok);letter-spacing:0.04em}
+.mchain s{text-decoration:none;color:var(--line-3)}
 
-/* signup */
-.signup{background:var(--surface-card);border:1px solid var(--line-signal);
-border-radius:var(--radius-2);padding:30px;margin-top:30px;max-width:600px}
-.signup label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:0.13em;
-text-transform:uppercase;color:var(--text-tertiary);margin:16px 0 6px}
+/* ── the create-a-workspace card ───────────────────────────────────────── */
+.signup{background:rgba(26,26,29,0.86);border:1px solid var(--line-signal);
+border-radius:var(--radius-2);padding:clamp(24px,3vw,36px);margin-top:clamp(30px,4vw,44px);
+max-width:620px}
+.signup label{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.15em;
+text-transform:uppercase;color:var(--text-tertiary);margin:18px 0 7px}
 .signup input[type=text],.signup input[type=email]{width:100%;font-family:var(--font-sans);
-font-size:14px;color:var(--text-primary);background:var(--surface-sunken);
-border:1px solid var(--line-1);border-radius:var(--radius-1);padding:11px 13px}
-:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-.signup .consent{display:flex;gap:10px;align-items:flex-start;margin:22px 0 0;padding:13px 15px;
+font-size:14.5px;color:var(--text-primary);background:var(--surface-sunken);
+border:1px solid var(--line-1);border-radius:var(--radius-1);padding:12px 14px}
+.signup .consent{display:flex;gap:11px;align-items:flex-start;margin:24px 0 0;padding:14px 16px;
 background:var(--surface-sunken);border:1px solid var(--line-1);border-radius:var(--radius-2);
 text-transform:none;letter-spacing:0;font-family:var(--font-sans);font-size:12.5px;
 color:var(--text-secondary);line-height:1.6}
 .signup .consent input{width:auto;flex:0 0 auto;margin-top:3px}
-.signup button{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;
-text-transform:uppercase;padding:13px 20px;margin-top:14px;border:1px solid var(--signal);
+.signup button{font-family:var(--font-mono);font-size:11px;letter-spacing:0.13em;
+text-transform:uppercase;padding:14px 20px;margin-top:14px;border:1px solid var(--signal);
 border-radius:var(--radius-1);background:var(--signal);color:var(--signal-ink);cursor:pointer;
 width:100%}
 .signup button:hover{background:var(--signal-bright)}
@@ -204,12 +375,10 @@ color:var(--text-tertiary);margin-top:16px}
 .hp{position:absolute;left:-6000px;top:-6000px}
 .err{color:var(--status-critical);font-family:var(--font-mono);font-size:12px;margin-top:12px;
 white-space:pre-wrap}
-
-/* the success panel. It persists: nothing here navigates on a timer. */
 .wslink{margin-top:22px;display:none;background:var(--surface-sunken);
 border:1px solid var(--line-signal);border-radius:var(--radius-2);padding:20px}
 .wslink.on{display:block}
-.wslink h3{font-family:var(--font-display);font-size:20px;margin-bottom:4px}
+.wslink h3{font-family:var(--font-display);font-size:21px;margin-bottom:4px}
 .wslink .sayonce{font-family:var(--font-mono);font-size:11px;color:var(--status-warn);
 line-height:1.8;margin-top:10px}
 .wslink input{width:100%;font-family:var(--font-mono);font-size:12.5px;color:var(--text-primary);
@@ -219,156 +388,292 @@ padding:11px 13px}
 .wsacts button{width:auto;margin-top:0;background:transparent;color:var(--text-primary);
 border:1px solid var(--line-2)}
 .wsacts button:hover{background:var(--surface-raised)}
-.wsacts a.open{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;
-text-transform:uppercase;padding:13px 20px;border-radius:var(--radius-1);text-decoration:none;
+.wsacts a.open{font-family:var(--font-mono);font-size:11px;letter-spacing:0.13em;
+text-transform:uppercase;padding:14px 20px;border-radius:var(--radius-1);text-decoration:none;
 background:var(--signal);color:var(--signal-ink)}
 .wsacts a.open:hover{background:var(--signal-bright)}
 .copied{font-family:var(--font-mono);font-size:11px;color:var(--status-ok)}
 
-footer{margin-top:88px;padding:26px 0 40px;border-top:1px solid var(--line-1);
-display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
-font-family:var(--font-mono);font-size:10.5px;line-height:2;color:var(--text-tertiary)}
+/* ── contact ───────────────────────────────────────────────────────────── */
+.intents{display:grid;gap:14px;grid-template-columns:1fr;margin-top:clamp(30px,4vw,44px)}
+@media(min-width:880px){.intents{grid-template-columns:repeat(3,1fr)}}
+.intent{background:rgba(26,26,29,0.8);border:1px solid var(--line-1);border-radius:var(--radius-2);
+padding:clamp(20px,2.4vw,26px);display:flex;flex-direction:column;gap:13px}
+.intent h3{font-size:19px;line-height:1.2}
+.imsg{font-size:13.5px;line-height:1.62;color:var(--text-secondary);background:var(--surface-sunken);
+border:1px solid var(--line-1);border-radius:var(--radius-1);padding:13px 15px;user-select:all}
+.irow{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;align-items:center}
+.icopy{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;
+padding:12px 16px;border:1px solid var(--line-2);border-radius:var(--radius-1);
+background:transparent;color:var(--text-primary);cursor:pointer}
+.icopy:hover{border-color:var(--line-signal);color:var(--signal)}
+.icopy[data-done="1"]{color:var(--status-ok);border-color:var(--status-ok)}
+
+/* ── reveal ────────────────────────────────────────────────────────────── */
+.js .rv{opacity:0;transform:translateY(18px);
+transition:opacity 620ms var(--ease-out),transform 620ms var(--ease-out)}
+.js .rv.is-in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+.js .rv{opacity:1;transform:none;transition:none}
+.js .scanline,.js .caret,.js .ltrack,.js .ground::after,.js .kicker i,
+.js .stagelive::before,.js .arrow .line::before,.js h1.mega em::after{animation:none}
+.js h1.mega em::after{transform:scaleX(1)}
+.frame{transform:none !important}}
+
+footer{margin-top:clamp(70px,9vw,120px);padding:30px 0 44px;border-top:1px solid var(--line-1);
+display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap;
+font-family:var(--font-mono);font-size:10.5px;line-height:2.1;color:var(--text-tertiary)}
 footer a{color:var(--signal)}
-footer .ph{color:var(--status-warn)}
 </style>
 </head>
 <body>
 <script>document.documentElement.classList.add("js")</script>
-<div class="wrap">
+<div class="ground" aria-hidden="true"></div>
 
-<nav class="nav">
-  <span class="wordmark"><b>Trust</b>Ops</span>
-  <a class="cta" href="#signup">Create a workspace</a>
+<nav class="navbar">
+  <div class="wrap">
+    <span class="wordmark"><b>Trust</b>Ops</span>
+    <span class="navlinks">
+      <a href="#gates">The gates</a>
+      <a href="#product">The product</a>
+      <a href="#custody">Custody</a>
+      <a href="#tiers">Tiers</a>
+    </span>
+    <a class="cta" href="#signup">Create a workspace</a>
+    <span class="progress" id="progress" aria-hidden="true"></span>
+  </div>
 </nav>
 
+<div class="wrap">
+
 <section class="hero">
-  <div>
-    <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
-    <p class="deck">TrustOps answers security questionnaires from your own approved evidence.
-    Every released answer carries a citation. Every refusal names its gap and routes to the right
-    human. Deterministic gates decide what ships, not model confidence.</p>
-    <div class="ctarow">
-      <a class="btn btn-primary" href="#signup">Create a workspace</a>
-      <a class="btn btn-alt" href="#signup" id="samplecta">Run it on the sample pack, no upload</a>
+  <span class="kicker"><i></i>Recorded run, replayed unchanged</span>
+  <h1 class="mega">Every answer cited to an approved source, <em>or refused</em>.</h1>
+  <div class="herogrid">
+    <div>
+      <p class="deck">TrustOps answers security questionnaires from your own approved evidence.
+      Every released answer carries a citation. Every refusal names its gap and routes to the right
+      human. Deterministic gates decide what ships, not model confidence.</p>
+      <div class="ctarow">
+        <a class="btn btn-primary" href="#signup">Create a workspace</a>
+        <a class="btn btn-alt" href="#signup" id="samplecta">Run the sample pack, upload nothing</a>
+      </div>
     </div>
-    <p class="herolinks"><a href="#gates">See the gates refuse, question by question</a></p>
-    <p class="hero-note">No sales call. No form gate. This demo drafts with Google Gemini on its
-    free tier, so bring public evidence: a published SOC 2 report, an ISO certificate, trust-center
-    policies. Or run it on our sample pack and upload nothing at all.</p>
+    <div class="counts">
+      <div class="count sig"><b>10</b><span>questions in the recorded run</span></div>
+      <div class="count red"><b>40%</b><span>refused by design</span></div>
+      <div class="count ok"><b>0</b><span>answers released without a citation</span></div>
+      <div class="count"><b>100%</b><span>of refusals name their gap</span></div>
+    </div>
   </div>
 
-  <div class="demoframe p-ticks" id="demoframe">
+  <div class="stage p-ticks" id="stage" data-tone="ok">
     <div class="scanline" aria-hidden="true"></div>
-    <p class="d-eyebrow">Recorded run / synthetic evidence / replayed unchanged</p>
-    <div class="chips" id="chips"><!--@CHIPS@--></div>
-    <div class="q-line"><span id="qtext" aria-hidden="true"><!--@Q0@--></span><span class="caret" id="caret" aria-hidden="true"></span></div>
-    <div id="demoresult" aria-live="polite" aria-atomic="true">
-      <p class="sr-only" id="qlive"><!--@Q0@--></p>
-      <div class="verdict-chip"><!--@VERDICT0@--></div>
-      <div class="d-answer" id="answer"><!--@ANSWER0@--></div>
-      <div id="prov"><!--@PROV0@--></div>
-      <div id="gaps"><!--@GAPS0@--></div>
+    <div class="stagebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="stagetitle">synthetic evidence / deterministic engine / no API call</span>
+      <span class="stagelive" id="stagelive">Replaying</span>
+    </div>
+    <div class="stagebody">
+      <div class="chips" id="chips"><!--@CHIPS@--></div>
+      <div class="stagemain">
+        <span class="slabel">Question from the buyer</span>
+        <div class="q-line"><span id="qtext" aria-hidden="true"><!--@Q0@--></span><span class="caret" id="caret" aria-hidden="true"></span></div>
+        <div id="demoresult" aria-live="polite" aria-atomic="true">
+          <p class="sr-only" id="qlive"><!--@Q0@--></p>
+          <div class="verdictrow"><!--@VERDICT0@--></div>
+          <span class="slabel">What the gates released</span>
+          <div class="d-answer" id="answer"><!--@ANSWER0@--></div>
+          <div id="prov"><!--@PROV0@--></div>
+          <div id="gaps"><!--@GAPS0@--></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="gates">
+<div class="ledger" aria-hidden="true">
+  <div class="ltrack" id="ltrack"><!--@TICKER@--></div>
+</div>
+
+<section id="gates" class="secpad">
   <div class="seclabel rv"><span class="idx">01</span><span class="label">The part others get wrong</span><span class="rule"></span></div>
   <h2 class="rv">Most tools answer confidently.<br>This one refuses correctly.</h2>
   <p class="sub rv">A wrong answer in a security questionnaire is a material misrepresentation in
-  an enterprise deal. Accuracy percentages concede a remainder that ships anyway. Our release rule
-  is different: zero unsupported claims, enforced in code. These four traps are planted in every
-  eval run, and the suite blocks release if any of them leaks. Open a bar to read the gate reasoning.</p>
+  an enterprise deal. An accuracy percentage concedes a remainder that ships anyway. Four traps are
+  planted in every eval run, and the suite blocks release if any of them leaks. Here is the answer
+  a confident tool would have sent, and the gate that stopped it.</p>
 
-  <div class="traps">
-    <div class="trap rv">
-      <span class="chip c-warn">CERT NEVER INFERRED</span>
-      <h3>The certification trap</h3>
-      <p class="q">Asked for ISO 27001 status when the evidence holds only a certification roadmap.</p>
-      <button type="button" class="p-redact" aria-expanded="false">Certification claims require a
-      certificate or attestation source. Plans and roadmaps never qualify, no matter how confident
-      the draft sounds.</button>
-      <span class="hint"><span class="h-hover">Hover or click to reveal the gate</span><span class="h-tap">Tap to reveal</span></span>
+  <div class="gseq">
+    <div class="grail">
+      <div class="gbig" id="gbig">01</div>
+      <div class="gname" id="gname">The certification trap</div>
+      <div class="gtick" id="gtick" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+      <p class="grailnote">Each gate is deterministic code that runs after the model, on the
+      structure of the evidence rather than on the wording of the draft. No prompt can talk it
+      out of a refusal.</p>
     </div>
-    <div class="trap rv">
-      <span class="chip c-warn">SOURCES CONFLICT</span>
-      <h3>The contradiction trap</h3>
-      <p class="q">Two approved policies state different customer data deletion windows: 90 and 365 days.</p>
-      <button type="button" class="p-redact" aria-expanded="false">Both sources are quarantined and
-      the question routes to both owners. Even a different question that cites the tainted policy
-      refuses too.</button>
-      <span class="hint"><span class="h-hover">Hover or click to reveal the gate</span><span class="h-tap">Tap to reveal</span></span>
-    </div>
-    <div class="trap rv">
-      <span class="chip c-warn">EVIDENCE EXPIRED</span>
-      <h3>The staleness trap</h3>
-      <p class="q">The penetration test report in evidence expired months before the question arrived.</p>
-      <button type="button" class="p-redact" aria-expanded="false">Expired evidence cannot support
-      a current state claim. The refusal names the document, its expiry date, and the owner to
-      chase.</button>
-      <span class="hint"><span class="h-hover">Hover or click to reveal the gate</span><span class="h-tap">Tap to reveal</span></span>
-    </div>
-    <div class="trap rv">
-      <span class="chip c-warn">ROUTED TO COUNSEL</span>
-      <h3>The legal trap</h3>
-      <p class="q">The buyer demands unlimited liability and uptime guarantees with penalties.</p>
-      <button type="button" class="p-redact" aria-expanded="false">Contract commitments route to
-      legal before drafting. The model never sees it as an answerable question.</button>
-      <span class="hint"><span class="h-hover">Hover or click to reveal the gate</span><span class="h-tap">Tap to reveal</span></span>
+
+    <div class="gcards">
+      <article class="gcard rv" data-g="0">
+        <span class="gk">Gate / certification evidence class</span>
+        <h3>The certification trap</h3>
+        <p class="gq">Is your ISMS ISO 27001 certified? Provide the certificate number,
+        certification body and expiry date.</p>
+        <div class="draftbox">
+          <span class="dl">What a confident tool ships</span>
+          <span class="struck">Yes. Our information security management system is ISO 27001
+          certified and maintained under an annual surveillance programme.</span>
+          <span class="stamp">Refused</span>
+        </div>
+        <p class="gwhy">The evidence store holds a certification <b>roadmap</b>, not a certificate.
+        It is retrieved, it is cited, and then the gate strikes it out: a certification claim needs
+        a certificate or an attestation, and a plan is neither. The refusal names the document that
+        was almost good enough.</p>
+      </article>
+
+      <article class="gcard rv" data-g="1">
+        <span class="gk">Gate / cross document contradiction</span>
+        <h3>The contradiction trap</h3>
+        <p class="gq">Within how many days of contract termination is customer data deleted?</p>
+        <div class="draftbox">
+          <span class="dl">What a confident tool ships</span>
+          <span class="struck">Customer data is permanently deleted within 90 days of contract
+          termination.</span>
+          <span class="stamp">Refused</span>
+        </div>
+        <p class="gwhy">Two approved policies say different things, 90 days and 365 days, and both
+        are real. The gate <b>quarantines both sources</b> and routes the question to both owners.
+        A different question that happens to cite the tainted policy refuses too, because the
+        contradiction attaches to the evidence, not to the question.</p>
+      </article>
+
+      <article class="gcard rv" data-g="2">
+        <span class="gk">Gate / staleness against the question date</span>
+        <h3>The staleness trap</h3>
+        <p class="gq">Has an independent penetration test been performed in the last 12 months?</p>
+        <div class="draftbox">
+          <span class="dl">What a confident tool ships</span>
+          <span class="struck">Yes. An independent third party penetration test is performed
+          annually, most recently by an accredited external firm.</span>
+          <span class="stamp">Refused</span>
+        </div>
+        <p class="gwhy">The report in evidence expired before the question arrived. Expired evidence
+        cannot support a present tense claim, so the refusal carries <b>the document, its expiry
+        date and the owner to chase</b>. That is a task, not a dead end.</p>
+      </article>
+
+      <article class="gcard rv" data-g="3">
+        <span class="gk">Gate / legal routing, before drafting</span>
+        <h3>The commitment trap</h3>
+        <p class="gq">Will Vendor contractually commit to unlimited liability for any breach?</p>
+        <div class="draftbox">
+          <span class="dl">What a confident tool ships</span>
+          <span class="struck">Yes, Vendor accepts unlimited liability for security incidents
+          affecting customer data.</span>
+          <span class="stamp">Counsel</span>
+        </div>
+        <p class="gwhy">This one never reaches the model. Contract commitments are detected and
+        routed to legal <b>before drafting</b>, so there is no draft to be tempted by and nothing
+        for a reviewer to rubber stamp at the end of a long afternoon.</p>
+      </article>
     </div>
   </div>
 </section>
 
-<section>
-  <div class="seclabel rv"><span class="idx">02</span><span class="label">How it works</span><span class="rule"></span></div>
-  <h2 class="rv">Five steps, one rule</h2>
-  <div class="steps">
-    <div class="step rv"><span class="n">01</span><span class="t">Upload evidence</span><span class="leader"></span><span class="d">Public policies, standards, reports. PDF, DOCX, MD, TXT. You attest what is approved.</span></div>
-    <div class="step rv"><span class="n">02</span><span class="t">Retrieve</span><span class="leader"></span><span class="d">Relevant excerpts are pulled from your documents only. Tenants are structurally isolated.</span></div>
-    <div class="step rv"><span class="n">03</span><span class="t">Draft</span><span class="leader"></span><span class="d">A model drafts an answer against the excerpts. The gates never trust it.</span></div>
-    <div class="step rv"><span class="n">04</span><span class="t">Gate</span><span class="leader"></span><span class="d">Citation or refusal. Staleness, contradiction, certification class, legal routing, all in code.</span></div>
-    <div class="step rv"><span class="n">05</span><span class="t">Named review</span><span class="leader"></span><span class="d">Nothing reaches DELIVERED without a human name and note in the audit chain.</span></div>
+<section id="product" class="secpad">
+  <div class="seclabel rv"><span class="idx">02</span><span class="label">The product, not a mockup</span><span class="rule"></span></div>
+  <h2 class="rv">Three screens, one rule<br>running through all of them</h2>
+  <p class="sub rv">These are screenshots of the running application, taken from the same run that
+  feeds the panel above. Nothing here is illustrated.</p>
+
+  <div class="shots">
+    <div class="shot rv">
+      <div class="shotcopy">
+        <span class="chip c-warn">Working paper</span>
+        <h3>The audit report</h3>
+        <p>Coverage, the refusal split by cause, and a lattice of every question with its verdict.
+        Then, per question, the answer, the provenance strip, and the gate findings that produced
+        it. This is the artefact you hand a reviewer.</p>
+        <p class="shotmeta">run_report.html<br>self contained, no network</p>
+      </div>
+      <div class="frame" data-par="0.05">
+        <div class="fbar"><i></i><i></i><i></i><span>run_report.html / northwind-systems</span></div>
+        <img src="@SHOT_REPORT@" width="1180" height="811" alt="The TrustOps run report: a sixty percent coverage dial, a lattice of ten question verdicts, and stat tiles reading ten questions ingested, forty percent refused by design, and a valid audit chain.">
+      </div>
+    </div>
+
+    <div class="shot flip rv">
+      <div class="shotcopy">
+        <span class="chip c-rev">Named review</span>
+        <h3>The approval queue</h3>
+        <p>Nothing reaches DELIVERED on its own. A reviewer puts their name and a note against each
+        held answer, and that name is appended to the run's hash chain. An answer with no surviving
+        citation has no approval path at all.</p>
+        <p class="shotmeta">reviewer identity required<br>approval appends to the chain</p>
+      </div>
+      <div class="frame" data-par="-0.04">
+        <div class="fbar"><i></i><i></i><i></i><span>/t/northwind-systems/review</span></div>
+        <img src="@SHOT_REVIEW@" width="1180" height="811" alt="The TrustOps review queue, showing answers held for a named human reviewer with fields for the reviewer name and note.">
+      </div>
+    </div>
+
+    <div class="shot rv">
+      <div class="shotcopy">
+        <span class="chip c-sig">Workspace</span>
+        <h3>Evidence in, run out</h3>
+        <p>Upload your documents or seed the synthetic sample pack and upload nothing. Attest what
+        is approved, press run, and watch the verdicts land question by question. Two minutes,
+        no call, no form in front of it.</p>
+        <p class="shotmeta">PDF, DOCX, MD, TXT<br>three runs, deleted after 14 days</p>
+      </div>
+      <div class="frame" data-par="0.05">
+        <div class="fbar"><i></i><i></i><i></i><span>/t/northwind-systems</span></div>
+        <img src="@SHOT_WORKSPACE@" width="1180" height="811" alt="The TrustOps workspace, listing uploaded evidence documents with their approval status and a control to start a run.">
+      </div>
+    </div>
   </div>
 </section>
 
-<section>
+<section id="custody" class="secpad">
   <div class="seclabel rv"><span class="idx">03</span><span class="label">Evidence custody</span><span class="rule"></span></div>
   <h2 class="rv">What leaves your infrastructure</h2>
-  <p class="sub rv">Two sub-processors, named plainly: Google Gemini drafts the answers, Render
-  hosts the server. There are no others. No analytics, no tag manager, no third party retrieval
-  service.</p>
-  <div class="custody">
-    <div class="cust rv">
+  <p class="sub rv">Two sub-processors, named plainly: Google Gemini drafts, Render hosts. There
+  are no others. No analytics, no tag manager, no third party retrieval service.</p>
+
+  <div class="flow rv">
+    <div class="node">
+      <span class="chip c-ok">Stays put</span>
       <h3>Your documents</h3>
-      <p>Stored in your isolated workspace on our server. Hard deleted 14 days after signup,
-      stated up front. Upload public evidence only on this tier, for the reason in the next card.</p>
-      <span class="chip c-ok tag">STAYS PUT</span>
+      <p>Held in your isolated workspace on our server, and hard deleted 14 days after signup.
+      Retrieval and embedding both run here, on the box.</p>
     </div>
-    <div class="cust rv">
-      <h3>The drafting model</h3>
-      <p>Google Gemini on its free tier, whose terms let Google use submitted content to improve
-      their services. That is the honest reason this demo asks for public evidence, and the reason
-      the BYOK tier below exists.</p>
-      <span class="chip c-rev tag">FREE TIER, PUBLIC EVIDENCE</span>
+    <div class="arrow"><div class="line"></div><em>question plus<br>retrieved excerpts</em></div>
+    <div class="node wall">
+      <span class="chip c-sig">The boundary</span>
+      <h3>What crosses</h3>
+      <p>One question and its four retrieved excerpts, per answer. Never a whole document, never
+      your document list, never another tenant's anything.</p>
     </div>
-    <div class="cust rv">
-      <h3>What the model sees</h3>
-      <p>One question and its retrieved excerpts per answer. Never your full documents, never your
-      document list, never another tenant. Retrieval itself runs on our server.</p>
-      <span class="chip c-sig tag">QUESTION + EXCERPTS ONLY</span>
+    <div class="arrow blocked"><div class="line"></div><em>full documents<br>never sent</em></div>
+    <div class="node">
+      <span class="chip c-rev">Free tier</span>
+      <h3>Google Gemini</h3>
+      <p>Its terms let Google use submitted content to improve their services. That is the honest
+      reason this tier asks for public evidence, and the reason BYOK exists below.</p>
     </div>
   </div>
 </section>
 
-<section id="tiers">
+<section id="tiers" class="secpad">
   <div class="seclabel rv"><span class="idx">04</span><span class="label">Whose key drafts</span><span class="rule"></span></div>
   <h2 class="rv">Three tiers, one honest difference</h2>
   <p class="sub rv">The gates, the audit chain and the deliverables are identical in all three.
   What changes is whose API key drafts your answers, and therefore whose terms your text is under.
   Pick the tier that matches the sensitivity of the evidence, not the size of the company.</p>
   <div class="tiers">
-    <div class="tier rv">
-      <span class="chip c-sig">DEMO</span>
+    <div class="tier lead rv">
+      <span class="chip c-sig">Demo</span>
       <h3>Our key, free</h3>
       <p>Google Gemini free tier. Google may use submitted content to improve their services, so
       this tier is for public evidence: a published SOC 2 report, an ISO certificate, trust-center
@@ -384,7 +689,7 @@ footer .ph{color:var(--status-warn)}
       <span class="who">Ask for it and it moves up the queue</span>
     </div>
     <div class="tier rv">
-      <span class="chip c-rev">MANAGED</span>
+      <span class="chip c-rev">Managed</span>
       <h3>Paid, with commitments</h3>
       <p>We run a paid tier key that carries a no-training commitment, and we pass that commitment
       through to you in the contract rather than in a marketing line. Retention and residency
@@ -394,26 +699,45 @@ footer .ph{color:var(--status-warn)}
   </div>
 </section>
 
-<section>
+<section id="deliverables" class="secpad">
   <div class="seclabel rv"><span class="idx">05</span><span class="label">What you take away</span><span class="rule"></span></div>
   <h2 class="rv">Deliverables an auditor can hold</h2>
-  <div class="dels">
-    <div class="del rv"><h3>The answered workbook</h3>
+  <div class="bento">
+    <div class="del rv">
+      <h3>The answered workbook</h3>
       <p>Your questionnaire returned in its original structure with responses and evidence notes
-      written in. Merged cells, hidden rows, and formulas survive untouched.</p>
-      <span class="mono">DELIVERED.xlsx</span></div>
-    <div class="del rv"><h3>The audit working paper</h3>
-      <p>Per question verdicts, provenance strips, gate findings, and the refusals with their
-      gaps named. A report you can hand to a reviewer.</p>
-      <span class="mono">run_report.html</span></div>
-    <div class="del rv"><h3>The tamper evident log</h3>
-      <p>Every state transition hash chained in an append only log. Edit any historical event
-      and verification fails from that point on. Check it yourself.</p>
-      <span class="mono">audit_log.jsonl</span></div>
+      written in. Merged cells, hidden rows and formulas survive untouched, which is the part that
+      quietly breaks in every other tool.</p>
+      <div class="mini mgrid" aria-hidden="true">
+        <i class="h"></i><i class="h"></i><i class="h"></i><i class="h"></i>
+        <i class="h"></i><i></i><i></i><i class="w"></i>
+        <i class="h"></i><i></i><i></i><i class="w"></i>
+        <i class="h"></i><i></i><i></i><i class="w"></i>
+      </div>
+      <span class="mono">DELIVERED.xlsx</span>
+    </div>
+    <div class="del rv">
+      <h3>The audit working paper</h3>
+      <p>Per question verdicts, provenance strips and every refusal with its gap named.</p>
+      <div class="mini" aria-hidden="true">
+        <div class="mbar"><i></i><i></i><i></i><i></i></div>
+        <div class="mlegend"><span>cited</span><span>conflict</span><span>stale</span><span>legal</span></div>
+      </div>
+      <span class="mono">run_report.html</span>
+    </div>
+    <div class="del rv">
+      <h3>The tamper evident log</h3>
+      <p>Every state transition hash chained in an append only file. Edit any historical event and
+      verification fails from that point on.</p>
+      <div class="mini mchain" aria-hidden="true">
+        <b>a41f</b><s>&#8594;</s><b>7c02</b><s>&#8594;</s><b>e9b8</b><s>&#8594;</s><b>3d51</b>
+      </div>
+      <span class="mono">audit_log.jsonl</span>
+    </div>
   </div>
 </section>
 
-<section id="signup">
+<section id="signup" class="secpad">
   <div class="seclabel rv"><span class="idx">06</span><span class="label">Try it now</span><span class="rule"></span></div>
   <h2 class="rv">Two ways in, both free</h2>
   <p class="sub rv">Create a workspace and either seed our synthetic sample pack, which uploads
@@ -457,7 +781,7 @@ footer .ph{color:var(--status-warn)}
   </div>
 </section>
 
-<section id="contact">
+<section id="contact" class="secpad">
   <div class="seclabel rv"><span class="idx">07</span><span class="label">Get in touch</span><span class="rule"></span></div>
   <h2 class="rv">Tell me which one you are</h2>
   <p class="sub rv">LinkedIn cannot prefill a message from a link, so pick the line that fits,
@@ -515,24 +839,60 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
 }),{rootMargin:"0px 0px -8% 0px"});
 document.querySelectorAll(".rv").forEach(el=>io.observe(el));
 
-/* ── redaction bars ───────────────────────────────────────────────────────
-   invisible bars that only respond to hover are four grey rectangles on a
-   phone. These are buttons: click, tap, Enter and Space all work. */
-document.querySelectorAll("button.p-redact").forEach(b=>{
-  b.addEventListener("click",()=>
-    b.setAttribute("aria-expanded",b.getAttribute("aria-expanded")==="true"?"false":"true"));
-});
+/* ── the pinned gate rail ─────────────────────────────────────────────────
+   The big numeral and the name follow whichever trap card owns the viewport,
+   so the left column narrates the right one instead of sitting there. */
+const GNAMES=["The certification trap","The contradiction trap","The staleness trap",
+  "The commitment trap"];
+const gio=new IntersectionObserver(es=>{
+  let best=null;
+  es.forEach(e=>{if(e.isIntersecting&&(!best||e.intersectionRatio>best.intersectionRatio))best=e});
+  if(!best)return;
+  const i=+best.target.dataset.g;
+  $("gbig").textContent=String(i+1).padStart(2,"0");
+  $("gname").textContent=GNAMES[i];
+  $("gtick").querySelectorAll("i").forEach((t,n)=>t.classList.toggle("on",n<=i));
+},{rootMargin:"-42% 0px -42% 0px",threshold:[0,0.2,0.6,1]});
+document.querySelectorAll(".gcard").forEach(c=>gio.observe(c));
+
+/* scroll progress hairline + a light parallax on the product frames */
+const frames=[...document.querySelectorAll(".frame[data-par]")];
+let ticking=false;
+function onScroll(){
+  if(ticking)return;ticking=true;
+  requestAnimationFrame(()=>{
+    const h=document.documentElement.scrollHeight-innerHeight;
+    $("progress").style.width=(h>0?(scrollY/h)*100:0)+"%";
+    if(!reduced)frames.forEach(f=>{
+      const r=f.getBoundingClientRect();
+      if(r.bottom<-200||r.top>innerHeight+200)return;
+      const mid=(r.top+r.height/2-innerHeight/2)/innerHeight;
+      f.style.transform=`translate3d(0,${(mid*+f.dataset.par*160).toFixed(1)}px,0)`;
+    });
+    ticking=false;
+  });
+}
+addEventListener("scroll",onScroll,{passive:true});onScroll();
 
 /* ── the recorded run ─────────────────────────────────────────────────────
-   The first contract is rendered into the HTML at build time, so the frame is
-   complete on first paint instead of opening on two seconds of empty box.
-   Typing is for the transitions only. */
+   The first contract is rendered into the HTML at build time, so the stage is
+   complete on first paint. Typing is for the transitions only. The stage's
+   accent colour follows the verdict, so the frame itself changes state. */
 const keys=Object.keys(DEMO);
 let current=keys[0],timer=null,cycleTimer=null;
 let auto=!reduced,paused=false,revealed=true;
-const DWELL=12000;
+const DWELL=11000;
+const TONE={ok:"var(--status-ok)",warn:"var(--status-critical)",
+  rev:"var(--status-warn)",legal:"var(--signal)"};
+const LIVE={ok:"Cited",warn:"Refused",rev:"Held for review",legal:"Routed to counsel"};
 
 function chipClass(t){return t==="ok"?"chip c-ok":t==="legal"?"chip c-sig":t==="rev"?"chip c-rev":"chip c-warn"}
+function paint(tone){
+  const st=$("stage");
+  st.dataset.tone=tone;
+  st.style.setProperty("--acc",TONE[tone]||"var(--signal)");
+  $("stagelive").textContent=LIVE[tone]||"Replaying";
+}
 function scheduleAdvance(){
   clearTimeout(cycleTimer);cycleTimer=null;
   if(!auto||paused||!revealed)return;
@@ -559,29 +919,31 @@ function show(key,instant){
        screen reader hears one sentence instead of 89 keystrokes */
     $("qlive").textContent=q;
     $("verdict").textContent=d.verdict;$("verdict").className=chipClass(d.tone);
-    $("answer").innerHTML=d.answer?esc(d.answer):"<em>No answer released.</em>";
+    paint(d.tone);
+    $("answer").innerHTML=d.answer?esc(d.answer)
+      :'<span class="none">Nothing released</span>';
     $("prov").innerHTML=d.citations.length
       ?`<div class="d-prov">${d.citations.map(esc).join("<br>")}</div>`
       :`<div class="d-prov warn">no citation released</div>`;
-    $("gaps").innerHTML=d.gaps.map(g=>`<div class="d-gap">&#9656; ${esc(g)}</div>`).join("");
+    $("gaps").innerHTML=d.gaps.map(g=>`<div class="d-gap"><span>&#9656;</span><span>${esc(g)}</span></div>`).join("");
     revealed=true;scheduleAdvance();
   };
   if(instant||reduced){$("qtext").textContent=q;reveal();return}
   let i=0;$("qtext").textContent="";
   const type=()=>{
     $("qtext").textContent=q.slice(0,++i);
-    if(i<q.length){timer=setTimeout(type,18)}else{timer=setTimeout(reveal,350)}
+    if(i<q.length){timer=setTimeout(type,16)}else{timer=setTimeout(reveal,320)}
   };
   type();
 }
 document.querySelectorAll("#chips button").forEach(b=>
   b.onclick=()=>{auto=false;clearTimeout(cycleTimer);show(b.dataset.k,false)});
-markChips();
+markChips();paint(DEMO[current].tone);
 
 /* WCAG 2.2.2: a moving carousel needs a pause, and reduced motion means it
    never starts. Pointer or keyboard inside the frame holds it. */
 if(!reduced){
-  const frame=$("demoframe");
+  const frame=$("stage");
   frame.addEventListener("pointerenter",()=>{paused=true;clearTimeout(cycleTimer)});
   frame.addEventListener("focusin",()=>{paused=true;clearTimeout(cycleTimer)});
   frame.addEventListener("pointerleave",()=>{paused=false;scheduleAdvance()});
