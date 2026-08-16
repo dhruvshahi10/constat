@@ -3,7 +3,12 @@
 FROM python:3.12-slim
 WORKDIR /app
 
-RUN pip install --no-cache-dir "openpyxl>=3.1" pypdf python-docx
+RUN pip install --no-cache-dir "openpyxl>=3.1" pypdf python-docx fastembed
+
+# bake the retrieval model into the image: runtime has zero network egress
+# and cold start never depends on a model host being up
+ENV FASTEMBED_CACHE_PATH=/opt/models
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
 
 COPY trustops/ trustops/
 COPY site/ site/

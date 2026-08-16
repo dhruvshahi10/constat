@@ -20,6 +20,38 @@ from ..report import write_report
 from . import config, db
 from .demo_questions import DEMO_QUESTIONS
 
+_embedder = None
+
+
+def get_embedder():
+    """Loaded once per process; production model if present, ngram floor else."""
+    global _embedder
+    if _embedder is None:
+        from ..semantic import best_embedder
+        _embedder = best_embedder()
+    return _embedder
+
+
+def make_retriever(slug: str):
+    """Fresh per-tenant semantic index for this run; lexical None on failure.
+
+    Rebuilding before each run (rather than at upload) keeps exactly one code
+    path and guarantees the index is never stale; the corpus is small enough
+    that the build is cheap at demo scale.
+    """
+    try:
+        from ..evidence import EvidenceStore
+        from ..semantic import SemanticRetriever, build_index
+        store = EvidenceStore(slug, config.evidence_root(slug))
+        index_dir = config.tenant_dir(slug) / "index"
+        emb = get_embedder()
+        build_index(store, index_dir, emb)
+        return SemanticRetriever(store, index_dir, emb), emb.name
+    except Exception as exc:  # noqa: BLE001 — retrieval quality never blocks a run
+        sys.stderr.write(f"[runqueue] semantic unavailable for {slug}: "
+                         f"{type(exc).__name__}: {exc}; using lexical\n")
+        return None, "lexical-fallback"
+
 _q: "queue.Queue[str]" = queue.Queue()
 _worker: threading.Thread | None = None
 
@@ -88,9 +120,13 @@ def _execute(run_id: str, org: str) -> None:
                      (db.now(), run_id))
     try:
         qnr = build_questionnaire_workbook(DEMO_QUESTIONS, out_dir / f"{run_id}.xlsx", org)
+        retriever, retrieval_mode = make_retriever(slug)
         res = pipeline_run(qnr, tenant=slug, evidence_root=config.evidence_root(slug),
                            out_dir=out_dir, drafter_kind=drafter, today=date.today(),
-                           approval_mode="human")
+                           approval_mode="human", retriever=retriever)
+        res.metrics["retrieval"] = retrieval_mode
+        (out_dir / "metrics.json").write_text(json.dumps(res.metrics, indent=2),
+                                              encoding="utf-8")
         write_report(res, date.today())
         with db.connect() as conn:
             conn.execute(
