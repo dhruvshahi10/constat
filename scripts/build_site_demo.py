@@ -759,6 +759,28 @@ def _clip(s: str, n: int) -> str:
     return s[:n].rsplit(" ", 1)[0].rstrip(" ,;:.") + "..."
 
 
+def workbook_rowcount() -> int:
+    """Data rows in the real questionnaire, for the sheet header.
+
+    Hardcoding a number here would be the one dishonest pixel on a page whose
+    entire argument is that it does not guess.
+    """
+    try:
+        import openpyxl
+    except ImportError:
+        return 0
+    if not WORKBOOK_FILE.is_file():
+        return 0
+    ws = openpyxl.load_workbook(WORKBOOK_FILE).active
+    # a real question id, not the hidden metadata row whose "internal-use"
+    # also contains a dash
+    qid = re.compile(r"^[A-Z&]{2,5}-\d+\.\d+$")
+    return sum(1 for r in range(1, ws.max_row + 1)
+               if isinstance(ws.cell(r, 1).value, str)
+               and qid.match(ws.cell(r, 1).value.strip())
+               and ws.cell(r, 3).value)
+
+
 def workbook_html() -> str:
     """Render the real delivered rows as a compact sheet."""
     try:
@@ -806,8 +828,8 @@ def workbook_html() -> str:
                 break
         out.append(
             f'<div class="wbrow" data-tone="{tone}">'
-            f'<div class="wbq"><span class="wbid">{e(qid)}</span>'
-            f'<p>{e(_clip(question, 72))}</p></div>'
+            f'<span class="wbid">{e(qid)}</span>'
+            f'<p class="wbq">{e(_clip(question, 76))}</p>'
             f'<div class="wbr"><span class="wbv">{e(verdict)}</span>'
             f'<p>{e(body)}</p>'
             + (f'<span class="wbe">{e(line)}</span>' if line else "")
@@ -999,6 +1021,7 @@ def main() -> None:
     page = page.replace("<!--@CHIPS@-->", chips_html(out))
     page = page.replace("<!--@CHAIN@-->", chain_html(chain))
     page = page.replace("<!--@WORKBOOK@-->", workbook_html())
+    page = page.replace("@WBTOTAL@", str(workbook_rowcount()))
     for token, uri in {**shot_uris(), **media_uris()}.items():
         page = page.replace(f"@{token}@", uri)
     first_key = next(iter(out))
@@ -1008,7 +1031,8 @@ def main() -> None:
                              "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
                              "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",
-                             "@VIDEO_MP4@", "@VIDEO_WEBM@", "@POSTER_URI@") if m in page]
+                             "@VIDEO_MP4@", "@VIDEO_WEBM@", "@POSTER_URI@",
+                             "@WBTOTAL@") if m in page]
     if leftovers:
         raise SystemExit(f"unfilled template placeholders: {leftovers}")
     (ROOT / "site" / "index.html").write_text(page, encoding="utf-8")

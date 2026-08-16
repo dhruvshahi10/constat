@@ -25,10 +25,32 @@ THE EDIT
 Source beats were measured from the capture, not guessed (see BEATS below).
 The timeline is the SHOTS table -- it is plain data, edit it and re-run.
 
-  frames are 24fps.  n = length of the shot in OUTPUT frames.
-  A footage shot names a source frame `src` and animates a crop rectangle
-  from `start` to `end`, each being (centre_x, centre_y, zoom).  The crop is
-  always exactly 8:5 so nothing is ever stretched.
+  frames are 24fps.  A footage shot names a source frame `src` and animates a
+  crop rectangle from `start` to `end`, each being (centre_x, centre_y, zoom).
+  The crop is always exactly 8:5 so nothing is ever stretched.
+
+MOVE AND HOLD  (the whole point of the second cut)
+--------------------------------------------------
+The first cut ran 22s over 13 beats -- every zoom arrived and immediately cut,
+so the film read as motion rather than information.  Nothing here is a beat you
+can read in 1.4 seconds.
+
+So a shot is now two phases, not one:
+
+    move   ~1.8s   the camera eases from `start` to `end`, and the source
+                   footage advances 1:1 so live events (the seed landing, the
+                   button click, the run finishing) play inside the move.
+    hold   ~3.2s   t is pinned at 1.0 AND the source frame is pinned at
+                   src+srcn-1.  The crop rectangle is therefore byte-identical
+                   frame to frame; the only thing that changes is the caption
+                   and the 2px progress bar.  The stillness is real, not slow.
+
+`srcn` is how many source frames the move is allowed to eat, clamped to the
+STATIC window listed in BEATS -- a 44-frame move over a 34-frame static window
+would scroll off the beat, so the footage freezes first and the camera keeps
+easing to its mark.
+
+Cards hold the same way: they finish animating, then sit.
 """
 
 from __future__ import annotations
@@ -94,68 +116,104 @@ WARN = (0xD9, 0xB3, 0x6A)
 # transition into the shot: "cut" | "wipe" (footage wipes over the act card)
 #                           | "dissolve" (blended with the previous shot's tail)
 
+# Standard lengths.  MOVE+HOLD = 122 frames = 5.08s per footage shot.
+MOVE = 44   # 1.83s of eased camera
+HOLD = 78   # 3.25s of dead-still frame at the end mark
+DISS = 12   # cross-dissolve
+WIPE = 12   # graphic wipe off an act card
+
+# Nine footage shots became six.  Three are gone entirely, not shortened, and
+# their captions went with them -- a caption that outlives its shot points at
+# nothing:
+#   src=152  the tilt down the document list.  The punch at src=90 now settles
+#            holding the 13/20 counter AND seven ATTESTED rows, so the tilt
+#            said nothing the shot before it had not already said.
+#            (dropped caption: "EVERY FILE ATTESTED AND APPROVED")
+#   src=446  the stat tiles.  388, 446 and 464 were three separate punch-ins
+#            into ONE static page view -- precisely the "just transitions"
+#            read.  The dial punch already carries VALID / 0.09s in frame.
+#            (dropped caption: "AUDIT CHAIN VALID, 0.09s CYCLE")
+#   src=534  the two evidence-integrity summary cards.  Of the two report
+#            detail shots this is the weaker: it *summarises* stale and
+#            contradiction, while src=632 shows an actual ledger row refusing
+#            and naming POL-RET-001 / POL-RET-002 as the sources that did it.
+#            Act 03's stack bar already gives the 1 / 2 / 1 counts.
+#            (dropped caption: "TAINTED SOURCES, QUARANTINED")
+
 SHOTS = [
     # --- OPENING ---------------------------------------------------------
-    dict(kind="title", n=48),
+    # title composition is finished at i=32; the rest is the hold
+    dict(kind="title", n=106),
 
     # --- ACT 01 : EVIDENCE ----------------------------------------------
-    dict(kind="act", n=22, num="01", name="EVIDENCE",
+    dict(kind="act", n=62, num="01", name="EVIDENCE",
          sub="Thirteen documents, seeded in one click"),
-    # the seed click lands and the document list pops in; push into the counter
-    dict(kind="footage", n=34, src=90, trans="wipe", wipe=10,
+    # the seed click lands, "Seeded 13 sample documents" pops in, and the punch
+    # settles holding the 13/20 counter and the first seven ATTESTED rows
+    dict(kind="footage", src=90, srcn=34, trans="wipe", wipe=WIPE,
          start=(480, 300, 1.00), end=(310, 412, 1.60),
-         caption="13 DOCUMENTS, ALL ATTESTED"),
-    # slow tilt down the full list of thirteen, every row chipped ATTESTED
-    dict(kind="footage", n=42, src=152, trans="cut",
-         start=(320, 200, 1.50), end=(320, 400, 1.50),
-         caption="EVERY FILE ATTESTED AND APPROVED"),
+         caption="13 DOCUMENTS, EVERY ONE ATTESTED"),
 
     # --- ACT 02 : RUN ----------------------------------------------------
-    dict(kind="act", n=22, num="02", name="RUN",
+    dict(kind="act", n=62, num="02", name="RUN",
          sub="Ten questions, one click"),
     # the ten questions, then the button is pressed and the run starts
-    dict(kind="footage", n=42, src=210, trans="wipe", wipe=10,
-         start=(480, 300, 1.00), end=(260, 330, 2.10),
+    dict(kind="footage", src=210, srcn=42, trans="wipe", wipe=WIPE,
+         start=(480, 300, 1.00), end=(300, 330, 1.85),
          caption="TEN QUESTIONS, ONE CLICK"),
     # dissolve = time passing while the run gates; land on the verdict card
-    dict(kind="footage", n=56, src=300, trans="dissolve", diss=8,
+    dict(kind="footage", src=300, srcn=MOVE, trans="dissolve", diss=DISS,
          start=(480, 300, 1.18), end=(330, 280, 1.75),
          caption="10 QUESTIONS. 0 DELIVERED. 4 REFUSED."),
 
     # --- ACT 03 : VERDICTS ----------------------------------------------
-    dict(kind="act", n=22, num="03", name="VERDICTS",
+    dict(kind="act", n=62, num="03", name="VERDICTS",
          sub="Four refused, every gap named"),
     # push onto the coverage dial
-    dict(kind="footage", n=40, src=388, trans="wipe", wipe=10,
+    dict(kind="footage", src=388, srcn=40, trans="wipe", wipe=WIPE,
          start=(480, 300, 1.00), end=(280, 430, 2.00),
          caption="60.0% CITED COVERAGE"),
-    # cut sideways onto the stat tiles (same static footage, new framing)
-    dict(kind="footage", n=28, src=446, trans="cut",
-         start=(520, 300, 1.30), end=(585, 295, 1.62),
-         caption="AUDIT CHAIN VALID, 0.09s CYCLE"),
     # pull back off the CONTRADICTION block to reveal the whole refusal stack,
-    # so the caption's three numbers are all on screen when it finishes typing
-    dict(kind="footage", n=28, src=464, trans="cut",
+    # so the caption's three numbers are all on screen when it finishes typing.
+    # Dissolve, not a cut: same page, overlapping framing -- a hard cut there
+    # reads as a glitch rather than as a deliberate re-frame.
+    dict(kind="footage", src=464, srcn=28, trans="dissolve", diss=DISS,
          start=(300, 400, 1.55), end=(480, 372, 1.06),
          caption="1 CONTRADICTION, 2 STALE, 1 LEGAL"),
 
     # --- ACT 04 : THE REPORT --------------------------------------------
-    dict(kind="act", n=22, num="04", name="THE REPORT",
+    dict(kind="act", n=62, num="04", name="THE REPORT",
          sub="Every refusal shows its sources"),
-    # push + tilt down onto the two evidence-integrity cards.  The cards run
-    # 76..880 wide, so 1.40 is the tightest zoom that keeps all their text in
-    # frame -- any closer and the quarantine sentence gets cut off.
-    dict(kind="footage", n=48, src=534, trans="wipe", wipe=10,
-         start=(480, 300, 1.10), end=(419, 386, 1.40),
-         caption="TAINTED SOURCES, QUARANTINED"),
-    # dissolve into the ledger row that refused, and read its provenance
-    dict(kind="footage", n=42, src=632, trans="dissolve", diss=7,
+    # push into the one ledger row that refused and sit on its provenance:
+    # "No answer released", the two conflicting approved sources, and the
+    # "no citation released" stamp.  This is the whole thesis in one frame,
+    # so it gets the longest settle of any shot in the film.
+    dict(kind="footage", src=632, srcn=42, trans="wipe", wipe=WIPE,
+         hold=90,
          start=(478, 280, 1.15), end=(655, 245, 2.13),
          caption="H-05: NO ANSWER RELEASED"),
 
     # --- CLOSING ---------------------------------------------------------
-    dict(kind="close", n=62, trans="dissolve", diss=8),
+    # finished at i=34, tail fade eats the last 8: 98 frames (4.08s) of the
+    # three numbers standing still, undimmed
+    dict(kind="close", n=140, trans="dissolve", diss=DISS),
 ]
+
+
+def normalise(shots):
+    """Footage shots are declared as move+hold, not as a raw length."""
+    for s in shots:
+        if s["kind"] == "footage":
+            s.setdefault("move", MOVE)
+            s.setdefault("hold", HOLD)
+            s.setdefault("srcn", s["move"])
+            if s["srcn"] > s["move"]:
+                raise SystemExit(f"srcn>{s['move']} for src={s['src']}")
+            s["n"] = s["move"] + s["hold"]
+    return shots
+
+
+normalise(SHOTS)
 
 TITLE_EYEBROW = "RECORDED LIVE / NOTHING STAGED"
 TITLE_HEAD = "One run, start to finish."
@@ -293,7 +351,7 @@ def load_source_frames(shots) -> dict[int, Image.Image]:
     wanted = set()
     for s in shots:
         if s["kind"] == "footage":
-            wanted.update(range(s["src"], s["src"] + s["n"]))
+            wanted.update(range(s["src"], s["src"] + s["srcn"]))
     hi = max(wanted)
     frame_bytes = W * H * 3
     proc = subprocess.Popen(
@@ -352,11 +410,30 @@ CAP_H = 46
 CAP_PAD = 44
 
 
+CAP_IN_AT, CAP_IN_LEN = 5, 9
+CAP_OUT_LEN = 9
+# a caption must stand fully typed and fully visible for at least this long
+# before it drops -- 62 frames = 2.58s.  If the text is long enough that the
+# deliberate type-on would eat into that, the type-on is compressed, not the
+# hold: an unread caption is the failure mode we are fixing.
+CAP_MIN_HOLD = 62
+
+
+def caption_type_window(text: str, n: int) -> tuple[int, int]:
+    """(first frame that draws a character, frames spent typing)."""
+    start = CAP_IN_AT + CAP_IN_LEN - 3
+    out_at = n - CAP_OUT_LEN
+    # ~1.35 frames per character == about 18 characters a second.  The first
+    # cut ran at 43 c/s, which is why it read as flicker.
+    want = max(14, int(round(len(text) * 1.35)))
+    return start, max(10, min(want, out_at - start - CAP_MIN_HOLD))
+
+
 def draw_caption(img: Image.Image, text: str, i: int, n: int):
     """A lower-third bar that slides up, types its line on, holds, and drops
     away before the cut.  Mono, uppercase, tracked -- the site's label voice."""
-    IN_AT, IN_LEN = 3, 6
-    OUT_LEN = 6
+    IN_AT, IN_LEN = CAP_IN_AT, CAP_IN_LEN
+    OUT_LEN = CAP_OUT_LEN
     out_at = n - OUT_LEN
     if i < IN_AT:
         return
@@ -379,8 +456,7 @@ def draw_caption(img: Image.Image, text: str, i: int, n: int):
 
     # type-on: linear, like a real typewriter -- easing makes the last few
     # characters crawl and the line reads as truncated for most of the shot
-    type_start = IN_AT + IN_LEN - 2
-    type_len = max(8, int((out_at - type_start) * 0.45))
+    type_start, type_len = caption_type_window(text, n)
     if i >= type_start + type_len or i >= out_at:
         shown = len(text)
     else:
@@ -393,7 +469,7 @@ def draw_caption(img: Image.Image, text: str, i: int, n: int):
     dr.rectangle([CAP_PAD - 18, ty + 5, CAP_PAD - 12, ty + 11], fill=SIGNAL + (a,))
     xend = draw_tracked(dr, (CAP_PAD, ty), vis, fnt, BONE, track=2.2, alpha=a)
     # blinking caret while typing
-    if shown < len(text) and (i // 3) % 2 == 0:
+    if shown < len(text) and (i // 4) % 2 == 0:
         dr.rectangle([xend, ty + 2, xend + 7, ty + 15], fill=SIGNAL + (a,))
 
     img.alpha_composite(layer) if img.mode == "RGBA" else \
@@ -570,11 +646,15 @@ def render_shot(shot, src_frames, prev_frame) -> list[Image.Image]:
         elif kind == "close":
             img = render_close(i, n)
         else:
-            t = ease(i / max(1, n - 1))
+            # ease() clamps, so for i >= move-1 the crop rectangle is EXACTLY
+            # the end mark -- same ints, same box -- and the source index is
+            # pinned too.  Those frames are byte-identical apart from the
+            # caption and the progress bar.  That is the hold.
+            t = ease(i / max(1, shot["move"] - 1))
             sx, sy, sz = shot["start"]
             ex, ey, ez = shot["end"]
             img = crop_zoom(
-                src_frames[shot["src"] + i],
+                src_frames[shot["src"] + min(i, shot["srcn"] - 1)],
                 sx + (ex - sx) * t, sy + (ey - sy) * t, sz + (ez - sz) * t,
             )
             if shot.get("caption"):
@@ -606,7 +686,7 @@ def timeline_length(shots) -> int:
     total = sum(s["n"] for s in shots)
     for s in shots:
         if s.get("trans") == "dissolve":
-            total -= s.get("diss", 8)
+            total -= s.get("diss", DISS)
     return total
 
 
@@ -674,9 +754,9 @@ def main() -> int:
     src_frames = load_source_frames(SHOTS)
 
     enc = Encoder(total)
-    # frame chosen for the poster: mid-way through the RUN COMPLETE punch-in,
-    # caption fully typed on -- a composed frame, not a bare screenshot.
-    poster_shot, poster_i = 6, 34
+    # frame chosen for the poster: deep in the RUN COMPLETE hold, camera
+    # settled, caption fully typed on -- a composed frame, not a screenshot.
+    poster_shot, poster_i = 5, 76
 
     pending_tail: list[Image.Image] = []
     prev_frame: Image.Image | None = None
@@ -684,12 +764,14 @@ def main() -> int:
     for si, shot in enumerate(SHOTS):
         frames = render_shot(shot, src_frames, prev_frame)
 
+        off = 0  # frames of this shot already consumed by an incoming dissolve
         if shot.get("trans") == "dissolve" and pending_tail:
-            k = min(len(pending_tail), shot.get("diss", 8), len(frames))
+            k = min(len(pending_tail), shot.get("diss", DISS), len(frames))
             for j in range(k):
                 t = (j + 1) / (k + 1)
                 enc.write(Image.blend(pending_tail[-k + j], frames[j], t))
             frames = frames[k:]
+            off = k
             pending_tail = []
         elif pending_tail:
             for f in pending_tail:
@@ -697,13 +779,13 @@ def main() -> int:
             pending_tail = []
 
         nxt = SHOTS[si + 1] if si + 1 < len(SHOTS) else None
-        hold = nxt.get("diss", 8) if (nxt and nxt.get("trans") == "dissolve") else 0
-        hold = min(hold, len(frames))
+        tail_n = nxt.get("diss", DISS) if (nxt and nxt.get("trans") == "dissolve") else 0
+        tail_n = min(tail_n, len(frames))
 
-        body = frames[: len(frames) - hold] if hold else frames
+        body = frames[: len(frames) - tail_n] if tail_n else frames
         for fi, f in enumerate(body):
-            enc.write(f, poster=(si == poster_shot and fi == poster_i))
-        pending_tail = frames[len(frames) - hold:] if hold else []
+            enc.write(f, poster=(si == poster_shot and off + fi == poster_i))
+        pending_tail = frames[len(frames) - tail_n:] if tail_n else []
         prev_frame = frames[-1] if frames else prev_frame
 
     for f in pending_tail:

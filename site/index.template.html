@@ -46,8 +46,9 @@ mask-image:radial-gradient(1200px 780px at 60% 8%,#000,transparent 72%)}
 border-bottom:1px solid var(--line-1)}
 .navbar .wrap{display:flex;justify-content:space-between;align-items:center;
 padding:15px clamp(18px,4vw,32px);gap:14px}
-.wordmark{font-family:var(--font-mono);font-size:13px;letter-spacing:0.22em;
-text-transform:uppercase;color:var(--text-primary)}
+.wordmark{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-mono);
+font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-primary)}
+.wordmark svg{flex:0 0 auto;color:var(--text-tertiary)}
 .wordmark b{color:var(--signal);font-weight:400}
 .navlinks{display:none;gap:26px;font-family:var(--font-mono);font-size:10.5px;
 letter-spacing:0.14em;text-transform:uppercase}
@@ -60,25 +61,66 @@ padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space
 .navbar a.cta:hover{background:var(--signal-bright)}
 .progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
-/* ── hero ──────────────────────────────────────────────────────────────── */
-.hero{padding:clamp(34px,4.6vw,62px) 0 0;display:grid;gap:clamp(28px,3.6vw,54px);
-align-items:start}
-@media(min-width:980px){.hero{grid-template-columns:1fr 1.02fr}}
-h1.mega{font-size:clamp(32px,4.3vw,52px);line-height:1.04;letter-spacing:-0.03em;
-text-wrap:balance;max-width:15ch}
-h1.mega em{font-style:italic;color:var(--signal)}
-.deck{font-size:clamp(15px,1.42vw,18px);line-height:1.58;color:var(--text-secondary);
-max-width:46ch;margin-top:clamp(16px,1.8vw,22px);text-wrap:pretty}
+/* ── hero ──────────────────────────────────────────────────────────────────
+   The hero performs the product instead of describing it: an empty
+   questionnaire fills itself in, and two rows refuse. Everything renders in
+   its final, filled state by default, so no-JS and reduced-motion readers get
+   the whole story; the animation is added on top, never depended on.
+   ──────────────────────────────────────────────────────────────────────── */
+.hero{padding:clamp(30px,4vw,56px) 0 0}
+.herotop{display:grid;gap:clamp(20px,2.6vw,40px);align-items:end;
+margin-bottom:clamp(26px,3.4vw,44px)}
+@media(min-width:1000px){.herotop{grid-template-columns:1.5fr 1fr}}
+
+.eyebrow-chip{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);
+font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary);
+border:1px solid var(--line-2);border-radius:100px;padding:7px 15px;
+margin-bottom:clamp(18px,2.2vw,26px);background:rgba(26,26,29,0.6)}
+.eyebrow-chip i{width:5px;height:5px;border-radius:50%;background:var(--status-critical);
+flex:0 0 5px;font-style:normal}
+.js .eyebrow-chip i{animation:beat 2.6s var(--ease-inout) infinite}
+@keyframes beat{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+h1.mega{font-size:clamp(30px,3.95vw,48px);line-height:1.06;letter-spacing:-0.032em;
+text-wrap:balance}
+/* words rise in on load. The span wrapping is done in JS, so the headline is
+   plain text in the markup and degrades to a normal heading. */
+h1.mega .w{display:inline-block;will-change:transform,opacity}
+.js h1.mega.kin .w{opacity:0;transform:translateY(0.5em);
+animation:rise 620ms var(--ease-out) both}
+@keyframes rise{to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+.js h1.mega.kin .w{opacity:1;transform:none;animation:none}}
+.deck{font-size:clamp(15px,1.4vw,17.5px);line-height:1.6;color:var(--text-secondary);
+max-width:44ch;margin-top:clamp(15px,1.7vw,20px);text-wrap:pretty}
 .deck b{color:var(--status-critical);font-weight:400;font-style:italic;
 font-family:var(--font-display)}
 
-/* the three steps: the whole product shape, in eighteen words */
-.steps{display:grid;gap:1px;background:var(--line-1);border:1px solid var(--line-1);
-border-radius:var(--radius-2);overflow:hidden;margin-top:clamp(22px,2.6vw,30px)}
-.step{background:rgba(26,26,29,0.8);padding:14px 16px;display:flex;gap:13px;align-items:baseline}
-.step b{font-family:var(--font-mono);font-size:10px;color:var(--signal);font-weight:400;
-flex:0 0 auto}
-.step span{font-size:14.5px;line-height:1.5;color:var(--text-primary)}
+/* the three stages, as a connected rail rather than a stack of boxes */
+.rail{display:flex;align-items:flex-start;gap:0;margin-top:clamp(22px,2.6vw,30px);
+max-width:520px}
+.rstage{flex:1;position:relative;padding-top:19px}
+.rstage::before{content:"";position:absolute;left:0;top:5px;width:9px;height:9px;
+border-radius:50%;background:var(--surface-page);border:1.5px solid var(--line-3);
+transition:border-color 400ms var(--ease-out),background 400ms var(--ease-out)}
+.rstage::after{content:"";position:absolute;left:9px;right:0;top:9.5px;height:1.5px;
+background:var(--line-2)}
+.rstage:last-child::after{display:none}
+.rstage.on::before{border-color:var(--signal);background:var(--signal);
+box-shadow:0 0 0 4px var(--signal-wash)}
+.rstage[data-tone="warn"].on::before{border-color:var(--status-critical);
+background:var(--status-critical);box-shadow:0 0 0 4px var(--status-critical-wash)}
+.rstage b{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.16em;
+text-transform:uppercase;color:var(--text-tertiary);font-weight:400;
+transition:color 400ms var(--ease-out)}
+.rstage.on b{color:var(--text-primary)}
+.rstage span{display:block;font-size:12.5px;line-height:1.45;color:var(--text-tertiary);
+margin-top:5px;padding-right:14px}
+@media(max-width:559px){.rail{flex-direction:column;gap:14px;max-width:none}
+.rstage{padding-top:0;padding-left:20px}
+.rstage::before{top:3px}
+.rstage::after{left:4px;top:14px;bottom:-14px;width:1.5px;height:auto;right:auto}}
+
 .ctarow{display:flex;gap:11px;flex-wrap:wrap;margin-top:clamp(20px,2.4vw,28px)}
 a.btn,button.btn{font-family:var(--font-mono);font-size:11px;letter-spacing:0.13em;
 text-transform:uppercase;padding:14px 22px;border-radius:var(--radius-1);text-decoration:none;
@@ -90,31 +132,96 @@ a.btn-primary:hover{background:var(--signal-bright);transform:translateY(-1px)}
 a.btn-ghost{border-color:var(--line-2);color:var(--text-primary)}
 a.btn-ghost:hover{border-color:var(--line-signal);color:var(--signal)}
 
-/* ── the workbook proof: the artefact the reader already understands ───── */
-.sheet{background:rgba(26,26,29,0.86);border:1px solid var(--line-2);
-border-radius:var(--radius-2);overflow:hidden;box-shadow:0 30px 70px -34px rgba(0,0,0,0.9)}
-.sheetbar{display:flex;align-items:center;gap:10px;padding:11px 15px;
-border-bottom:1px solid var(--line-1);background:rgba(14,14,16,0.65);
-font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
-color:var(--text-tertiary);flex-wrap:wrap}
-.sheetbar i{width:6px;height:6px;border-radius:1px;background:var(--status-ok);font-style:normal}
-.wbrow{display:grid;gap:0;border-bottom:1px solid var(--line-1)}
-@media(min-width:620px){.wbrow{grid-template-columns:1fr 1.25fr}}
+/* ── the sheet: the artefact the reader already understands ────────────── */
+.sheetwrap{position:relative}
+.sheet{position:relative;border:1px solid var(--line-2);border-radius:var(--radius-2);
+overflow:hidden;background:linear-gradient(180deg,rgba(30,30,34,0.96),rgba(18,18,21,0.96));
+box-shadow:0 1px 0 rgba(232,232,228,0.06) inset,
+           0 40px 80px -40px rgba(0,0,0,0.95),
+           0 8px 24px -12px rgba(0,0,0,0.7)}
+.sheetbar{display:flex;align-items:center;gap:11px;padding:12px 16px;
+border-bottom:1px solid var(--line-1);background:rgba(12,12,14,0.75);flex-wrap:wrap}
+.sheetfile{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.12em;
+color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+min-width:0;flex:1}
+.sheetfile b{color:var(--text-secondary);font-weight:400}
+/* a real segmented control: the "before" is a state you can go back to, not a
+   caption claiming an empty column once existed */
+.seg{display:none;border:1px solid var(--line-2);border-radius:100px;overflow:hidden;
+flex:0 0 auto}
+.js .seg{display:inline-flex}
+.seg button{font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
+text-transform:uppercase;padding:7px 13px;border:0;background:transparent;
+color:var(--text-tertiary);cursor:pointer;transition:color 200ms var(--ease-out),
+background 200ms var(--ease-out)}
+.seg button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink)}
+.seg button:not([aria-pressed="true"]):hover{color:var(--text-primary)}
+
+.wbhead{display:none;padding:9px 16px;border-bottom:1px solid var(--line-1);
+background:rgba(232,232,228,0.028);font-family:var(--font-mono);font-size:8.5px;
+letter-spacing:0.16em;text-transform:uppercase;color:var(--text-tertiary)}
+@media(min-width:760px){.wbhead{display:grid;grid-template-columns:96px 1.05fr 1.5fr;gap:16px}}
+.wbrow{display:grid;gap:4px;padding:11px 16px;border-bottom:1px solid var(--line-1);
+position:relative}
+@media(min-width:760px){.wbrow{grid-template-columns:96px 1.05fr 1.5fr;gap:16px;
+align-items:start}}
 .wbrow:last-child{border-bottom:0}
-.wbq{padding:13px 15px;border-right:1px solid var(--line-1)}
-.wbq p{font-size:12.5px;line-height:1.5;color:var(--text-secondary);margin-top:6px}
-.wbid{font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;color:var(--text-tertiary)}
-.wbr{padding:13px 15px;background:var(--surface-sunken);position:relative}
-.wbr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--acc)}
+.wbrow:hover{background:rgba(232,232,228,0.022)}
+.wbid{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.08em;
+color:var(--text-tertiary);padding-top:1px}
+.wbq{font-size:12.5px;line-height:1.5;color:var(--text-secondary)}
 .wbrow[data-tone="ok"]{--acc:var(--status-ok)}
 .wbrow[data-tone="warn"]{--acc:var(--status-critical)}
 .wbrow[data-tone="legal"]{--acc:var(--signal)}
-.wbv{font-family:var(--font-mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
-color:var(--acc)}
-.wbr p{font-size:12.5px;line-height:1.55;color:var(--text-primary);margin-top:6px}
-.wbe{display:block;margin-top:8px;font-family:var(--font-mono);font-size:9.5px;line-height:1.6;
+/* the response cell reads as a spreadsheet cell: its own ground and a left rule */
+.wbr{position:relative;padding:8px 11px;border-radius:var(--radius-1);
+background:var(--surface-sunken);border:1px solid var(--line-1);
+border-left:2px solid var(--acc);min-height:2.6em}
+.wbv{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.16em;
+text-transform:uppercase;color:var(--acc)}
+.wbr p{font-size:12.5px;line-height:1.55;color:var(--text-primary);margin-top:5px}
+.wbe{display:block;margin-top:7px;font-family:var(--font-mono);font-size:9px;line-height:1.6;
 color:var(--text-tertiary)}
-.sheetnote{font-size:13px;line-height:1.6;color:var(--text-tertiary);margin-top:14px;max-width:52ch}
+
+/* the empty state and the fill. Default is filled, so this only ever hides
+   things once scripting has confirmed it can put them back. */
+.sheet.empty .wbr{border-left-color:var(--line-2)}
+.sheet.empty .wbr>*{opacity:0;transition:none}
+/* an empty cell waiting for input, not a broken box. The children keep their
+   space so filling a row never shifts the layout. */
+.sheet.empty .wbr::after{content:"";position:absolute;left:11px;top:9px;width:7px;
+height:14px;background:var(--line-3)}
+.js .sheet.empty .wbr::after{animation:blink 1.15s step-end infinite}
+.sheet.empty .wbrow.in .wbr::after{display:none}
+@media(prefers-reduced-motion:reduce){.js .sheet.empty .wbr::after{animation:none}}
+.sheet.empty .wbrow.in .wbr{border-left-color:var(--acc)}
+.sheet.empty .wbrow.in .wbr>*{animation:cellin 420ms var(--ease-out) both}
+@keyframes cellin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sheet.empty .wbrow.in .wbr>*:nth-child(2){animation-delay:70ms}
+.sheet.empty .wbrow.in .wbr>*:nth-child(3){animation-delay:130ms}
+/* the row being written gets a moving highlight */
+.wbrow.writing::after{content:"";position:absolute;inset:0;pointer-events:none;
+background:linear-gradient(90deg,transparent,rgba(183,196,255,0.07),transparent)}
+
+.scan{position:absolute;left:0;right:0;top:0;height:34px;pointer-events:none;z-index:3;
+opacity:0;background:linear-gradient(180deg,transparent,rgba(183,196,255,0.10),transparent);
+border-bottom:1px solid rgba(183,196,255,0.5)}
+.sheet.scanning .scan{opacity:1;animation:sweep var(--scandur,4.2s) linear both}
+@keyframes sweep{from{transform:translateY(0)}to{transform:translateY(var(--scanto,420px))}}
+
+.sheetfoot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 16px;
+border-top:1px solid var(--line-1);background:rgba(12,12,14,0.6)}
+.tally{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.13em;
+text-transform:uppercase;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.tally b{color:var(--text-primary);font-weight:400}
+.tally em{font-style:normal;color:var(--status-critical)}
+.replay{display:none;margin-left:auto;font-family:var(--font-mono);font-size:9px;
+letter-spacing:0.14em;text-transform:uppercase;padding:7px 12px;border:1px solid var(--line-2);
+border-radius:var(--radius-1);background:transparent;color:var(--text-tertiary);cursor:pointer}
+.js .replay{display:inline-block}
+.replay:hover{color:var(--signal);border-color:var(--line-signal)}
+.sheetnote{font-size:12.5px;line-height:1.6;color:var(--text-tertiary);margin-top:13px;
+max-width:60ch}
 .sheetnote b{color:var(--text-primary);font-weight:500}
 
 /* ── the stage: ask it yourself ────────────────────────────────────────── */
@@ -446,7 +553,13 @@ footer a{color:var(--signal)}
 
 <nav class="navbar">
   <div class="wrap">
-    <span class="wordmark"><b>Trust</b>Ops</span>
+    <span class="wordmark">
+      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+        <path d="M12 2.5 20.5 5.6v6.9c0 5.3-3.5 8.7-8.5 9.9-5-1.2-8.5-4.6-8.5-9.9V5.6z"
+          fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M8.3 12.2 11 14.9l4.8-6" fill="none" stroke="var(--signal)" stroke-width="1.9"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg><b>Trust</b>Ops</span>
     <span class="navlinks">
       <a href="#ask">Try it</a>
       <a href="#refuse">Why it refuses</a>
@@ -461,28 +574,47 @@ footer a{color:var(--signal)}
 <main class="wrap">
 
 <section class="hero">
-  <div>
-    <h1 class="mega">Your security questionnaire, answered from your own documents.</h1>
-    <p class="deck">Every answer carries a citation to the policy it came from. When the evidence
-    is missing, it <b>refuses</b> and names the gap.</p>
-    <div class="steps">
-      <div class="step"><b>01</b><span>Drop in your policy documents</span></div>
-      <div class="step"><b>02</b><span>Every question answered with its source</span></div>
-      <div class="step"><b>03</b><span>Your spreadsheet back, ready to send</span></div>
+  <div class="herotop">
+    <div>
+      <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
+      <h1 class="mega">Your security questionnaire, answered from your own documents.</h1>
+      <p class="deck">Every answer carries a citation to the policy it came from. When the
+      evidence is missing, it <b>refuses</b> and names the gap.</p>
     </div>
-    <div class="ctarow">
-      <a class="btn btn-primary" href="#access">Get early access</a>
-      <a class="btn btn-ghost" href="#run">Watch a real run</a>
+    <div>
+      <div class="rail" id="rail">
+        <div class="rstage" data-s="0"><b>01 Evidence</b><span>Your approved policies, read in</span></div>
+        <div class="rstage" data-s="1"><b>02 Answers</b><span>Each one cited to its source</span></div>
+        <div class="rstage" data-s="2" data-tone="warn"><b>03 Gates</b><span>Anything unsupported refuses</span></div>
+      </div>
+      <div class="ctarow">
+        <a class="btn btn-primary" href="#access">Get early access</a>
+        <a class="btn btn-ghost" href="#run">Watch a real run</a>
+      </div>
     </div>
   </div>
 
-  <div>
-    <div class="sheet">
-      <div class="sheetbar"><i></i>acme_security_questionnaire__DELIVERED.xlsx</div>
+  <div class="sheetwrap">
+    <div class="sheet" id="sheet">
+      <div class="scan" aria-hidden="true"></div>
+      <div class="sheetbar">
+        <span class="sheetfile"><b>acme_security_questionnaire.xlsx</b> / 5 of @WBTOTAL@ rows</span>
+        <span class="seg" role="group" aria-label="Workbook state">
+          <button type="button" id="segBefore" aria-pressed="false">As received</button>
+          <button type="button" id="segAfter" aria-pressed="true">Answered</button>
+        </span>
+      </div>
+      <div class="wbhead" aria-hidden="true">
+        <span>Question ID</span><span>Question</span><span>Vendor response</span>
+      </div>
       <!--@WORKBOOK@-->
+      <div class="sheetfoot">
+        <span class="tally" id="tally"><b>2</b> answered with citations / <em>3</em> refused or routed</span>
+        <button type="button" class="replay" id="replay">Replay</button>
+      </div>
     </div>
-    <p class="sheetnote">The buyer sent this with the last column empty.
-    <b>Merged cells, hidden rows and formulas survive untouched.</b></p>
+    <p class="sheetnote">Real rows from a real run. <b>Merged cells, hidden rows and formulas
+    survive untouched</b>, which is the part that quietly breaks in every other tool.</p>
   </div>
 </section>
 
@@ -785,6 +917,108 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
   if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}
 }),{rootMargin:"0px 0px -8% 0px"});
 document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+
+/* ── the hero ─────────────────────────────────────────────────────────────
+   The headline splits into words for a staggered rise, and the sheet fills
+   itself in. Both are enhancements: the markup already carries the finished
+   headline and the finished rows, so nothing here is load bearing. */
+(function(){
+  const h1=document.querySelector("h1.mega");
+  if(h1&&!reduced){
+    const words=h1.textContent.split(/\s+/);
+    h1.textContent="";
+    words.forEach((w,i)=>{
+      const s=document.createElement("span");
+      s.className="w";s.textContent=w;
+      s.style.animationDelay=(60+i*38)+"ms";
+      h1.appendChild(s);
+      if(i<words.length-1)h1.appendChild(document.createTextNode(" "));
+    });
+    h1.classList.add("kin");
+  }
+
+  const sheet=$("sheet");
+  if(!sheet)return;
+  const rows=[...sheet.querySelectorAll(".wbrow")];
+  const rail=[...document.querySelectorAll(".rstage")];
+  const tally=$("tally"),before=$("segBefore"),after=$("segAfter");
+  const STEP=760, LEAD=520;
+  let timers=[];
+
+  function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+  function at(ms,fn){timers.push(setTimeout(fn,ms))}
+  function press(isAfter){
+    after.setAttribute("aria-pressed",isAfter?"true":"false");
+    before.setAttribute("aria-pressed",isAfter?"false":"true");
+  }
+  function counts(n){
+    /* the tally counts only what has actually landed, so the numbers are
+       true at every frame of the fill rather than only at the end */
+    const shown=rows.slice(0,n);
+    const cited=shown.filter(r=>r.dataset.tone==="ok").length;
+    const held=shown.filter(r=>r.dataset.tone!=="ok").length;
+    tally.innerHTML=`<b>${cited}</b> answered with citations / <em>${held}</em> refused or routed`;
+  }
+  function showEmpty(){
+    clearTimers();
+    sheet.classList.remove("scanning");
+    sheet.classList.add("empty");
+    rows.forEach(r=>r.classList.remove("in","writing"));
+    rail.forEach(s=>s.classList.remove("on"));
+    counts(0);press(false);
+  }
+  function showFull(){
+    clearTimers();
+    sheet.classList.remove("empty","scanning");
+    rows.forEach(r=>r.classList.remove("in","writing"));
+    rail.forEach(s=>s.classList.add("on"));
+    counts(rows.length);press(true);
+  }
+  function play(){
+    if(reduced){showFull();return}
+    clearTimers();
+    sheet.classList.add("empty");
+    rows.forEach(r=>r.classList.remove("in","writing"));
+    rail.forEach(s=>s.classList.remove("on"));
+    counts(0);press(true);
+    /* the scan sweeps the exact height of the rows it is writing */
+    const first=rows[0],last=rows[rows.length-1];
+    const span=last.offsetTop+last.offsetHeight-first.offsetTop;
+    const dur=LEAD+rows.length*STEP;
+    sheet.style.setProperty("--scanto",span+"px");
+    sheet.style.setProperty("--scandur",dur+"ms");
+    sheet.querySelector(".scan").style.top=first.offsetTop+"px";
+    sheet.classList.add("scanning");
+    at(60,()=>rail[0].classList.add("on"));
+    rows.forEach((r,i)=>{
+      at(LEAD+i*STEP-160,()=>r.classList.add("writing"));
+      at(LEAD+i*STEP,()=>{
+        r.classList.remove("writing");r.classList.add("in");counts(i+1);
+        if(i===0)rail[1].classList.add("on");
+        if(r.dataset.tone!=="ok")rail[2].classList.add("on");
+      });
+    });
+    at(dur+260,()=>{sheet.classList.remove("scanning");showFull()});
+  }
+
+  before.onclick=showEmpty;
+  after.onclick=()=>{if(sheet.classList.contains("empty"))play();else showFull()};
+  $("replay").onclick=play;
+
+  /* The markup renders finished, so the rail must start lit to match it.
+     Without this the rail reads as "nothing has happened" while the sheet
+     beside it is already full, which is only visible on a narrow screen
+     where the sheet sits below the fold. */
+  showFull();
+
+  /* run once, when the sheet is actually looked at */
+  let played=false;
+  new IntersectionObserver((es,ob)=>es.forEach(e=>{
+    if(!e.isIntersecting||played)return;
+    played=true;ob.disconnect();
+    if(reduced)showFull();else play();
+  }),{threshold:0.25}).observe(sheet);
+})();
 
 /* count-up. The final number is in the HTML, so no JS and reduced motion both
    simply show it. */
