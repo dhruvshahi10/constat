@@ -656,7 +656,36 @@ footer a{color:var(--signal)}
 </style>
 </head>
 <body>
-<script>document.documentElement.classList.add("js")</script>
+<script>
+document.documentElement.classList.add("js");
+/* The reveal observer is registered here rather than with the rest of the
+   script at the end of the document. The class above hides every .rv element
+   as soon as it is parsed, and this page is megabytes long, so an observer at
+   the end left the whole document invisible for the entire download: measured
+   at 0 of 12 elements shown mid stream, against 12 of 12 for the same bytes
+   with scripting disabled. Our own script was making the page worse than not
+   having it. Registering here, and re-scanning as nodes stream in, means each
+   element reveals as soon as it arrives. The re-scan is rAF throttled because
+   a large document produces a great many mutations while it parses. */
+window.__rv = new IntersectionObserver(function (es) {
+  es.forEach(function (e) {
+    if (e.isIntersecting) { e.target.classList.add("is-in"); window.__rv.unobserve(e.target); }
+  });
+}, { rootMargin: "0px 0px -8% 0px" });
+(function () {
+  var seen = new WeakSet(), queued = false;
+  function scan() {
+    queued = false;
+    var all = document.querySelectorAll(".rv"), i = 0;
+    for (; i < all.length; i++) if (!seen.has(all[i])) { seen.add(all[i]); window.__rv.observe(all[i]); }
+  }
+  window.__rvScan = function () { if (!queued) { queued = true; requestAnimationFrame(scan); } };
+  window.__rvScan();
+  new MutationObserver(window.__rvScan).observe(document.documentElement,
+    { childList: true, subtree: true });
+  document.addEventListener("DOMContentLoaded", scan);
+})();
+</script>
 <div class="ground" aria-hidden="true"></div>
 <canvas id="amb" aria-hidden="true"></canvas>
 
@@ -837,7 +866,6 @@ footer a{color:var(--signal)}
         width="960" height="600" poster="@POSTER_URI@"
         aria-label="Screen recording of a complete Pramana AI run: evidence seeded, ten questions run, verdicts landing, and the audit report opened.">
         <source src="@VIDEO_MP4@" type='video/mp4; codecs="avc1.640020"'>
-        <source src="@VIDEO_WEBM@" type='video/webm; codecs="vp9"'>
       </video>
     </div>
   </div>
@@ -1074,11 +1102,10 @@ const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.addEventListener("visibilitychange",()=>{vis=!document.hidden;if(vis)start()});
 })();
 
-/* reveal on scroll */
-const io=new IntersectionObserver(es=>es.forEach(e=>{
-  if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}
-}),{rootMargin:"0px 0px -8% 0px"});
-document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+/* reveal on scroll: the observer itself is registered in the head script, so
+   that elements reveal while the document is still streaming. All that is
+   left here is a final sweep for anything added after parsing. */
+window.__rvScan();
 
 /* ── the hero ─────────────────────────────────────────────────────────────
    The headline splits into words for a staggered rise, and the sheet fills

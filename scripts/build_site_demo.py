@@ -653,7 +653,7 @@ def ticker_html(out: dict) -> str:
 SHOTS = {"SHOT_REPORT": "report", "SHOT_REVIEW": "review", "SHOT_WORKSPACE": "workspace"}
 
 
-def media_uris() -> dict[str, str]:
+def media_uris(*, inline: bool) -> dict[str, str]:
     """The screen capture and its poster, inlined like the screenshots.
 
     The video is real footage of a complete run (scripts/capture_demo_video.py
@@ -665,10 +665,11 @@ def media_uris() -> dict[str, str]:
     # punch-ins, captions) from scripts/produce_demo_video.py; demo.webm is the
     # raw capture it was cut from. H.264 first, because iOS Safari only plays
     # VP8 WebM from 17.4 and the founder reviews on an iPhone.
+    # The WebM twin is gone. Every shipping browser decodes the H.264 first
+    # source, so it was 1.83MB, 30 percent of the page, for a fallback nobody
+    # reached, and it cost 296ms of domInteractive on a throttled CPU.
     candidates = {
         "VIDEO_MP4": [("site/img/demo_edit.mp4", "video/mp4")],
-        "VIDEO_WEBM": [("site/img/demo_edit.webm", "video/webm"),
-                       ("site/img/demo.webm", "video/webm")],
         "POSTER_URI": [("site/img/demo_edit_poster.jpg", "image/jpeg"),
                        ("site/img/demo_poster.jpg", "image/jpeg")],
     }
@@ -677,9 +678,19 @@ def media_uris() -> dict[str, str]:
         for rel, mime in opts:
             path = ROOT / rel
             if path.is_file():
-                b64 = _b64.b64encode(path.read_bytes()).decode("ascii")
-                out[token] = f"data:{mime};base64,{b64}"
-                print(f"  {token}: {rel} ({path.stat().st_size // 1024}KB)")
+                kb = path.stat().st_size // 1024
+                # The film is externalised on the hosted build and inlined only
+                # where the page must be one file. Inlining it is what made the
+                # document megabytes long, which is what pushed the script to
+                # 99 percent of the stream, and it is also the sole reason the
+                # CSP needed a media-src data: exception.
+                if inline or not rel.endswith(".mp4"):
+                    b64 = _b64.b64encode(path.read_bytes()).decode("ascii")
+                    out[token] = f"data:{mime};base64,{b64}"
+                    print(f"  {token}: {rel} ({kb}KB, inlined)")
+                else:
+                    out[token] = "/" + rel
+                    print(f"  {token}: {rel} ({kb}KB, linked)")
                 break
         else:
             print(f"  WARNING: no file for {token}, the film frame will be blank")
@@ -1063,7 +1074,7 @@ def main() -> None:
     page = page.replace("<!--@CHAIN@-->", chain_html(chain))
     page = page.replace("<!--@WORKBOOK@-->", workbook_html())
     page = page.replace("@WBTOTAL@", str(workbook_rowcount()))
-    for token, uri in {**shot_uris(), **media_uris()}.items():
+    for token, uri in shot_uris().items():
         page = page.replace(f"@{token}@", uri)
     first_key = next(iter(out))
     for name, html in prerender(out[first_key]).items():
@@ -1072,17 +1083,29 @@ def main() -> None:
                              "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
                              "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",
-                             "@VIDEO_MP4@", "@VIDEO_WEBM@", "@POSTER_URI@",
                              "@WBTOTAL@") if m in page]
     if leftovers:
         raise SystemExit(f"unfilled template placeholders: {leftovers}")
-    (ROOT / "site" / "index.html").write_text(page, encoding="utf-8")
-    print(f"wrote site/index.html ({len(page) // 1024}KB)")
+
+    # The media tokens are filled per output, because the two builds resolve
+    # them differently: the hosted page links the film so the document stays
+    # small, the single-file build has no choice but to inline it.
+    hosted = page
+    for token, uri in media_uris(inline=False).items():
+        hosted = hosted.replace(f"@{token}@", uri)
+    if "@VIDEO_MP4@" in hosted or "@POSTER_URI@" in hosted:
+        raise SystemExit("unfilled media placeholders in the hosted page")
+    (ROOT / "site" / "index.html").write_text(hosted, encoding="utf-8")
+    print(f"wrote site/index.html ({len(hosted) // 1024}KB)")
 
     for p in build_legal(ROOT):
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size // 1024}KB)")
 
     static = build_static(page)
+    for token, uri in media_uris(inline=True).items():
+        static = static.replace(f"@{token}@", uri)
+    if "@VIDEO_MP4@" in static or "@POSTER_URI@" in static:
+        raise SystemExit("unfilled media placeholders in the static page")
     static_path = ROOT / "site" / "static" / "index.html"
     static_path.parent.mkdir(parents=True, exist_ok=True)
     static_path.write_text(static, encoding="utf-8")

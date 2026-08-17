@@ -67,6 +67,7 @@ _BUSY = (b"HTTP/1.1 503 Service Unavailable\r\n"
          b"Content-Length: " + str(len(_BUSY_BODY)).encode() + b"\r\n"
          b"Connection: close\r\n\r\n" + _BUSY_BODY)
 CTYPES = {".html": "text/html; charset=utf-8", ".json": "application/json",
+          ".mp4": "video/mp4", ".jpg": "image/jpeg", ".webm": "video/webm",
           ".jsonl": "text/plain; charset=utf-8",
           ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
 
