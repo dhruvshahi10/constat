@@ -643,7 +643,8 @@ transition:opacity 560ms var(--ease-out),transform 560ms var(--ease-out)}
 .js .rv.is-in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){
 .js .rv{opacity:1;transform:none;transition:none}
-.js .caret,.js .ground::after,.js .stagelive::before{animation:none}}
+.js .caret,.js .ground::after,.js .stagelive::before,
+.js .eyebrow-chip i,.js .scrollcue span{animation:none}}
 
 footer{margin-top:clamp(52px,6vw,84px);padding:26px 0 46px;
 border-top:1px solid var(--line-1);
@@ -875,11 +876,11 @@ footer a{color:var(--signal)}
       <div class="frame wide"><div class="fbar"><i></i><i></i><i></i><span>run_report.html</span></div>
         <img src="@SHOT_REPORT@" width="1180" height="811" alt="The Pramana AI run report: a sixty percent coverage dial, a lattice of ten question verdicts, and tiles reading ten questions ingested, forty percent refused by design, and a valid audit chain."></div>
     </div>
-    <div class="tabpanel" id="panel-review" role="tabpanel" aria-labelledby="tab-review" hidden>
+    <div class="tabpanel" id="panel-review" role="tabpanel" aria-labelledby="tab-review">
       <div class="frame wide"><div class="fbar"><i></i><i></i><i></i><span>/review</span></div>
         <img src="@SHOT_REVIEW@" width="1180" height="811" alt="The Pramana AI review queue, showing answers held for a named human reviewer with fields for the reviewer name and note."></div>
     </div>
-    <div class="tabpanel" id="panel-workspace" role="tabpanel" aria-labelledby="tab-workspace" hidden>
+    <div class="tabpanel" id="panel-workspace" role="tabpanel" aria-labelledby="tab-workspace">
       <div class="frame wide"><div class="fbar"><i></i><i></i><i></i><span>/workspace</span></div>
         <img src="@SHOT_WORKSPACE@" width="1180" height="811" alt="The Pramana AI workspace, listing uploaded evidence documents with their approval status and a control to start a run."></div>
     </div>
@@ -1235,6 +1236,11 @@ function selectTab(t){
     $(o.getAttribute("aria-controls")).hidden=!on;
   });
 }
+/* The panels ship visible and are collapsed here, not in the markup. Shipping
+   them hidden made two of the three product screens unreachable whenever this
+   script had not run: with JS off, and throughout the load of a 6MB document
+   whose script sits at the very end of it. */
+if(tabs.length)selectTab(tabs.find(t=>t.getAttribute("aria-selected")==="true")||tabs[0]);
 tabs.forEach((t,i)=>{
   t.onclick=()=>selectTab(t);
   t.onkeydown=e=>{

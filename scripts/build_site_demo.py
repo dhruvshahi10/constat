@@ -921,7 +921,7 @@ STATIC_LEGAL_CSS = """
 .legalstrip{padding:clamp(40px,5vw,64px) 0 0;border-top:1px solid var(--line-1)}
 .legalhead{font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;
 text-transform:uppercase;color:var(--text-tertiary);margin-bottom:16px}
-.legalhead span{color:var(--text-faint)}
+.legalhead span{color:var(--text-tertiary)}
 .legaldoc>summary{font-size:15px !important;padding:14px 16px !important;
 font-family:var(--font-sans) !important;letter-spacing:0 !important}
 .legaldoc>summary::after{content:"Read" !important}
