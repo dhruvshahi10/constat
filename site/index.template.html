@@ -103,6 +103,59 @@ padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space
 .progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
 /* ── hero ──────────────────────────────────────────────────────────────── */
+/* ── the hero's live object ──────────────────────────────────────────────
+   Questions drift across a gate. What the approved evidence supports comes
+   out cited; what it cannot comes out refused with its gap named. It runs on
+   its own clock rather than on scroll, because the hero should show the
+   machine working before the visitor has done anything at all. */
+.lane{position:relative;height:clamp(300px,46vh,430px);overflow:hidden;
+border:1px solid var(--line-2);border-radius:var(--radius-2);
+background:linear-gradient(180deg,rgba(24,24,27,0.72),rgba(14,14,16,0.9))}
+.lanetrack{position:absolute;inset:0;
+-webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
+.lcard{position:absolute;left:0;top:0;width:min(45%,248px);
+border:1px solid var(--line-2);border-left:2px solid var(--line-2);
+border-radius:6px;background:var(--surface-card);padding:11px 13px;
+box-shadow:0 10px 26px rgba(0,0,0,0.34)}
+.js .lcard{opacity:0}
+.lq{font-size:12.5px;line-height:1.35;color:var(--text-secondary);
+display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.la{margin-top:9px;font-family:var(--font-mono);font-size:9.5px;line-height:1.5;
+letter-spacing:0.02em;color:var(--text-tertiary);min-height:2.6em}
+.lv{display:block;font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;
+color:var(--text-faint);margin-bottom:3px}
+.lcard:not(.past) .lt{color:var(--text-faint);opacity:0.55}
+.lcard[data-v="ok"].past{border-left-color:var(--status-ok)}
+.lcard[data-v="warn"].past{border-left-color:var(--status-critical)}
+.lcard[data-v="ok"].past .lv{color:var(--status-ok)}
+.lcard[data-v="warn"].past .lv{color:var(--status-critical)}
+.lcard.past .lt{color:var(--text-secondary)}
+/* the gate: a decision, drawn as the one place on the lane where a card changes */
+.lanegate{position:absolute;top:0;bottom:26px;left:62%;width:1px;pointer-events:none}
+.lgline{position:absolute;inset:0;background:linear-gradient(180deg,
+transparent,var(--signal) 14%,var(--signal) 86%,transparent);opacity:0.5}
+.lgglow{position:absolute;top:0;bottom:0;left:-13px;width:27px;
+background:radial-gradient(45% 50% at 50% 50%,rgba(169,180,245,0.3),transparent 72%);
+opacity:0;transition:opacity 220ms var(--ease-out)}
+.lane.firing .lgglow{opacity:1}
+.lglabel{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.2em;
+text-transform:uppercase;color:var(--signal)}
+.lanefoot{position:absolute;left:0;right:0;bottom:0;display:flex;gap:16px;
+padding:7px 13px;border-top:1px solid var(--line-1);background:rgba(14,14,16,0.86);
+font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
+text-transform:uppercase;color:var(--status-ok)}
+.lanefoot .warn{color:var(--status-critical)}
+/* No script, or reduced motion: three cards sit still, already decided. The
+   lane is a demonstration either way, it just stops moving. */
+.lane:not(.running) .lcard{position:relative;opacity:1;width:auto;margin:0 0 8px;
+box-shadow:none}
+.lane:not(.running) .lanetrack{position:relative;padding:12px 13px 40px;
+display:flex;flex-direction:column;gap:0}
+.lane:not(.running) .lcard:nth-child(n+4){display:none}
+.lane:not(.running) .lanegate{display:none}
+
 .eyebrow-chip{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);
 font-size:var(--t-mono);letter-spacing:0.18em;text-transform:uppercase;
 color:var(--text-secondary);border:1px solid var(--line-2);border-radius:100px;
@@ -729,21 +782,42 @@ window.__rv = new IntersectionObserver(function (es) {
 
 <main>
 
-<!-- 01 ─ the claim and the artefact that proves it, on one screen ────────── -->
-<section class="band first pin" id="proof">
+<!-- 01 ─ the hero: the claim, and the machine running beside it ─────────── -->
+<section class="band first">
+  <div class="wrap herogrid">
+    <div class="herocopy">
+      <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
+      <h1 class="display">Send the security questionnaire back today.</h1>
+      <p class="lede">Every answer cites the approved policy it came from. Anything your
+      evidence cannot prove is refused, with the gap named.</p>
+      <div class="ctarow">
+        <a class="btn btn-primary" href="#access">Get early access</a>
+        <a class="btn btn-ghost" href="#proof">Watch it run</a>
+      </div>
+    </div>
+
+    <!-- The live object. Questions drift in from the left, cross the gate, and
+         come out either cited or refused. It runs on its own clock: this is the
+         product working, not a diagram of the product working. -->
+    <div class="lane" id="lane" aria-hidden="true">
+      <div class="lanegate"><span class="lgline"></span><span class="lgglow"></span>
+        <span class="lglabel">gate</span></div>
+      <div class="lanetrack" id="lanetrack"><div class="lcard" data-v="ok" data-cite="POL-IAM-002 &#167;3.1"><p class="lq">Do you enforce multi factor authentication for administrative access?</p><p class="la"><span class="lv"></span><span class="lt">Per Access Control Policy v2.3: administrative access requires MFA.</span></p></div><div class="lcard" data-v="warn" data-cite="route to security owner"><p class="lq">Is your information security management system ISO 27001 certified?</p><p class="la"><span class="lv"></span><span class="lt">Roadmap is not a certificate. No attestation on file.</span></p></div><div class="lcard" data-v="ok" data-cite="POL-CRY-001 &#167;2.4"><p class="lq">Is customer data encrypted in transit using TLS 1.2 or higher?</p><p class="la"><span class="lv"></span><span class="lt">Per Cryptography Policy v1.4: TLS 1.2 is the enforced minimum.</span></p></div><div class="lcard" data-v="warn" data-cite="route to security owner"><p class="lq">Has an independent penetration test been performed in the last 12 months?</p><p class="la"><span class="lv"></span><span class="lt">RPT-PEN-2024 expired 2025-06-10, cannot support a current claim.</span></p></div><div class="lcard" data-v="warn" data-cite="route to data owners"><p class="lq">Within how many days of termination is customer data deleted?</p><p class="la"><span class="lv"></span><span class="lt">Two approved sources disagree. Held until an owner reconciles.</span></p></div><div class="lcard" data-v="ok" data-cite="POL-ISMS-001 v3.2"><p class="lq">Do you maintain a formal, approved information security policy?</p><p class="la"><span class="lv"></span><span class="lt">Per Information Security Policy v3.2: reviewed at least annually.</span></p></div></div>
+      <div class="lanefoot"><span class="lstat" id="lstat">0 cited</span>
+        <span class="lstat warn" id="lstatr">0 refused</span></div>
+    </div>
+    <p class="sr-only">A continuous animation: security questionnaire questions pass
+    through a gate. Questions the approved evidence supports come out with a
+    citation. Questions it cannot support come out refused, with the gap named.</p>
+  </div>
+  <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
+</section>
+
+<!-- 02 ─ the sheet fills as you scroll. You set the pace. ─────────────────── -->
+<section class="band alt pin" id="proof">
   <div class="pinwrap" id="pinwrap">
     <div class="pinstick">
-      <div class="wrap herogrid">
-       <div class="herocopy">
-        <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
-        <h1 class="display">Send the security questionnaire back today.</h1>
-        <p class="lede">Every answer cites the approved policy it came from. Anything your
-        evidence cannot prove is refused, with the gap named.</p>
-        <div class="ctarow">
-          <a class="btn btn-primary" href="#access">Get early access</a>
-        </div>
-       </div>
-       <div class="herostage">
+      <div class="wrap">
         <p class="pinstep" id="pinstep"><b>00</b><span>As it arrived from the buyer</span></p>
         <div class="sheet" id="sheet">
           <div class="scan" aria-hidden="true"></div>
@@ -770,12 +844,11 @@ window.__rv = new IntersectionObserver(function (es) {
           <li><b>04</b><span>Conflict</span></li>
           <li><b>05</b><span>Counsel</span></li>
         </ol>
-       </div>
       </div>
     </div>
   </div>
-  <a class="scrollcue" href="#ask" aria-label="Skip to trying it yourself"><span></span></a>
 </section>
+
 
 <!-- 03 ─ ask it anything ─────────────────────────────────────────────────── -->
 <section class="band" id="ask">
@@ -1118,6 +1191,112 @@ const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
    that elements reveal while the document is still streaming. All that is
    left here is a final sweep for anything added after parsing. */
 window.__rvScan();
+
+/* ── the hero lane ─────────────────────────────────────────────────────────
+   Cards drift left to right at a constant speed. A card is undecided until its
+   leading edge reaches the gate; at that moment its verdict appears and its
+   answer resolves out of document glyphs into the real sentence, reusing the
+   same resolve as the workbook so the two sections speak the same language.
+   Recycled at the right edge, so the loop is endless and only six cards exist.
+
+   Stops entirely when the hero is off screen, when the tab is hidden, or under
+   reduced motion, where the markup's own three static cards are the fallback,
+   which is also exactly what a visitor with no script sees. */
+(function(){
+  const lane=document.getElementById("lane");
+  if(!lane||reduced)return;
+  const track=document.getElementById("lanetrack");
+  const cards=[...track.querySelectorAll(".lcard")];
+  const okOut=document.getElementById("lstat"),badOut=document.getElementById("lstatr");
+  if(!cards.length)return;
+  const GL="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\u00a7\u00b6\u00b7/.";
+  const SPEED=50;                     /* px per second */
+  const LANES=3, RES=620;             /* rows, and resolve duration in ms */
+  let ok=0,bad=0,run=false,last=0,W=0,H=0,gateX=0,raf=0;
+
+  cards.forEach(c=>{
+    const lt=c.querySelector(".lt");
+    lt.dataset.text=lt.textContent;
+    c._lt=lt;c._v=c.querySelector(".lv");c._cite=c.dataset.cite;
+  });
+  function measure(){
+    W=lane.clientWidth;H=lane.clientHeight-26;
+    gateX=W*0.62;
+    cards.forEach(c=>{if(c._x===undefined)place(c,true)});
+  }
+  /* Space the cards so they reach the gate one at a time rather than in a
+     clump, which is the difference between a queue and a traffic jam. On the
+     first frame the lane is seeded mid flow: some cards already past the gate
+     and decided, one about to cross. An empty lane that takes seven seconds to
+     produce its first verdict is a loading state, not a demonstration. */
+  function place(c,initial){
+    const i=cards.indexOf(c);
+    const cw=c.offsetWidth||280,ch=c.offsetHeight||96;
+    c._row=i%LANES;
+    const span=W+cw*2;
+    c._x=initial? gateX-cw-24-i*(span/cards.length) : -cw-14;
+    c._y=6+c._row*((H-ch-12)/(LANES-1||1));
+    c.classList.remove("past");
+    c._v.textContent="pending";c._done=false;c._t0=0;
+    c.style.opacity="1";
+    /* anything seeded beyond the gate has already been decided */
+    if(initial&&c._x+cw>=gateX){
+      c.classList.add("past");
+      c._v.textContent=c.dataset.v==="ok"?"Cited \u00b7 "+c._cite:"Refused \u00b7 "+c._cite;
+      c._lt.textContent=c._lt.dataset.text;c._done=true;c._t0=0;
+      if(c.dataset.v==="ok")okOut.textContent=(++ok)+" cited";
+      else badOut.textContent=(++bad)+" refused";
+    }
+    draw(c);
+  }
+  function draw(c){c.style.transform="translate3d("+c._x.toFixed(1)+"px,"+c._y.toFixed(1)+"px,0)"}
+  function decide(c){
+    c.classList.add("past");
+    c._v.textContent=c.dataset.v==="ok"?"Cited \u00b7 "+c._cite:"Refused \u00b7 "+c._cite;
+    c._t0=performance.now();
+    if(c.dataset.v==="ok"){ok++;okOut.textContent=ok+" cited"}
+    else{bad++;badOut.textContent=bad+" refused"}
+    lane.classList.add("firing");
+    clearTimeout(lane._g);lane._g=setTimeout(()=>lane.classList.remove("firing"),300);
+  }
+  function step(now){
+    if(!run)return;
+    const dt=Math.min(50,now-(last||now));last=now;
+    cards.forEach(c=>{
+      const cw=c.offsetWidth||280;
+      c._x+=SPEED*dt/1000;
+      if(!c.classList.contains("past")&&c._x+cw>=gateX)decide(c);
+      if(!c._t0&&!c.classList.contains("past")){
+        /* pending: unreadable document noise, re-drawn a few times a second.
+           Cheap, and it means no card on the lane is ever an empty box. */
+        if(now-(c._n||0)>150){c._n=now;
+          const txt=c._lt.dataset.text;let s="";
+          for(let i=0;i<txt.length;i++){const ch=txt[i];
+            s+= ch===" "?ch:GL[(Math.random()*GL.length)|0]}
+          c._lt.textContent=s}
+      }
+      if(c._t0&&!c._done){
+        const txt=c._lt.dataset.text,k=Math.ceil(txt.length*(now-c._t0)/RES);
+        if(k>=txt.length){c._lt.textContent=txt;c._done=true}
+        else{let s="";for(let i=0;i<txt.length;i++){const ch=txt[i];
+          s+= i<k||ch===" "||ch===","||ch==="."||ch===":"||ch===";"
+              ? ch : GL[(Math.random()*GL.length)|0]}
+          c._lt.textContent=s}
+      }
+      if(c._x>W+20)place(c,false);
+      draw(c);
+    });
+    raf=requestAnimationFrame(step);
+  }
+  function start(){if(run)return;run=true;last=0;lane.classList.add("running");
+    measure();raf=requestAnimationFrame(step)}
+  function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
+  new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
+    {threshold:0.08}).observe(lane);
+  document.addEventListener("visibilitychange",()=>document.hidden?stop():
+    (lane.getBoundingClientRect().bottom>0&&start()));
+  addEventListener("resize",()=>{cards.forEach(c=>c._x=undefined);measure()},{passive:true});
+})();
 
 /* ── the hero ─────────────────────────────────────────────────────────────
    The headline splits into words for a staggered rise, and the sheet fills
