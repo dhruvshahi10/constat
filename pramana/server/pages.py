@@ -185,7 +185,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
 def workspace(slug: str, org: str) -> str:
     body = f"""
 <header>
-<div class="eyebrow"><b>Pramana</b> / workspace / {_html.escape(slug)}</div>
+<div class="eyebrow"><b>Pramana AI</b> / workspace / {_html.escape(slug)}</div>
 <h1>{_html.escape(org)}</h1>
 <div class="runmeta">Evidence stays in this workspace. Retrieval runs on our server;
 only a question and its retrieved excerpts ever reach the drafting model.
@@ -281,7 +281,7 @@ changes is whose API key drafts your answers, and therefore whose terms your tex
 and it moves up the queue.
 <a class="filelink" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">Tell me on LinkedIn</a></p>
 
-<footer>Pramana hosted demo / public evidence only on this tier / data deleted after 14 days /
+<footer>Pramana AI hosted demo / public evidence only on this tier / data deleted after 14 days /
 <a class="filelink" href="/site/legal/terms.html">Terms</a> /
 <a class="filelink" href="/site/legal/privacy.html">Privacy and data handling</a> /
 <a class="filelink" href="https://www.linkedin.com/in/dhruvshahi-/" target="_blank" rel="noopener">talk about a pilot</a></footer>
@@ -595,14 +595,14 @@ refresh();
     js = (js.replace("__ESC__", ESC_JS)
             .replace("__TYPES__", TYPE_OPTIONS)
             .replace("__QLIST__", _inline_json([t for _q, _d, t in DEMO_QUESTIONS])))
-    return _page(f"Pramana, {org}", body + js)
+    return _page(f"Pramana AI, {org}", body + js)
 
 
 def review_page(slug: str, org: str, runs: list[dict]) -> str:
     runs_json = _inline_json(runs)
     body = f"""
 <header>
-<div class="eyebrow"><b>Pramana</b> / review queue / {_html.escape(slug)}</div>
+<div class="eyebrow"><b>Pramana AI</b> / review queue / {_html.escape(slug)}</div>
 <h1>Named review</h1>
 <div class="runmeta">Approving releases a cited draft into the DELIVERED workbook. Rejecting sends
 it back to the exception queue. Every action writes your name and note into the tamper-evident
@@ -610,7 +610,7 @@ audit chain. Exceptions cannot be approved: an answer without a surviving citati
 </header>
 <p class="sub" style="margin-top:20px"><a class="filelink" href="/t/{slug}">Back to workspace</a></p>
 <div id="queue"></div>
-<footer>Pramana hosted demo / reviewer identity is self-attested in the demo /
+<footer>Pramana AI hosted demo / reviewer identity is self-attested in the demo /
 <a class="filelink" href="/site/legal/terms.html">Terms</a> /
 <a class="filelink" href="/site/legal/privacy.html">Privacy and data handling</a></footer>
 """
@@ -675,4 +675,4 @@ async function act(runId,qid,action,btn){
 render();
 </script>"""
     js = js.replace("__ESC__", ESC_JS).replace("__RUNS__", runs_json)
-    return _page(f"Pramana review, {org}", body + js)
+    return _page(f"Pramana AI review, {org}", body + js)

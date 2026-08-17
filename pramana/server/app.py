@@ -1,4 +1,4 @@
-"""Pramana hosted server. stdlib only: ThreadingHTTPServer + route table.
+"""Pramana AI hosted server. stdlib only: ThreadingHTTPServer + route table.
 
 Auth model: signup mints a bearer token bound to the tenant slug (hashed at
 rest). First visit with ?k=<token> sets an HttpOnly cookie; thereafter the
@@ -295,7 +295,7 @@ class Handler(BaseHTTPRequestHandler):
         if site.is_file():
             self._html(site.read_text(encoding="utf-8"))
         else:
-            self._html("<title>Pramana</title><p>Pramana hosted. Landing ships in Wave 2. "
+            self._html("<title>Pramana AI</title><p>Pramana AI hosted. Landing ships in Wave 2. "
                        "<a href='/healthz'>healthz</a></p>")
 
     def site_asset(self, rel: str) -> None:
@@ -508,7 +508,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Pramana hosted server")
+    ap = argparse.ArgumentParser(description="Pramana AI hosted server")
     ap.add_argument("--host", default=config.HOST)
     ap.add_argument("--port", type=int, default=config.PORT)
     args = ap.parse_args()

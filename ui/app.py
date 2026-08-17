@@ -1,4 +1,4 @@
-"""Pramana console — zero-dependency web UI over the evidence-gated engine.
+"""Pramana AI console — zero-dependency web UI over the evidence-gated engine.
 
   .venv/bin/python ui/app.py          # http://localhost:8787
   .venv/bin/python ui/app.py --port N
@@ -131,10 +131,10 @@ a.filelink{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;col
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pramana console</title>
+<title>Pramana AI console</title>
 <style>/*CSS*/</style></head><body><div class="wrap">
 <header>
-<div class="eyebrow"><b>Pramana Desk</b> / Evidence gated answer engine / v0</div>
+<div class="eyebrow"><b>Pramana AI</b> / Evidence gated answer engine / v0</div>
 <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
 <div class="runmeta">tenant=acme (synthetic)<br>gates: cite-or-abstain / cert-evidence-class /
 staleness / contradiction / legal-routing / tenant-isolation</div>
@@ -182,7 +182,7 @@ and the hash-chained audit log.</p>
 </div>
 </div>
 
-<footer>Pramana v0 · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
+<footer>Pramana AI v0 · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
 </div>
 <script>
 const $=id=>document.getElementById(id);
@@ -295,11 +295,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Pramana zero-dependency web console")
+    ap = argparse.ArgumentParser(description="Pramana AI zero-dependency web console")
     ap.add_argument("--port", type=int, default=8787)
     args = ap.parse_args()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"Pramana console → http://localhost:{args.port}  (Ctrl-C to stop)")
+    print(f"Pramana AI console → http://localhost:{args.port}  (Ctrl-C to stop)")
     server.serve_forever()
 
 

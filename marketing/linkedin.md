@@ -11,7 +11,7 @@ Every answer is a representation your company makes in a deal. 95% accurate mean
 
 So I built the opposite.
 
-Pramana answers security questionnaires from your own approved documents, and its
+Pramana AI answers security questionnaires from your own approved documents, and its
 headline is not an accuracy number. An answer is released only when it survives the
 gates that sit outside the model:
 

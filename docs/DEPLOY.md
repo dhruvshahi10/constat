@@ -1,4 +1,4 @@
-# Deploying Pramana (about 10 minutes, at a desk)
+# Deploying Pramana AI (about 10 minutes, at a desk)
 
 Written so it can be followed without rereading any conversation. Everything the
 repo can decide for itself is already decided; what is left needs a browser and a

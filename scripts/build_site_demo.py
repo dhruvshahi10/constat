@@ -381,15 +381,15 @@ def _legal_page(title: str, heading: str, eyebrow: str, body: str) -> str:
         f"<title>{title}</title>"
         f"<style>{brand.stylesheet(LEGAL_CSS)}</style></head>"
         '<body><div class="wrap legalwrap">'
-        f'<header><div class="eyebrow"><b>Pramana</b> / {eyebrow}</div>'
+        f'<header><div class="eyebrow"><b>Pramana AI</b> / {eyebrow}</div>'
         f"<h1>{heading}</h1>"
-        '<div class="updated">Version 0.1 / 16 August 2026 / operator: Pramana, '
+        '<div class="updated">Version 0.1 / 16 August 2026 / operator: Pramana AI, '
         "operated by Dhruv Shahi</div></header>"
         f"{DRAFT_NOTE}{body}"
-        '<p class="navback"><a href="/">Back to Pramana</a> / '
+        '<p class="navback"><a href="/">Back to Pramana AI</a> / '
         '<a href="/site/legal/terms.html">Terms</a> / '
         '<a href="/site/legal/privacy.html">Privacy and data handling</a></p>'
-        "<footer>Pramana, operated by Dhruv Shahi / "
+        "<footer>Pramana AI, operated by Dhruv Shahi / "
         f"governing law and venue: {JURISDICTION} / "
         f'<a href="{LINKEDIN}" target="_blank" rel="noopener">message on LinkedIn</a>'
         f' / <a href="mailto:{RIGHTS_EMAIL}">{RIGHTS_EMAIL}</a></footer>'
@@ -398,14 +398,14 @@ def _legal_page(title: str, heading: str, eyebrow: str, body: str) -> str:
 
 TERMS_BODY = """
 <h2>1. Who you are contracting with</h2>
-<p>The service at this address is <strong>Pramana, operated by Dhruv Shahi</strong>, an
+<p>The service at this address is <strong>Pramana AI, operated by Dhruv Shahi</strong>, an
 individual operator based in India. There is no company entity behind it yet. Governing law and
 the venue for any dispute are the laws of <strong>India</strong>. This document was drafted by the
 operator rather than by counsel, so if you need contractual certainty, ask before you rely on
 this service, and expect a reviewed agreement before any paid tier is sold to you.</p>
 
 <h2>2. This is a demo, and it is sold as one</h2>
-<p>Pramana is pre-launch. It is provided <strong>as is and as available</strong>, with
+<p>Pramana AI is pre-launch. It is provided <strong>as is and as available</strong>, with
 <strong>no warranty</strong> of any kind, express or implied, including any warranty of
 merchantability, fitness for a particular purpose, accuracy or non infringement. There is
 <strong>no service level agreement</strong>, no uptime commitment, no support commitment and no
@@ -414,7 +414,7 @@ workspace may be deleted early if the demo is being abused or if it costs more t
 operator can carry.</p>
 <p>Nothing this service outputs is legal, audit or compliance advice. Every answer it drafts is
 a draft. The whole design of the product is that a named human reviews before anything is
-released, and that design assumes you actually do the reviewing. If you send a Pramana answer
+released, and that design assumes you actually do the reviewing. If you send a Pramana AI answer
 to a customer without reading it, that is your representation to your customer, not ours.</p>
 
 <h2>3. What you may upload</h2>
@@ -430,7 +430,7 @@ no personal data of third parties, no secrets, no material non-public informatio
 <li>Do not use the service to break the law, to attack it or anyone else, or to generate
 misleading claims about your security posture.</li>
 </ul>
-<p>If you need to run Pramana over confidential evidence, that is the BYOK tier, where you
+<p>If you need to run Pramana AI over confidential evidence, that is the BYOK tier, where you
 supply your own provider key and your text travels under your contract with that provider. Ask
 for it. It is not built yet, and saying so is more useful to you than a checkbox that pretends
 otherwise.</p>
@@ -594,8 +594,8 @@ def build_legal(root: Path) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     for name, title, heading, eyebrow, body in (
-        ("terms.html", "Pramana terms of use", "Terms of use", "legal / terms", TERMS_BODY),
-        ("privacy.html", "Pramana privacy and data handling",
+        ("terms.html", "Pramana AI terms of use", "Terms of use", "legal / terms", TERMS_BODY),
+        ("privacy.html", "Pramana AI privacy and data handling",
          "Privacy and data handling", "legal / privacy", PRIVACY_BODY),
     ):
         p = out_dir / name
