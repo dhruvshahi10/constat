@@ -933,7 +933,7 @@
     "genesis": "0000000000000000000000000000000000000000000000000000000000000000",
     "events": [
       {
-        "ts": "2026-08-17T08:32:23.467498+00:00",
+        "ts": "2026-08-17T08:38:15.121867+00:00",
         "actor": "system",
         "action": "RECEIVED",
         "subject": "acme_security_questionnaire.xlsx",
@@ -942,21 +942,21 @@
           "tenant": "acme"
         },
         "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-        "hash": "2fbfa58e1992a557257eb47df250a997ff9da256c108a5f879b05b448d28971b"
+        "hash": "9d6b9d4fb6712f5791b047bc518436547f38fc5b76bcb14f6804d58ae6986669"
       },
       {
-        "ts": "2026-08-17T08:32:23.474403+00:00",
+        "ts": "2026-08-17T08:38:15.129345+00:00",
         "actor": "system",
         "action": "CLASSIFIED",
         "subject": "acme_security_questionnaire.xlsx",
         "detail": {
           "question_count": 24
         },
-        "prev_hash": "2fbfa58e1992a557257eb47df250a997ff9da256c108a5f879b05b448d28971b",
-        "hash": "b605fe488397f5d56f2a8721a88794cf81a000f1e121f2233ad3a4c58620ff01"
+        "prev_hash": "9d6b9d4fb6712f5791b047bc518436547f38fc5b76bcb14f6804d58ae6986669",
+        "hash": "5299406052dfda80ecb90ad608f2bdc3749766f063b9d11c7b6fb84db153a461"
       },
       {
-        "ts": "2026-08-17T08:32:23.475078+00:00",
+        "ts": "2026-08-17T08:38:15.130025+00:00",
         "actor": "system",
         "action": "EVIDENCE_INTEGRITY_SCAN",
         "subject": "acme",
@@ -972,11 +972,11 @@
             ]
           }
         },
-        "prev_hash": "b605fe488397f5d56f2a8721a88794cf81a000f1e121f2233ad3a4c58620ff01",
-        "hash": "7f1807518c0dd60975758f0c588635c5b1be5dd01e2202bcd46ebae50b422855"
+        "prev_hash": "5299406052dfda80ecb90ad608f2bdc3749766f063b9d11c7b6fb84db153a461",
+        "hash": "af49de28dc4f4b2926be6e06fdc4898d40ff7a8c93d4b8324f619f2b025c8f9f"
       },
       {
-        "ts": "2026-08-17T08:32:23.475910+00:00",
+        "ts": "2026-08-17T08:38:15.130948+00:00",
         "actor": "mock",
         "action": "DRAFTED",
         "subject": "GRC-01.1",
@@ -986,11 +986,11 @@
           ],
           "coverage": "complete"
         },
-        "prev_hash": "7f1807518c0dd60975758f0c588635c5b1be5dd01e2202bcd46ebae50b422855",
-        "hash": "8292a09a3cfdc0ea31bf86dab822d9acc63d660f1eaa5652e0be4b446ccd4028"
+        "prev_hash": "af49de28dc4f4b2926be6e06fdc4898d40ff7a8c93d4b8324f619f2b025c8f9f",
+        "hash": "6bf2c6abaf71428fb3a7e859c7aa92a1c4a7e936a9238ac256cf49e9900ad1a5"
       },
       {
-        "ts": "2026-08-17T08:32:23.476267+00:00",
+        "ts": "2026-08-17T08:38:15.131247+00:00",
         "actor": "demo-grc-reviewer (simulated)",
         "action": "APPROVED",
         "subject": "GRC-01.1",
@@ -1000,11 +1000,11 @@
             "POL-ISMS-001@para:2"
           ]
         },
-        "prev_hash": "8292a09a3cfdc0ea31bf86dab822d9acc63d660f1eaa5652e0be4b446ccd4028",
-        "hash": "b661fafeeab362494805eaf9f4531288b00bb94b74aa9805a333accc5c75391d"
+        "prev_hash": "6bf2c6abaf71428fb3a7e859c7aa92a1c4a7e936a9238ac256cf49e9900ad1a5",
+        "hash": "b9813108a6a2e90dea83f24d4225b9446db14186203e06e8abace85a20f74fab"
       },
       {
-        "ts": "2026-08-17T08:32:23.476986+00:00",
+        "ts": "2026-08-17T08:38:15.131887+00:00",
         "actor": "mock",
         "action": "DRAFTED",
         "subject": "GRC-02.1",
@@ -1014,8 +1014,8 @@
           ],
           "coverage": "complete"
         },
-        "prev_hash": "b661fafeeab362494805eaf9f4531288b00bb94b74aa9805a333accc5c75391d",
-        "hash": "94af1359d685118d391bcb9b9479228ce7cd305b1ae7eb5355c2085d9d77e25f"
+        "prev_hash": "b9813108a6a2e90dea83f24d4225b9446db14186203e06e8abace85a20f74fab",
+        "hash": "27fb82f4d446685cc385f7fa20ce1d032b6f41e6662305b891b2396b36a91970"
       }
     ]
   }
