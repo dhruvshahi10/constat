@@ -35,15 +35,24 @@ body{overflow-x:hidden}
 .band{position:relative;padding:var(--band) 0}
 .band.alt{background:var(--surface-sunken);
 box-shadow:inset 0 1px 0 var(--line-1),inset 0 -1px 0 var(--line-1)}
-.band.first{padding-top:clamp(56px,7vh,96px);min-height:calc(100vh - 62px);
-display:flex;flex-direction:column;justify-content:center}
-/* the hero hands over to the proof rather than stopping dead */
-.js .band.first .wrap{will-change:transform,opacity;
-opacity:calc(1 - var(--exit,0) * 0.9);
-transform:translateY(calc(var(--exit,0) * -56px))}
+.band.first{min-height:calc(100vh - 62px)}
+.band.first.pin{padding:0}
+/* Two columns: the claim on the left, the artefact that proves it on the
+   right. The product used to appear at screen seven, after 690 words. A
+   compliance buyer decides in the first screen whether this is real. */
+.herogrid{display:grid;gap:clamp(28px,4vw,56px);align-items:center}
+@media(min-width:1080px){.herogrid{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}}
+.herocopy .ctarow{margin-top:clamp(20px,2.4vw,30px)}
+.herostage{min-width:0}
+/* Only the copy column recedes as the sheet takes over. This used to fade the
+   whole hero wrap, which now contains the sheet, so keeping it would have
+   dissolved the artefact while the reader was still reading it. */
+.js .band.first .herocopy{will-change:transform,opacity;
+opacity:calc(1 - var(--exit,0) * 0.55);
+transform:translateY(calc(var(--exit,0) * -22px))}
 @media(prefers-reduced-motion:reduce){
 html{scroll-behavior:auto}
-.js .band.first .wrap{opacity:1;transform:none}}
+.js .band.first .herocopy{opacity:1;transform:none}}
 .wrap{width:100%;max-width:1140px;margin:0 auto;padding:0 clamp(18px,4vw,32px)}
 
 h1,h2,h3{font-family:var(--font-display);font-weight:400;letter-spacing:-0.028em}
@@ -132,7 +141,7 @@ background:var(--text-tertiary);transform:translateX(-50%)}
    an ordinary block and the sheet is already full, so nothing depends on it. */
 .pin{padding:0}
 .pinwrap{position:relative}
-.js .pinwrap{height:min(420vh,3200px)}
+.js .pinwrap{height:min(340vh,2600px)}
 .pinstick{padding:var(--band) 0}
 .js .pinstick{position:sticky;top:0;min-height:100vh;display:flex;align-items:center;
 padding:70px 0 40px}
@@ -714,26 +723,21 @@ window.__rv = new IntersectionObserver(function (es) {
 
 <main>
 
-<!-- 01 ─ the whole screen says one thing ─────────────────────────────────── -->
-<section class="band first">
-  <div class="wrap hero">
-    <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
-    <h1 class="display">Your security questionnaire, answered from your own evidence.</h1>
-    <p class="lede">Every answer cites the policy it came from. Anything the evidence
-    cannot support is refused, with the gap named.</p>
-    <div class="ctarow">
-      <a class="btn btn-primary" href="#access">Get early access</a>
-      <a class="btn btn-ghost" href="#proof">See it happen</a>
-    </div>
-  </div>
-  <a class="scrollcue" href="#proof" aria-label="Scroll to the demonstration"><span></span></a>
-</section>
-
-<!-- 02 ─ the sheet fills as you scroll. You set the pace. ─────────────────── -->
-<section class="band alt pin" id="proof">
+<!-- 01 ─ the claim and the artefact that proves it, on one screen ────────── -->
+<section class="band first pin" id="proof">
   <div class="pinwrap" id="pinwrap">
     <div class="pinstick">
-      <div class="wrap">
+      <div class="wrap herogrid">
+       <div class="herocopy">
+        <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
+        <h1 class="display">Send the security questionnaire back today.</h1>
+        <p class="lede">Every answer cites the approved policy it came from. Anything your
+        evidence cannot prove is refused, with the gap named.</p>
+        <div class="ctarow">
+          <a class="btn btn-primary" href="#access">Get early access</a>
+        </div>
+       </div>
+       <div class="herostage">
         <p class="pinstep" id="pinstep"><b>00</b><span>As it arrived from the buyer</span></p>
         <div class="sheet" id="sheet">
           <div class="scan" aria-hidden="true"></div>
@@ -760,9 +764,11 @@ window.__rv = new IntersectionObserver(function (es) {
           <li><b>04</b><span>Conflict</span></li>
           <li><b>05</b><span>Counsel</span></li>
         </ol>
+       </div>
       </div>
     </div>
   </div>
+  <a class="scrollcue" href="#ask" aria-label="Skip to trying it yourself"><span></span></a>
 </section>
 
 <!-- 03 ─ ask it anything ─────────────────────────────────────────────────── -->
@@ -1238,7 +1244,7 @@ document.querySelectorAll(".cred b").forEach(b=>cio.observe(b));
 
 /* scroll progress hairline */
 let ticking=false,pinTick=false;
-const heroWrap=document.querySelector('.band.first .wrap');
+const heroWrap=document.querySelector('.band.first .herocopy');
 addEventListener("scroll",()=>{
   if(ticking)return;ticking=true;
   requestAnimationFrame(()=>{
