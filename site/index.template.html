@@ -1084,7 +1084,10 @@ document.querySelectorAll(".rv").forEach(el=>io.observe(el));
    itself in. Both are enhancements: the markup already carries the finished
    headline and the finished rows, so nothing here is load bearing. */
 (function(){
-  const h1=document.querySelector("h1.mega");
+  /* the class is "display"; querying "mega" silently matched nothing, so the
+     headline has never animated once. The CSS below was always written for
+     .display, which is how the dead selector went unnoticed. */
+  const h1=document.querySelector("h1.display");
   if(h1&&!reduced){
     const words=h1.textContent.split(/\s+/);
     h1.textContent="";
