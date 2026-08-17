@@ -149,8 +149,9 @@ padding:70px 0 40px}
 min-height:2.2em}
 .pinstep b{font-family:var(--font-mono);font-size:var(--t-mono);letter-spacing:0.16em;
 color:var(--signal);font-weight:400;font-variant-numeric:tabular-nums}
-.pinstep span{font-family:var(--font-display);font-size:clamp(19px,1.1rem + 0.9vw,30px);
-line-height:1.2;letter-spacing:-0.02em;color:var(--text-primary)}
+.pinstep span{font-family:var(--font-mono);font-size:var(--t-mono);
+letter-spacing:0.16em;text-transform:uppercase;
+line-height:1.2;color:var(--text-secondary)}
 .pinstep[data-tone="warn"] b,.pinstep[data-tone="warn"] span{color:var(--status-critical)}
 .pinstep[data-tone="legal"] b{color:var(--signal)}
 
@@ -667,6 +668,11 @@ footer a{color:var(--signal)}
 <body>
 <script>
 document.documentElement.classList.add("js");
+/* The first screen is a scroll driven sequence, so a restored scroll position
+   drops the visitor into the middle of it: a reload part way down opened the
+   page on beat 05, "Routed to counsel, never drafted", with no beats 00 to 04
+   to make sense of it. The sequence has to start at its start. */
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 /* The reveal observer is registered here rather than with the rest of the
    script at the end of the document. The class above hides every .rv element
    as soon as it is parsed, and this page is megabytes long, so an observer at
@@ -1176,11 +1182,66 @@ window.__rvScan();
   }
   /* n = how many rows have landed. This is the only state the view has. */
   let shownN=-1;
+  /* ── the resolve ──────────────────────────────────────────────────────
+     An answer arrives out of unreadable document noise and locks into place
+     one character at a time, left to right. This is the one piece of motion on
+     the page that is an argument rather than a flourish: the product's whole
+     claim is that unstructured evidence becomes one specific citable line, so
+     the text resolves because the system resolves.
+
+     The glyph set is document furniture, not Matrix rain: capitals, digits,
+     and the marks that live in a policy document. The final string is the one
+     already in the markup, so with JS off or reduced motion the answer is just
+     there, and a resolve that is interrupted restores the real text exactly. */
+  const GLYPHS="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\u00a7\u00b6\u00b7/.";
+  /* A fixed duration, not a fixed character rate. At a fixed rate a long answer
+     took four and a half seconds while a short one took half a second, so the
+     rows finished at wildly different times and the sheet never felt like one
+     object. Every answer now resolves in the same 760ms however long it is. */
+  const DUR=760;
+  function resolve(el){
+    if(reduced||el.dataset.resolved==="1")return;
+    const text=el.dataset.text||el.textContent;
+    el.dataset.text=text;el.dataset.resolved="1";
+    if(!text.trim()||text.length>420){el.textContent=text;return}
+    const t0=performance.now();
+    if(el._raf)cancelAnimationFrame(el._raf);
+    (function tick(now){
+      const locked=Math.ceil(text.length*(now-t0)/DUR);
+      if(locked>=text.length){el.textContent=text;el._raf=0;return}
+      let s="";
+      for(let i=0;i<text.length;i++){
+        const c=text[i];
+        /* whitespace and punctuation never scramble: the shape of the sentence
+           should be legible before its words are, so the eye has somewhere to
+           sit while it fills. */
+        s+= i<locked||c===" "||c==="\n"||c===","||c==="."||c===":"||c===";"
+            ? c : GLYPHS[(Math.random()*GLYPHS.length)|0];
+      }
+      el.textContent=s;
+      el._raf=requestAnimationFrame(tick);
+    })(t0);
+  }
+  function unresolve(el){
+    if(el._raf){cancelAnimationFrame(el._raf);el._raf=0}
+    if(el.dataset.text)el.textContent=el.dataset.text;
+    el.dataset.resolved="";
+  }
+  function rowText(r){return r.querySelector(".wbr p")}
+
   function render(n){
     n=Math.max(0,Math.min(rows.length,n));
-    if(n===shownN)return;shownN=n;
+    if(n===shownN)return;
+    const forward=n>shownN;shownN=n;
     sheet.classList.toggle("empty",n<rows.length);
-    rows.forEach((r,i)=>r.classList.toggle("in",i<n));
+    rows.forEach((r,i)=>{
+      const was=r.classList.contains("in"),now=i<n;
+      r.classList.toggle("in",now);
+      const el=rowText(r);
+      if(!el)return;
+      if(now&&!was&&forward)resolve(el);
+      else if(!now&&was)unresolve(el);
+    });
     if(n>0){
       const r=rows[n-1];
       scan.style.transform="translateY("+(r.offsetTop+r.offsetHeight-scan.offsetHeight/2)+"px)";
