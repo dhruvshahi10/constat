@@ -10,15 +10,19 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import sys
 import threading
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 
 from pramana.server import app, config, db
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # ---------------------------------------------------------------------------
 # harness
@@ -389,6 +393,32 @@ def test_security_headers_on_every_response(server):
         # HSTS is pointless (and hostile) on a plaintext localhost port
         assert r.headers.get("Strict-Transport-Security") is None, path
         assert expect is None
+
+
+def test_csp_allows_every_data_uri_the_landing_page_inlines(server):
+    """Each kind of data: URI we inline needs its own CSP directive.
+
+    img-src and font-src were given `data:` when they were added; media-src was
+    not, so it fell back to default-src 'self' and the browser silently refused
+    the demo film. That was 88 percent of the page's bytes rendering nothing,
+    on the hosted build only, with no server-side symptom. Rather than assert
+    the three directives we happen to use today, read the built page and
+    require a directive for every scheme actually present, so inlining a new
+    kind of asset fails here instead of in production.
+    """
+    page = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    directive = {"image": "img-src", "font": "font-src",
+                 "video": "media-src", "audio": "media-src"}
+    found = {m for m in re.findall(r"data:(image|font|video|audio)/", page)}
+    assert found, "expected the landing page to inline data: URIs"
+
+    csp = call(server, "GET", "/").headers["Content-Security-Policy"]
+    parsed = {p.strip().split(" ")[0]: p.strip()
+              for p in csp.split(";") if p.strip()}
+    for kind in sorted(found):
+        name = directive[kind]
+        assert name in parsed, f"data:{kind}/ is inlined but {name} is unset, so it falls back to default-src"
+        assert "data:" in parsed[name], f"{name} does not permit data:, which blocks every data:{kind}/ URI"
 
 
 def test_robots_disallows_workspaces(server):

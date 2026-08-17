@@ -29,9 +29,15 @@ NOINDEX = {"X-Robots-Tag": "noindex"}
 # Our pages inline both <style> and <script>, so 'unsafe-inline' is required;
 # what this policy actually buys is that nothing may be pulled from, or posted
 # to, an origin that is not us — the exfiltration path for a leaked token.
+# media-src needs data: for the same reason img-src and font-src do: the
+# landing page is one self-contained file and inlines the demo film as a data
+# URI. It was omitted, so media-src fell back to default-src 'self' and the
+# browser refused the video, silently, on the hosted build only. That is 5.3MB
+# of the page, 88 percent of its bytes, rendering nothing.
 CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; "
        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-       "font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'")
+       "font-src 'self' data:; media-src 'self' data:; "
+       "connect-src 'self'; frame-ancestors 'none'")
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
