@@ -44,7 +44,7 @@ gap:4.6mm;background:var(--surface-page)}
 .mast{display:flex;justify-content:space-between;align-items:baseline;
 border-bottom:1px solid var(--line-2);padding-bottom:3.6mm}
 .wordmark{font-family:var(--font-mono);font-size:12pt;letter-spacing:0.22em;text-transform:uppercase}
-.wordmark b{color:var(--signal);font-weight:400}
+.wordmark b{color:var(--signal);font-weight:400;margin-left:-0.22em}
 .mast .tag{font-family:var(--font-mono);font-size:7pt;letter-spacing:0.16em;
 text-transform:uppercase;color:var(--text-tertiary)}
 h1{font-size:22pt;line-height:1.06;letter-spacing:-0.015em}
@@ -113,7 +113,7 @@ background:var(--surface-page);padding:10px 0}
 SHEET = """
 <div class="sheet">
   <div class="mast">
-    <span class="wordmark"><b>Pra</b>mana AI</span>
+    <span class="wordmark">Pramana&nbsp;<b>AI</b></span>
     <span class="tag">Evidence gated answers for security questionnaires</span>
   </div>
 
