@@ -103,52 +103,60 @@ padding:10px 15px;border-radius:var(--radius-1);text-decoration:none;white-space
 .progress{position:absolute;left:0;bottom:-1px;height:1px;width:0;background:var(--signal)}
 
 /* ── hero ──────────────────────────────────────────────────────────────── */
-/* ── the hero's live object: evidence being searched ─────────────────────── */
-.vault{position:relative;display:flex;flex-direction:column;gap:14px;
+/* ── the hero's live object: the redaction lifting ───────────────────────── */
+.redact{position:relative;display:flex;flex-direction:column;gap:13px;
 padding:clamp(16px,2vw,22px);border:1px solid var(--line-2);
 border-radius:var(--radius-2);min-height:clamp(320px,48vh,440px);
 background:linear-gradient(180deg,rgba(24,24,27,0.7),rgba(14,14,16,0.92))}
-.vq{font-size:14px;line-height:1.4;color:var(--text-primary);min-height:2.8em;
+.rq{font-size:14px;line-height:1.4;color:var(--text-primary);min-height:2.8em;
 border-left:2px solid var(--signal);padding-left:11px}
-.vsrc{position:relative;flex:1;display:flex;flex-direction:column;gap:5px;
-justify-content:center;overflow:hidden}
-.vbar{position:relative;display:grid;grid-template-columns:5px 1fr auto;gap:9px;
-align-items:center;padding:6px 9px;border:1px solid var(--line-1);border-radius:4px;
-background:rgba(232,232,228,0.016);font-family:var(--font-mono);font-size:9.5px;
-letter-spacing:0.1em;color:var(--text-tertiary);
-transition:border-color 200ms var(--ease-out),background 200ms var(--ease-out)}
-.vbar i{width:5px;height:5px;border-radius:50%;background:var(--line-2);
-transition:background 200ms var(--ease-out)}
-.vbar b{font-weight:400;color:var(--text-secondary)}
-.vbar em{font-style:normal;color:var(--text-faint);font-size:8.5px}
-.vbar.lit{border-color:var(--status-ok);background:rgba(122,164,124,0.09)}
-.vbar.lit i{background:var(--status-ok)}
-.vbar.lit b{color:var(--status-ok)}
-.vbar.flag{border-color:var(--status-critical);background:rgba(217,120,98,0.08)}
-.vbar.flag i{background:var(--status-critical)}
-.vbar.flag b{color:var(--status-critical)}
-/* the sweep: one moving element, so the cost is one transform per frame */
-.vbeam{position:absolute;left:-6px;right:-6px;height:34px;top:0;pointer-events:none;
-opacity:0;background:linear-gradient(180deg,transparent,rgba(169,180,245,0.14) 45%,
-rgba(169,180,245,0.03) 70%,transparent);
-box-shadow:0 1px 0 rgba(169,180,245,0.45)}
-.vault.scanning .vbeam{opacity:1}
-.vout{display:grid;gap:5px;padding-top:11px;border-top:1px solid var(--line-1);
-min-height:4.6em}
-.vv{font-family:var(--font-mono);font-size:9px;letter-spacing:0.18em;
-text-transform:uppercase;color:var(--text-faint)}
-.vout[data-v="ok"] .vv{color:var(--status-ok)}
-.vout[data-v="warn"] .vv{color:var(--status-critical)}
-.vt{font-family:var(--font-mono);font-size:10px;line-height:1.55;
-color:var(--text-secondary)}
-/* no script, or reduced motion: one finished example, held still */
-.vault:not(.live) .vbeam{display:none}
+.rdoc{position:relative;flex:1;border:1px solid var(--line-1);border-radius:5px;
+padding:28px 15px 15px;background:rgba(232,232,228,0.012);overflow:hidden}
+.rsrc{position:absolute;top:0;left:0;right:0;padding:5px 11px;
+border-bottom:1px solid var(--line-1);background:rgba(14,14,16,0.72);
+font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.16em;
+text-transform:uppercase;color:var(--text-faint);white-space:nowrap;
+overflow:hidden;text-overflow:ellipsis}
+.rlines{position:relative;display:flex;flex-direction:column;gap:12px;
+justify-content:center;height:100%}
+.rline{display:flex;gap:7px;align-items:center;min-height:10px}
+/* a redaction bar, not a loading placeholder: the point is that the document is
+   real and almost all of it is none of the buyer's business */
+.rline i{height:9px;border-radius:2px;background:rgba(232,232,228,0.11);
+transition:opacity 320ms var(--ease-out)}
+/* The reveal line is covered like every other line until something lifts it, so
+   a refusal leaves a uniformly redacted document rather than a hole where the
+   answer would have been. Its bars and its text occupy the same row. */
+.rline[data-i="3"]{position:relative;min-height:2.9em;align-items:center;
+padding-left:11px;border-left:2px solid transparent;
+transition:border-color 320ms var(--ease-out)}
+.rline[data-i="3"] i{transition:opacity 280ms var(--ease-out)}
+.redact.found .rline[data-i="3"]{align-items:flex-start}
+.redact.found .rline[data-i="3"] i{opacity:0}
+.rline[data-i="3"] .rtxt{position:absolute;left:11px;right:0;top:0}
+.rtxt{font-size:12.5px;line-height:1.45;color:var(--text-primary);opacity:0;
+transition:opacity 360ms var(--ease-out)}
+.redact.found .rline[data-i="3"] .rtxt{opacity:1}
+.redact.found .rline[data-i="3"]{border-left-color:var(--status-ok)}
+/* the other lines stay covered and recede, so the uncovered one carries alone */
+.redact.found .rline:not([data-i="3"]) i{opacity:0.34}
+.rsweep{position:absolute;left:-15px;right:-15px;height:30px;top:0;opacity:0;
+pointer-events:none;background:linear-gradient(180deg,transparent,
+rgba(169,180,245,0.14) 46%,transparent);box-shadow:0 1px 0 rgba(169,180,245,0.42)}
+.redact.searching .rsweep{opacity:1}
+.rout{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.15em;
+text-transform:uppercase;color:var(--text-faint);min-height:1.7em;
+padding-top:11px;border-top:1px solid var(--line-1);line-height:1.5}
+.rout[data-v="ok"]{color:var(--status-ok)}
+.rout[data-v="warn"]{color:var(--status-critical)}
+.redact:not(.live) .rsweep{display:none}
 
-/* ── the hero's live object ──────────────────────────────────────────────
+/* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
-   out cited; what it cannot comes out refused with its gap named. It runs on
-   its own clock rather than on scroll, because the hero should show the
-   machine working before the visitor has done anything at all. */
+   out cited; what it cannot comes out refused with its gap named. Every
+   deliverable listed in this section is made of one of those two outcomes, so
+   the section shows them being produced rather than describing them. Drag a
+   card across the gate, or arrow-key it, and the verdict follows the card. */
 .lane{position:relative;height:clamp(300px,46vh,430px);overflow:hidden;
 border:1px solid var(--line-2);border-radius:var(--radius-2);
 background:linear-gradient(180deg,rgba(24,24,27,0.72),rgba(14,14,16,0.9))}
@@ -188,6 +196,13 @@ padding:7px 13px;border-top:1px solid var(--line-1);background:rgba(14,14,16,0.8
 font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;
 text-transform:uppercase;color:var(--status-ok)}
 .lanefoot .warn{color:var(--status-critical)}
+.lhint{margin-left:auto;color:var(--text-faint);letter-spacing:0.12em}
+.lcard{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.lcard:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.lcard.held{cursor:grabbing;z-index:5;
+box-shadow:0 18px 44px rgba(0,0,0,0.55);border-color:var(--signal)}
+.lane:not(.running) .lcard{cursor:default}
+.lane:not(.running) .lhint{display:none}
 /* No script, or reduced motion: three cards sit still, already decided. The
    lane is a demonstration either way, it just stops moving. */
 .lane:not(.running) .lcard{position:relative;opacity:1;width:auto;margin:0 0 8px;
@@ -837,23 +852,23 @@ window.__rv = new IntersectionObserver(function (es) {
       </div>
     </div>
 
-    <!-- The live object: your own evidence, being searched. A question arrives,
-         a beam sweeps the approved sources, and what it finds decides the
-         answer. Nothing is found, or what is found is stale, or two sources
-         disagree: each of those is a refusal with a different name. This is the
-         headline claim drawn rather than asserted. -->
-    <div class="vault" id="vault" aria-hidden="true">
-      <p class="vq" id="vq">Do you enforce multi factor authentication for administrative access?</p>
-      <div class="vsrc" id="vsrc"><span class="vbar" data-id="POL-ISMS-001"><i></i><b>POL-ISMS-001</b><em>v3.2 approved</em></span><span class="vbar lit" data-id="POL-IAM-002"><i></i><b>POL-IAM-002</b><em>v2.3 approved</em></span><span class="vbar" data-id="POL-CRY-001"><i></i><b>POL-CRY-001</b><em>v1.4 approved</em></span><span class="vbar" data-id="CRT-SOC2-2025"><i></i><b>CRT-SOC2-2025</b><em>v1.0 approved</em></span><span class="vbar" data-id="RPT-PEN-2024"><i></i><b>RPT-PEN-2024</b><em>v1.0 expired</em></span><span class="vbar" data-id="POL-RET-001"><i></i><b>POL-RET-001</b><em>v2.0 approved</em></span><span class="vbar" data-id="POL-RET-014"><i></i><b>POL-RET-014</b><em>v1.1 approved</em></span><span class="vbeam" id="vbeam"></span></div>
-      <!-- A finished example lives in the markup, so with no script at all this
-           panel still shows what the product does rather than an empty box. -->
-      <div class="vout" id="vout" data-v="ok"><span class="vv" id="vv">Cited &#183; POL-IAM-002 &#167;3.1</span>
-        <span class="vt" id="vt">Per Access Control Policy v2.3: administrative access requires MFA.</span></div>
+    <!-- The live object: the redaction lifting. A question arrives, the approved
+         evidence is searched, and exactly one line comes uncovered: the line the
+         answer is cited to. Nothing lifts when nothing supports the claim. The
+         redaction is already this brand's motif, so the argument is made in the
+         house language rather than in an effect borrowed from someone else. -->
+    <div class="redact" id="redact">
+      <p class="rq" id="rq">Do you enforce multi factor authentication for administrative access?</p>
+      <div class="rdoc" id="rdoc">
+        <span class="rsrc" id="rsrc">POL-IAM-002 v2.3 &#183; approved</span>
+        <div class="rlines" id="rlines"><p class="rline" data-i="0"><i style="width:58%"></i><i style="width:26%"></i></p><p class="rline" data-i="1"><i style="width:42%"></i><i style="width:34%"></i><i style="width:14%"></i></p><p class="rline" data-i="2"><i style="width:64%"></i><i style="width:22%"></i></p><p class="rline" data-i="3"><i style="width:54%"></i><i style="width:30%"></i><span class="rtxt"></span></p><p class="rline" data-i="4"><i style="width:38%"></i><i style="width:30%"></i><i style="width:20%"></i></p><p class="rline" data-i="5"><i style="width:52%"></i><i style="width:18%"></i></p><p class="rline" data-i="6"><i style="width:46%"></i><i style="width:28%"></i><i style="width:12%"></i></p><span class="rsweep" id="rsweep"></span></div>
+      </div>
+      <p class="rout" id="rout" data-v="ok"><span id="rv">Cited &#183; POL-IAM-002 &#167;3.1</span></p>
     </div>
-    <p class="sr-only">A continuous animation: a security questionnaire question
-    arrives, the approved evidence is searched, and the answer is either cited to
-    the source it was found in or refused because the evidence is missing, expired,
-    or contradictory.</p>
+    <p class="sr-only">An animation: a security questionnaire question arrives, the
+    company's own approved evidence is searched, and the one line the answer is
+    cited to is uncovered. When no approved evidence supports the claim, nothing is
+    uncovered and the answer is refused with the gap named.</p>
   </div>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
@@ -1011,16 +1026,19 @@ window.__rv = new IntersectionObserver(function (es) {
     <!-- Every deliverable below is made of these: a verdict with a citation, or a
          refusal with its gap named. So show them being produced, once, here,
          rather than describing them. -->
-    <div class="lane" id="lane" aria-hidden="true">
+    <div class="lane" id="lane">
       <div class="lanegate"><span class="lgline"></span><span class="lgglow"></span>
         <span class="lglabel">gate</span></div>
       <div class="lanetrack" id="lanetrack"><div class="lcard" data-v="ok" data-cite="POL-IAM-002 &#167;3.1"><p class="lq">Do you enforce multi factor authentication for administrative access?</p><p class="la"><span class="lv"></span><span class="lt">Per Access Control Policy v2.3: administrative access requires MFA.</span></p></div><div class="lcard" data-v="warn" data-cite="route to security owner"><p class="lq">Is your information security management system ISO 27001 certified?</p><p class="la"><span class="lv"></span><span class="lt">Roadmap is not a certificate. No attestation on file.</span></p></div><div class="lcard" data-v="ok" data-cite="POL-CRY-001 &#167;2.4"><p class="lq">Is customer data encrypted in transit using TLS 1.2 or higher?</p><p class="la"><span class="lv"></span><span class="lt">Per Cryptography Policy v1.4: TLS 1.2 is the enforced minimum.</span></p></div><div class="lcard" data-v="warn" data-cite="route to security owner"><p class="lq">Has an independent penetration test been performed in the last 12 months?</p><p class="la"><span class="lv"></span><span class="lt">RPT-PEN-2024 expired 2025-06-10, cannot support a current claim.</span></p></div><div class="lcard" data-v="warn" data-cite="route to data owners"><p class="lq">Within how many days of termination is customer data deleted?</p><p class="la"><span class="lv"></span><span class="lt">Two approved sources disagree. Held until an owner reconciles.</span></p></div><div class="lcard" data-v="ok" data-cite="POL-ISMS-001 v3.2"><p class="lq">Do you maintain a formal, approved information security policy?</p><p class="la"><span class="lv"></span><span class="lt">Per Information Security Policy v3.2: reviewed at least annually.</span></p></div></div>
       <div class="lanefoot"><span class="lstat" id="lstat">0 cited</span>
-        <span class="lstat warn" id="lstatr">0 refused</span></div>
+        <span class="lstat warn" id="lstatr">0 refused</span>
+        <span class="lhint">Drag a question across the gate</span></div>
     </div>
-    <p class="sr-only">A continuous animation: security questionnaire questions pass
-    through a gate. Questions the approved evidence supports come out with a
-    citation. Questions it cannot support come out refused, with the gap named.</p>
+    <p class="sr-only">An interactive animation: security questionnaire questions
+    drift across a gate. What the approved evidence supports comes out cited; what
+    it cannot comes out refused with the gap named. Each card can be dragged or
+    arrow-keyed across the gate and back. The deliverables listed below state the
+    same outcomes in text.</p>
   </div>
 
     <div class="tamper rv" id="tamper">
@@ -1253,119 +1271,88 @@ const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
    left here is a final sweep for anything added after parsing. */
 window.__rvScan();
 
-/* ── the hero's live object ────────────────────────────────────────────────
-   One cycle: a question arrives, a beam sweeps the approved sources, and what
-   it finds decides the answer. Five cycles, and only one of them is a clean
-   citation, because that is roughly the real split and a hero full of green
-   ticks would sell the opposite of this product.
+/* ── the hero's live object: the redaction lifting ────────────────────────
+   One cycle: a question arrives, a sweep runs down the company's own approved
+   evidence, and either exactly one line comes uncovered or nothing does. Five
+   cycles, one of which finds its line. The other four are four different
+   reasons a claim cannot be released, which is the argument the product makes.
 
-   The four refusals are four different reasons, which is the argument: nothing
-   found, found but expired, two sources disagreeing, and a question no evidence
-   can answer because it is a contractual commitment. */
+   The sweep is one CSS transition on one element and the reveal is two class
+   toggles, so while it runs the cost is a transform and an opacity, both of
+   which the compositor handles off the main thread. */
 (function(){
-  const v=document.getElementById("vault");
-  if(!v)return;
-  const q=document.getElementById("vq"),beam=document.getElementById("vbeam"),
-        src=document.getElementById("vsrc"),out=document.getElementById("vout"),
-        vv=document.getElementById("vv"),vt=document.getElementById("vt");
-  const bars=[...src.querySelectorAll(".vbar")];
-  const GL="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789§¶·/.";
+  const r=document.getElementById("redact");
+  if(!r)return;
+  const q=document.getElementById("rq"),src=document.getElementById("rsrc"),
+        sweep=document.getElementById("rsweep"),out=document.getElementById("rout"),
+        rv=document.getElementById("rv"),lines=document.getElementById("rlines"),
+        txt=r.querySelector('.rline[data-i="3"] .rtxt');
   const CYCLES=[
     {q:"Do you enforce multi factor authentication for administrative access?",
-     hit:["POL-IAM-002"],tone:"ok",v:"Cited · POL-IAM-002 §3.1",
-     a:"Per Access Control Policy v2.3: administrative access requires MFA."},
+     src:"POL-IAM-002 v2.3 · approved",found:true,tone:"ok",
+     line:"Access to production systems follows least privilege, and administrative access requires multi factor authentication.",
+     v:"Cited · POL-IAM-002 §3.1"},
     {q:"Is your information security management system ISO 27001 certified?",
-     hit:[],tone:"warn",v:"Refused · no approved evidence",
-     a:"A roadmap is not a certificate. Nothing on file attests to it."},
+     src:"7 approved sources searched · 0 name a certificate",found:false,tone:"warn",
+     v:"Refused · no approved evidence"},
     {q:"Has an independent penetration test been performed in the last 12 months?",
-     hit:["RPT-PEN-2024"],flag:true,tone:"warn",v:"Refused · evidence expired",
-     a:"RPT-PEN-2024 expired 2025-06-10. It cannot support a current claim."},
+     src:"RPT-PEN-2024 v1.0 · expired 2025-06-10",found:false,tone:"warn",
+     v:"Refused · the only match expired"},
     {q:"Within how many days of termination is customer data deleted?",
-     hit:["POL-RET-001","POL-RET-014"],flag:true,tone:"warn",
-     v:"Refused · sources conflict",
-     a:"Two approved policies disagree. Held until an owner reconciles them."},
+     src:"POL-RET-001 v2.0 and POL-RET-014 v1.1 · both approved",found:false,tone:"warn",
+     v:"Refused · two approved sources disagree"},
     {q:"Will Vendor contractually commit to unlimited liability for a breach?",
-     hit:[],tone:"warn",v:"Routed to counsel",
-     a:"A contractual commitment. The model is never asked to draft one."}];
-
-  let i=0,run=false,timers=[],raf=0;
+     src:"contractual commitment · routed before drafting",found:false,tone:"warn",
+     v:"Routed to counsel"}];
+  let i=0,run=false,timers=[];
   const after=(ms,fn)=>timers.push(setTimeout(fn,ms));
-  function clear(){timers.forEach(clearTimeout);timers=[];
-    if(raf){cancelAnimationFrame(raf);raf=0}}
-  function reset(){
-    bars.forEach(b=>b.classList.remove("lit","flag"));
-    v.classList.remove("scanning");
-    out.removeAttribute("data-v");vv.textContent="Searching approved evidence";vt.textContent="";
-  }
-  /* the answer resolves out of document noise, the same gesture the workbook
-     uses, so the two say the same thing in the same language */
-  function resolve(text,ms){
-    const t0=performance.now();
-    (function tick(now){
-      const k=Math.ceil(text.length*(now-t0)/ms);
-      if(k>=text.length){vt.textContent=text;raf=0;return}
-      let s="";
-      for(let j=0;j<text.length;j++){const c=text[j];
-        s+= j<k||c===" "||c===","||c==="."||c===":"||c===";"
-            ? c : GL[(Math.random()*GL.length)|0]}
-      vt.textContent=s;raf=requestAnimationFrame(tick);
-    })(t0);
-  }
+  function clear(){timers.forEach(clearTimeout);timers=[]}
   function cycle(){
     if(!run)return;
     const c=CYCLES[i%CYCLES.length];i++;
-    reset();
-    q.textContent=c.q;
-    const h=src.clientHeight,bh=beam.offsetHeight||34;
-    beam.style.transform="translateY(0px)";
-    after(180,()=>{
+    clear();
+    r.classList.remove("found","searching");
+    out.removeAttribute("data-v");rv.textContent="";
+    q.textContent=c.q;src.textContent="searching approved evidence";
+    txt.textContent=c.line||"";
+    const h=lines.clientHeight,sh=sweep.offsetHeight||30;
+    sweep.style.transition="none";sweep.style.transform="translateY(0px)";
+    after(140,()=>{
       if(!run)return;
-      v.classList.add("scanning");
-      /* one transition, not a per-frame loop: the sweep is the cheapest possible
-         moving part and the browser composites it */
-      beam.style.transition="transform 1150ms cubic-bezier(.33,.02,.28,1)";
-      beam.style.transform="translateY("+(h-bh)+"px)";
-      /* light each match as the beam passes its row */
-      c.hit.forEach(id=>{
-        const b=bars.find(x=>x.dataset.id===id);
-        if(!b)return;
-        const at=180+1150*(b.offsetTop/Math.max(1,h-bh));
-        after(Math.min(at,1250),()=>b.classList.add(c.flag?"flag":"lit"));
-      });
+      r.classList.add("searching");
+      sweep.style.transition="transform 1200ms cubic-bezier(.33,.02,.28,1)";
+      sweep.style.transform="translateY("+Math.max(0,h-sh)+"px)";
     });
     after(1480,()=>{
       if(!run)return;
-      v.classList.remove("scanning");
-      out.dataset.v=c.tone;vv.textContent=c.v;
-      resolve(c.a,620);
+      r.classList.remove("searching");
+      src.textContent=c.src;
+      if(c.found)r.classList.add("found");
+      out.dataset.v=c.tone;rv.textContent=c.v;
     });
-    after(4600,()=>{beam.style.transition="none";cycle()});
+    after(4700,cycle);
   }
   function start(){
     if(run)return;
-    run=true;v.classList.add("live");
-    if(reduced){          /* one finished example, held still */
-      const c=CYCLES[0];q.textContent=c.q;
-      bars.find(x=>x.dataset.id===c.hit[0])?.classList.add("lit");
-      out.dataset.v=c.tone;vv.textContent=c.v;vt.textContent=c.a;
+    run=true;r.classList.add("live");
+    if(reduced){        /* the markup's own finished example, held still */
+      const c=CYCLES[0];
+      q.textContent=c.q;src.textContent=c.src;txt.textContent=c.line;
+      r.classList.add("found");out.dataset.v=c.tone;rv.textContent=c.v;
       return;
     }
     cycle();
   }
-  function stop(){if(!run)return;run=false;clear()}
-  /* JS off leaves the markup's idle state, which is honest: it says Idle. Give
-     it a finished example the moment we know a script is running. */
-  /* the markup carries a finished example for the no-script case; once we are
-     running, the cycle owns every field from its first frame */
+  function stop(){run=false;clear()}
   new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
-    {threshold:0.12}).observe(v);
+    {threshold:0.12}).observe(r);
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden)stop();
-    else if(v.getBoundingClientRect().bottom>0)start();
+    else if(r.getBoundingClientRect().bottom>0)start();
   });
 })();
 
-/* ── the hero lane ─────────────────────────────────────────────────────────
+/* ── section 04's gate lane ─────────────────────────────────────────────────────────
    Cards drift left to right at a constant speed. A card is undecided until its
    leading edge reaches the gate; at that moment its verdict appears and its
    answer resolves out of document glyphs into the real sentence, reusing the
@@ -1385,7 +1372,15 @@ window.__rvScan();
   const GL="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\u00a7\u00b6\u00b7/.";
   const SPEED=50;                     /* px per second */
   const LANES=3, RES=620;             /* rows, and resolve duration in ms */
-  let ok=0,bad=0,run=false,last=0,W=0,H=0,gateX=0,raf=0;
+  let run=false,last=0,W=0,H=0,gateX=0,raf=0,held=null;
+  /* The counters used to accumulate, so they climbed past eighty and read as
+     invented. They describe the six cards actually on the lane. */
+  function tally(){
+    let ok=0,bad=0;
+    cards.forEach(c=>{if(!c.classList.contains("past"))return;
+      c.dataset.v==="ok"?ok++:bad++});
+    okOut.textContent=ok+" cited";badOut.textContent=bad+" refused";
+  }
 
   cards.forEach(c=>{
     const lt=c.querySelector(".lt");
@@ -1417,9 +1412,8 @@ window.__rvScan();
       c.classList.add("past");
       c._v.textContent=c.dataset.v==="ok"?"Cited \u00b7 "+c._cite:"Refused \u00b7 "+c._cite;
       c._lt.textContent=c._lt.dataset.text;c._done=true;c._t0=0;
-      if(c.dataset.v==="ok")okOut.textContent=(++ok)+" cited";
-      else badOut.textContent=(++bad)+" refused";
     }
+    tally();
     draw(c);
   }
   function draw(c){c.style.transform="translate3d("+c._x.toFixed(1)+"px,"+c._y.toFixed(1)+"px,0)"}
@@ -1427,18 +1421,75 @@ window.__rvScan();
     c.classList.add("past");
     c._v.textContent=c.dataset.v==="ok"?"Cited \u00b7 "+c._cite:"Refused \u00b7 "+c._cite;
     c._t0=performance.now();
-    if(c.dataset.v==="ok"){ok++;okOut.textContent=ok+" cited"}
-    else{bad++;badOut.textContent=bad+" refused"}
+    tally();
     lane.classList.add("firing");
     clearTimeout(lane._g);lane._g=setTimeout(()=>lane.classList.remove("firing"),300);
   }
+  /* Pull a question back across the gate and it becomes undecided again. The
+     gate is the decision, so crossing it means something in both directions,
+     otherwise dragging is a toy bolted onto a diagram. */
+  function undecide(c){
+    c.classList.remove("past");
+    c._v.textContent="pending";c._t0=0;c._done=false;
+    tally();
+  }
+
+  /* Drag. Pointer events cover mouse, touch and pen in one path, and pointer
+     capture means a fast drag that outruns the card does not drop it. */
+  function grab(e){
+    const c=e.currentTarget;
+    if(!run)return;
+    held=c;c.classList.add("held");
+    c._gx=e.clientX-c._x;c._gy=e.clientY-c._y;
+    try{c.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  }
+  function at(c,x,y){
+    const cw=c.offsetWidth||280,ch=c.offsetHeight||96;
+    c._x=Math.max(-cw*0.55,Math.min(W+cw*0.2,x));
+    if(y!==undefined)c._y=Math.max(2,Math.min(H-ch-4,y));
+    draw(c);
+    const crossed=c._x+cw>=gateX;
+    if(crossed&&!c.classList.contains("past"))decide(c);
+    else if(!crossed&&c.classList.contains("past"))undecide(c);
+  }
+  function move(e){
+    const c=e.currentTarget;
+    if(held!==c)return;
+    at(c,e.clientX-c._gx,e.clientY-c._gy);
+  }
+  function drop(e){
+    const c=e.currentTarget;
+    if(held!==c)return;
+    held=null;c.classList.remove("held");
+    try{c.releasePointerCapture(e.pointerId)}catch(_){}
+  }
+  cards.forEach(c=>{
+    c.addEventListener("pointerdown",grab);
+    c.addEventListener("pointermove",move);
+    c.addEventListener("pointerup",drop);
+    c.addEventListener("pointercancel",drop);
+    /* the gate has to be operable without a pointer */
+    c.tabIndex=0;
+    c.setAttribute("role","button");
+    c.setAttribute("aria-label",
+      "Question card. Left and right arrow keys move it across the gate.");
+    c.addEventListener("keydown",e=>{
+      const d=e.key==="ArrowRight"?46:e.key==="ArrowLeft"?-46:0;
+      if(!d||!run)return;
+      e.preventDefault();at(c,c._x+d);
+    });
+  });
+
   function step(now){
     if(!run)return;
     const dt=Math.min(50,now-(last||now));last=now;
     cards.forEach(c=>{
       const cw=c.offsetWidth||280;
-      c._x+=SPEED*dt/1000;
-      if(!c.classList.contains("past")&&c._x+cw>=gateX)decide(c);
+      if(c!==held)c._x+=SPEED*dt/1000;
+      const crossed=c._x+cw>=gateX;
+      if(!c.classList.contains("past")&&crossed)decide(c);
+      else if(c.classList.contains("past")&&!crossed)undecide(c);
       if(!c._t0&&!c.classList.contains("past")){
         /* pending: unreadable document noise, re-drawn a few times a second.
            Cheap, and it means no card on the lane is ever an empty box. */
@@ -1456,7 +1507,7 @@ window.__rvScan();
               ? ch : GL[(Math.random()*GL.length)|0]}
           c._lt.textContent=s}
       }
-      if(c._x>W+20)place(c,false);
+      if(c._x>W+20&&c!==held)place(c,false);
       draw(c);
     });
     raf=requestAnimationFrame(step);
