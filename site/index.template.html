@@ -136,36 +136,13 @@ transform:translateY(6px)}
 transition:opacity 520ms var(--ease-out) 700ms,transform 520ms var(--ease-out) 700ms}
 @media(prefers-reduced-motion:reduce){.js .intro{display:none}}
 
-/* ── the hero's live object: the pile ────────────────────────────────────── */
-.pile{position:relative;display:flex;flex-direction:column;
-border:1px solid var(--line-2);border-radius:var(--radius-2);overflow:hidden;
-min-height:clamp(320px,50vh,460px);
-background:linear-gradient(180deg,rgba(24,24,27,0.72),rgba(14,14,16,0.94))}
-.pilebar{display:flex;align-items:center;gap:9px;padding:7px 13px;
-border-bottom:1px solid var(--line-1);font-family:var(--font-mono);
-font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-faint)}
-.pilelive{width:5px;height:5px;border-radius:50%;background:var(--status-critical);
-margin-left:auto;opacity:0.35;flex:0 0 5px}
-.js .pile.filling .pilelive{animation:beat 1.1s var(--ease-inout) infinite;opacity:1}
-/* The rows are set tiny and tight on purpose. Read one and it is a fair
-   question; read eighty at once and it is a week of someone's life. The
-   texture is the argument, so the type is sized to be seen, not read. */
-.pilerows{flex:1;overflow:hidden;padding:11px 13px;
-display:flex;flex-direction:column;gap:3px;
--webkit-mask-image:linear-gradient(180deg,#000 74%,transparent);
-mask-image:linear-gradient(180deg,#000 74%,transparent)}
-.prow{font-size:10.5px;line-height:1.5;color:var(--text-tertiary);
-white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-padding-left:9px;border-left:1px solid var(--line-2);flex:0 0 auto}
-.js .pile.filling .prow{animation:prowin 240ms var(--ease-out) both}
-@keyframes prowin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.pilefoot{display:flex;align-items:baseline;gap:14px;padding:12px 13px;
-border-top:1px solid var(--line-1);background:rgba(14,14,16,0.72)}
-.pilen{font-family:var(--font-display);font-weight:300;font-size:clamp(34px,4.4vw,54px);
-line-height:1;color:var(--text-primary);font-variant-numeric:tabular-nums}
-.pilelbl{font-family:var(--font-mono);font-size:9px;letter-spacing:0.15em;
-text-transform:uppercase;color:var(--text-tertiary);line-height:1.7}
-.pilelbl em{font-style:normal;color:var(--status-critical)}
+/* ── the hero's live object: the field ───────────────────────────────────── */
+.field{position:relative;border:1px solid var(--line-2);
+border-radius:var(--radius-2);overflow:hidden;
+height:clamp(340px,52vh,500px);
+background:radial-gradient(120% 90% at 62% 46%,rgba(169,180,245,0.05),transparent 62%),
+linear-gradient(180deg,rgba(24,24,27,0.66),rgba(12,12,14,0.94))}
+.field canvas{display:block;width:100%;height:100%}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -878,24 +855,16 @@ window.__rv = new IntersectionObserver(function (es) {
       </div>
     </div>
 
-    <!-- The live object: the size of the thing. Not another question being
-         answered, because three sections below already do that and the hero kept
-         competing with them. This is the pile that arrives, which is the part a
-         founder actually recognises. The questions are real ones from the sample
-         pack and the count is the real count: no invented industry statistic. -->
-    <div class="pile" id="pile">
-      <div class="pilebar"><span id="pilesrc">inbound questionnaire</span>
-        <span class="pilelive" id="pilelive"></span></div>
-      <div class="pilerows" id="pilerows"><span class="prow">Do you maintain a formal, approved information security policy?</span><span class="prow">Is customer data encrypted in transit using TLS 1.2 or higher?</span><span class="prow">Do you enforce multi factor authentication for administrators?</span><span class="prow">Has an independent penetration test been performed this year?</span><span class="prow">Within how many days of termination is customer data deleted?</span><span class="prow">Do you hold a current SOC 2 Type II attestation?</span><span class="prow">Are backups encrypted at rest and restore tested?</span><span class="prow">How quickly are critical vulnerabilities remediated?</span><span class="prow">Do subcontractors process customer data, and under what terms?</span></div>
-      <div class="pilefoot">
-        <b class="pilen" id="pilen">42</b>
-        <span class="pilelbl">questions on one questionnaire<br>
-        <em>and every deal brings another</em></span>
-      </div>
+    <!-- The live object. Purely visual: there is already a headline and a lede
+         to read on this screen, and a panel of prose beside them was a second
+         thing to read rather than something to watch. Documents drift through
+         the frame, cross the gate, and come out cleared or struck. No words. -->
+    <div class="field" id="field" aria-hidden="true">
+      <canvas id="fieldc"></canvas>
     </div>
-    <p class="sr-only">An animation: the questions from a single security
-    questionnaire arrive one after another and are counted, showing the volume a
-    company is asked to answer for each deal.</p>
+    <p class="sr-only">A decorative animation: documents drift across the screen
+    and pass a gate, where each is either cleared or struck through. The sections
+    below state the same outcomes in text.</p>
   </div>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
@@ -1355,62 +1324,148 @@ window.__rvScan();
   setTimeout(end,3200);
 })();
 
-/* ── the hero's live object: the pile ──────────────────────────────────────
-   Questions from one real questionnaire arrive and are counted. Not another
-   question being answered: three sections below already do that, and every
-   hero I built before this one was competing with the section under it.
+/* ── the hero's live object: the field ─────────────────────────────────────
+   Documents drift through the frame and cross a gate. What the evidence
+   supports comes out cleared, what it cannot comes out struck. There is not a
+   word in it: the headline and the lede are already on this screen, so a panel
+   of prose beside them was a second thing to read rather than something to
+   watch.
 
-   The rows are the real bank the demo runs on and the count is that bank's real
-   size. No invented industry figure: if the number has to be bigger than the
-   truth to land, the page is arguing dishonestly on the one product whose whole
-   claim is that it does not do that. */
+   A sheet is drawn as a sheet, with ruled lines standing in for its text, so it
+   reads as a document rather than as an abstract particle. That is the whole
+   difference between this and the ambient noise field it replaces.
+
+   Canvas, because forty objects with depth, parallax and per-object strokes is
+   what canvas is for: as DOM it would be forty composited layers and a style
+   recalc every frame. */
 (function(){
-  const pile=document.getElementById("pile");
-  if(!pile)return;
-  const rows=document.getElementById("pilerows"),n=document.getElementById("pilen"),
-        src=document.getElementById("pilesrc");
-  const bank=(typeof DEMO!=="undefined"&&DEMO.bank)?DEMO.bank:[];
-  const qs=bank.map(b=>b.question).filter(Boolean);
-  if(!qs.length)return;                    /* markup's nine rows stand alone */
-  const TOTAL=qs.length,STEP=44;
-  let run=false,timers=[],i=0;
-  const after=(ms,fn)=>timers.push(setTimeout(fn,ms));
-  function clear(){timers.forEach(clearTimeout);timers=[]}
-  /* Rows are added, never removed while filling, and the container clips with a
-     fade, so the pile grows past the frame the way an inbox does. */
-  function add(){
-    if(!run||i>=TOTAL)return done();
-    const el=document.createElement("span");
-    el.className="prow";el.textContent=qs[i];
-    rows.appendChild(el);
-    i++;n.textContent=i;
-    /* keep the DOM bounded: only the visible tail can matter */
-    while(rows.children.length>26)rows.removeChild(rows.firstElementChild);
-    after(STEP,add);
+  const wrap=document.getElementById("field");
+  if(!wrap)return;
+  const cv=document.getElementById("fieldc");
+  if(!cv||!cv.getContext)return;
+  const ctx=cv.getContext("2d");
+
+  const INK="232,232,228", OK="122,164,124", BAD="217,120,98", SIG="169,180,245";
+  const N=42;
+  let W=0,H=0,dpr=1,gate=0,sheets=[],run=false,raf=0,last=0,flash=0;
+
+  function size(){
+    const r=wrap.getBoundingClientRect();
+    dpr=Math.min(2,devicePixelRatio||1);
+    W=r.width;H=r.height;gate=W*0.6;
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  function done(){
-    pile.classList.remove("filling");pile.classList.add("filled");
-    src.textContent="one questionnaire, counted";
-    n.textContent=TOTAL;
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function make(seed){
+    /* depth drives size, speed and opacity together, so the field has a front
+       and a back rather than being a flat scatter */
+    const z=rnd(0.42,1);
+    const w=rnd(46,74)*z, h=w*rnd(1.16,1.34);
+    return {z,w,h,
+      x: seed? rnd(-w,W+w) : -w-rnd(0,90),
+      y: rnd(-h*0.25,H-h*0.55),
+      vx: (10+z*30)/1000,
+      drift: rnd(-0.004,0.004),
+      rot: rnd(-0.06,0.06),
+      lines: Math.max(3,Math.round(h/13)),
+      /* 4 in 10 are refused, which is the sample pack's real split rather than
+         a flattering one */
+      bad: Math.random()<0.4,
+      done: false, t: 0};
+  }
+  function reset(){sheets=Array.from({length:N},(_,i)=>make(true))}
+
+  function sheet(s){
+    ctx.save();
+    ctx.translate(s.x+s.w/2,s.y+s.h/2);ctx.rotate(s.rot);
+    ctx.translate(-s.w/2,-s.h/2);
+    const a=0.14+s.z*0.5;
+    /* the page */
+    ctx.fillStyle="rgba(22,22,26,"+(0.5+s.z*0.42)+")";
+    ctx.strokeStyle="rgba("+INK+","+(a*0.34)+")";
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();ctx.stroke();
+    /* its text, as ruling. Never actual glyphs: at this size type would be
+       noise, and the point is the object, not its contents. */
+    ctx.fillStyle="rgba("+INK+","+(a*0.3)+")";
+    const pad=6*s.z, gap=(s.h-pad*2)/s.lines;
+    for(let i=0;i<s.lines;i++){
+      const wd=(s.w-pad*2)*(i===0?0.52:rnd(0.5,0.94));
+      ctx.fillRect(pad,pad+i*gap,wd,Math.max(1,1.4*s.z));
+    }
+    if(s.done){
+      const c=s.bad?BAD:OK;
+      ctx.fillStyle="rgba("+c+","+(0.1+s.z*0.12)+")";
+      ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();
+      /* cleared gets a rule down its spine, struck gets a line through it */
+      ctx.strokeStyle="rgba("+c+","+(0.5+s.z*0.4)+")";
+      ctx.lineWidth=Math.max(1.4,2*s.z);
+      ctx.beginPath();
+      if(s.bad){ctx.moveTo(pad*0.6,s.h*0.5);ctx.lineTo(s.w-pad*0.6,s.h*0.44)}
+      else{ctx.moveTo(1,2);ctx.lineTo(1,s.h-2)}
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function frame(now){
+    if(!run)return;
+    const dt=Math.min(48,now-(last||now));last=now;
+    ctx.clearRect(0,0,W,H);
+
+    /* the gate: one soft vertical seam, brightening for a moment each time
+       something is decided on it */
+    const g=ctx.createLinearGradient(gate-26,0,gate+26,0);
+    const lift=0.09+flash*0.55;
+    g.addColorStop(0,"rgba("+SIG+",0)");
+    g.addColorStop(0.5,"rgba("+SIG+","+lift+")");
+    g.addColorStop(1,"rgba("+SIG+",0)");
+    ctx.fillStyle=g;ctx.fillRect(gate-26,0,52,H);
+    ctx.strokeStyle="rgba("+SIG+","+(0.34+flash*0.5)+")";
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(gate,0);ctx.lineTo(gate,H);ctx.stroke();
+    flash=Math.max(0,flash-dt/420);
+
+    sheets.sort((a,b)=>a.z-b.z);
+    for(const s of sheets){
+      s.x+=s.vx*dt;s.y+=s.drift*dt;s.rot+=0.00002*dt;
+      if(!s.done&&s.x+s.w>=gate){s.done=true;flash=1}
+      if(s.x>W+s.w+10)Object.assign(s,make(false));
+      sheet(s);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  function still(){
+    /* one composed frame: what reduced motion gets, and what a paused tab
+       leaves on screen instead of a blank rectangle */
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle="rgba("+SIG+",0.2)";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(gate,0);ctx.lineTo(gate,H);ctx.stroke();
+    sheets.sort((a,b)=>a.z-b.z);
+    for(const s of sheets){s.done=s.x+s.w>=gate;sheet(s)}
   }
   function start(){
-    if(run)return;run=true;
-    src.textContent="inbound questionnaire";
-    if(reduced){                       /* no stream, just the finished state */
-      done();n.textContent=TOTAL;return;
-    }
-    rows.textContent="";i=0;n.textContent="0";
-    pile.classList.remove("filled");pile.classList.add("filling");
-    add();
+    if(run)return;
+    size();if(!sheets.length)reset();
+    if(reduced){still();return}
+    run=true;last=0;raf=requestAnimationFrame(frame);
   }
-  function stop(){run=false;clear();pile.classList.remove("filling")}
-  new IntersectionObserver(es=>es.forEach(e=>{
-    if(e.isIntersecting)start(); else{stop();}
-  }),{threshold:0.15}).observe(pile);
+  function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
+
+  new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
+    {threshold:0.05}).observe(wrap);
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden)stop();
-    else if(pile.getBoundingClientRect().bottom>0)start();
+    else if(wrap.getBoundingClientRect().bottom>0)start();
   });
+  let rt=0;
+  addEventListener("resize",()=>{
+    clearTimeout(rt);
+    rt=setTimeout(()=>{size();reset();if(reduced)still()},160);
+  },{passive:true});
 })();
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
