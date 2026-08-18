@@ -136,13 +136,23 @@ transform:translateY(6px)}
 transition:opacity 520ms var(--ease-out) 700ms,transform 520ms var(--ease-out) 700ms}
 @media(prefers-reduced-motion:reduce){.js .intro{display:none}}
 
-/* ── the hero's live object: the field ───────────────────────────────────── */
-.field{position:relative;border:1px solid var(--line-2);
-border-radius:var(--radius-2);overflow:hidden;
-height:clamp(340px,52vh,500px);
-background:radial-gradient(120% 90% at 62% 46%,rgba(169,180,245,0.05),transparent 62%),
+/* ── the hero's live object: the corpus ──────────────────────────────────── */
+/* With no script the canvas is blank, so rather than show an empty frame
+   inviting a drag that cannot happen, the panel is not there at all and the
+   hero is its type alone, which stands up perfectly well on its own. */
+.corpus{display:none}
+.js .corpus{display:block;position:relative;border:1px solid var(--line-2);
+border-radius:var(--radius-2);overflow:hidden;height:clamp(340px,52vh,500px);
+background:radial-gradient(110% 86% at 50% 46%,rgba(169,180,245,0.045),transparent 64%),
 linear-gradient(180deg,rgba(24,24,27,0.66),rgba(12,12,14,0.94))}
-.field canvas{display:block;width:100%;height:100%}
+.corpus canvas{display:block;width:100%;height:100%;touch-action:none}
+.corpus.over canvas{cursor:grab}
+.corpus.grabbing canvas{cursor:grabbing}
+.corpushint{position:absolute;left:13px;bottom:11px;font-family:var(--font-mono);
+font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;
+color:var(--text-faint);pointer-events:none;
+transition:opacity 260ms var(--ease-out)}
+.corpus.grabbing .corpushint{opacity:0}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -855,16 +865,18 @@ window.__rv = new IntersectionObserver(function (es) {
       </div>
     </div>
 
-    <!-- The live object. Purely visual: there is already a headline and a lede
-         to read on this screen, and a panel of prose beside them was a second
-         thing to read rather than something to watch. Documents drift through
-         the frame, cross the gate, and come out cleared or struck. No words. -->
-    <div class="field" id="field" aria-hidden="true">
-      <canvas id="fieldc"></canvas>
+    <!-- The live object: the corpus. Every section below shows a question being
+         judged; none shows the evidence doing the judging, so this is the one
+         thing the hero can own without repeating them. Drag any document and
+         the structure follows and settles. -->
+    <div class="corpus" id="corpus">
+      <canvas id="corpusc"></canvas>
+      <span class="corpushint">drag a document</span>
     </div>
-    <p class="sr-only">A decorative animation: documents drift across the screen
-    and pass a gate, where each is either cleared or struck through. The sections
-    below state the same outcomes in text.</p>
+    <p class="sr-only">An interactive diagram: the company's approved policy
+    documents, drawn as sheets, connected to the other documents they overlap
+    with. Any document can be dragged and the structure settles around it. The
+    sections below describe the same evidence in text.</p>
   </div>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
@@ -1324,137 +1336,180 @@ window.__rvScan();
   setTimeout(end,3200);
 })();
 
-/* ── the hero's live object: the field ─────────────────────────────────────
-   Documents drift through the frame and cross a gate. What the evidence
-   supports comes out cleared, what it cannot comes out struck. There is not a
-   word in it: the headline and the lede are already on this screen, so a panel
-   of prose beside them was a second thing to read rather than something to
-   watch.
+/* ── the hero's live object: the corpus ────────────────────────────────────
+   Every other section on this page shows a question being judged. None of them
+   shows the thing doing the judging, which is the company's own evidence, and
+   that is the one object the hero can own without repeating a section below it.
 
-   A sheet is drawn as a sheet, with ruled lines standing in for its text, so it
-   reads as a document rather than as an abstract particle. That is the whole
-   difference between this and the ambient noise field it replaces.
+   So: the policy corpus as a live structure. Documents are nodes, a spring
+   joins any two that share a topic, and the whole thing is under constant
+   repulsion, so it finds its own shape. Grab one and the structure follows,
+   swings, and settles. That is the tracebit lesson, momentum and release, done
+   with physics rather than with a scroll position.
 
-   Canvas, because forty objects with depth, parallax and per-object strokes is
-   what canvas is for: as DOM it would be forty composited layers and a style
-   recalc every frame. */
+   A node is drawn as a document, a small sheet with ruled lines, never as a
+   circle. A constellation of dots is the grey blotch problem again: the viewer
+   has to be told what the dots are, and a thing that needs a caption is not
+   working. A sheet needs no caption. */
 (function(){
-  const wrap=document.getElementById("field");
+  const wrap=document.getElementById("corpus");
   if(!wrap)return;
-  const cv=document.getElementById("fieldc");
+  const cv=document.getElementById("corpusc");
   if(!cv||!cv.getContext)return;
   const ctx=cv.getContext("2d");
 
-  const INK="232,232,228", OK="122,164,124", BAD="217,120,98", SIG="169,180,245";
-  const N=42;
-  let W=0,H=0,dpr=1,gate=0,sheets=[],run=false,raf=0,last=0,flash=0;
+  const INK="232,232,228", SIG="169,180,245", OK="122,164,124", BAD="217,120,98";
+  /* the seven real sources the demo runs on, plus the edges between the ones
+     that genuinely cover overlapping ground. The shape is not invented: it is
+     the sample pack's own topic overlap. */
+  const DOCS=[
+    {k:"isms", w:1.25},{k:"iam", w:1.0},{k:"cry", w:1.0},{k:"soc2", w:1.15},
+    {k:"pen", w:0.9, stale:true},{k:"ret1", w:1.0},{k:"ret14", w:0.9, stale:true},
+    {k:"bcp", w:0.95},{k:"vend", w:1.0}];
+  const EDGES=[[0,1],[0,2],[0,3],[0,5],[1,3],[2,3],[3,4],[5,6],[0,7],[3,7],
+               [0,8],[8,5],[1,8],[2,4]];
+
+  let W=0,H=0,dpr=1,nodes=[],run=false,raf=0,last=0,held=null,hover=null,
+      px=0,py=0,pvx=0,pvy=0;
 
   function size(){
     const r=wrap.getBoundingClientRect();
     dpr=Math.min(2,devicePixelRatio||1);
-    W=r.width;H=r.height;gate=W*0.6;
+    W=r.width;H=r.height;
     cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  const rnd=(a,b)=>a+Math.random()*(b-a);
-
-  function make(seed){
-    /* depth drives size, speed and opacity together, so the field has a front
-       and a back rather than being a flat scatter */
-    const z=rnd(0.42,1);
-    const w=rnd(46,74)*z, h=w*rnd(1.16,1.34);
-    return {z,w,h,
-      x: seed? rnd(-w,W+w) : -w-rnd(0,90),
-      y: rnd(-h*0.25,H-h*0.55),
-      vx: (10+z*30)/1000,
-      drift: rnd(-0.004,0.004),
-      rot: rnd(-0.06,0.06),
-      lines: Math.max(3,Math.round(h/13)),
-      /* 4 in 10 are refused, which is the sample pack's real split rather than
-         a flattering one */
-      bad: Math.random()<0.4,
-      done: false, t: 0};
+  function build(){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*0.3;
+    nodes=DOCS.map((d,i)=>{
+      const a=(i/DOCS.length)*Math.PI*2;
+      return {...d,
+        x:cx+Math.cos(a)*R*(0.7+Math.random()*0.5),
+        y:cy+Math.sin(a)*R*(0.7+Math.random()*0.5),
+        vx:0,vy:0,
+        bw:Math.round(40*d.w), bh:Math.round(50*d.w),
+        rot:(Math.random()-0.5)*0.22,
+        lines:Math.max(3,Math.round(50*d.w/10))};
+    });
   }
-  function reset(){sheets=Array.from({length:N},(_,i)=>make(true))}
-
-  function sheet(s){
+  /* one Euler step: springs pull, everything repels, a weak centring force
+     keeps the structure inside its frame, and damping makes a release settle
+     instead of ringing forever */
+  function physics(dt){
+    const k=0.0016, rest=Math.min(W,H)*0.23, rep=Math.min(W,H)*3.1, damp=0.9;
+    for(const[a,b]of EDGES){
+      const n=nodes[a],m=nodes[b];
+      const dx=m.x-n.x,dy=m.y-n.y,d=Math.hypot(dx,dy)||1;
+      const f=k*(d-rest);
+      const fx=f*dx/d,fy=f*dy/d;
+      if(n!==held){n.vx+=fx;n.vy+=fy}
+      if(m!==held){m.vx-=fx;m.vy-=fy}
+    }
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const n=nodes[i],m=nodes[j];
+      const dx=m.x-n.x,dy=m.y-n.y,d2=Math.max(400,dx*dx+dy*dy),d=Math.sqrt(d2);
+      const f=rep/d2;
+      const fx=f*dx/d,fy=f*dy/d;
+      if(n!==held){n.vx-=fx;n.vy-=fy}
+      if(m!==held){m.vx+=fx;m.vy+=fy}
+    }
+    const cx=W/2,cy=H/2;
+    for(const n of nodes){
+      if(n===held)continue;
+      n.vx+=(cx-n.x)*0.00045;n.vy+=(cy-n.y)*0.00045;
+      n.vx*=damp;n.vy*=damp;
+      n.x+=n.vx*dt*0.06;n.y+=n.vy*dt*0.06;
+      const pad=n.bw*0.8;
+      if(n.x<pad){n.x=pad;n.vx=Math.abs(n.vx)*0.4}
+      if(n.x>W-pad){n.x=W-pad;n.vx=-Math.abs(n.vx)*0.4}
+      if(n.y<pad){n.y=pad;n.vy=Math.abs(n.vy)*0.4}
+      if(n.y>H-pad){n.y=H-pad;n.vy=-Math.abs(n.vy)*0.4}
+      n.rot+=n.vx*0.00016;
+    }
+  }
+  function sheet(n){
+    const on=(n===hover||n===held);
     ctx.save();
-    ctx.translate(s.x+s.w/2,s.y+s.h/2);ctx.rotate(s.rot);
-    ctx.translate(-s.w/2,-s.h/2);
-    const a=0.14+s.z*0.5;
-    /* the page */
-    ctx.fillStyle="rgba(22,22,26,"+(0.5+s.z*0.42)+")";
-    ctx.strokeStyle="rgba("+INK+","+(a*0.34)+")";
-    ctx.lineWidth=1;
-    ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();ctx.stroke();
-    /* its text, as ruling. Never actual glyphs: at this size type would be
-       noise, and the point is the object, not its contents. */
-    ctx.fillStyle="rgba("+INK+","+(a*0.3)+")";
-    const pad=6*s.z, gap=(s.h-pad*2)/s.lines;
-    for(let i=0;i<s.lines;i++){
-      const wd=(s.w-pad*2)*(i===0?0.52:rnd(0.5,0.94));
-      ctx.fillRect(pad,pad+i*gap,wd,Math.max(1,1.4*s.z));
-    }
-    if(s.done){
-      const c=s.bad?BAD:OK;
-      ctx.fillStyle="rgba("+c+","+(0.1+s.z*0.12)+")";
-      ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();
-      /* cleared gets a rule down its spine, struck gets a line through it */
-      ctx.strokeStyle="rgba("+c+","+(0.5+s.z*0.4)+")";
-      ctx.lineWidth=Math.max(1.4,2*s.z);
-      ctx.beginPath();
-      if(s.bad){ctx.moveTo(pad*0.6,s.h*0.5);ctx.lineTo(s.w-pad*0.6,s.h*0.44)}
-      else{ctx.moveTo(1,2);ctx.lineTo(1,s.h-2)}
-      ctx.stroke();
-    }
+    ctx.translate(n.x,n.y);ctx.rotate(n.rot);ctx.translate(-n.bw/2,-n.bh/2);
+    ctx.fillStyle="rgba(24,24,28,0.94)";
+    ctx.strokeStyle=on?"rgba("+SIG+",0.85)"
+      :n.stale?"rgba("+BAD+",0.5)":"rgba("+INK+",0.3)";
+    ctx.lineWidth=on?1.6:1;
+    ctx.beginPath();ctx.roundRect(0,0,n.bw,n.bh,3);ctx.fill();ctx.stroke();
+    /* a spine in the source's own status colour: approved, or stale */
+    ctx.fillStyle=n.stale?"rgba("+BAD+",0.85)":"rgba("+OK+",0.7)";
+    ctx.fillRect(0,0,2,n.bh);
+    ctx.fillStyle="rgba("+INK+","+(on?0.4:0.22)+")";
+    const pad=4,gap=(n.bh-pad*2)/n.lines;
+    for(let i=0;i<n.lines;i++)
+      ctx.fillRect(pad+2,pad+i*gap,(n.bw-pad*2-2)*(i?0.55+((i*37)%40)/100:0.42),1);
     ctx.restore();
   }
-
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(const[a,b]of EDGES){
+      const n=nodes[a],m=nodes[b];
+      const lit=(n===hover||m===hover||n===held||m===held);
+      ctx.strokeStyle=lit?"rgba("+SIG+",0.5)":"rgba("+INK+",0.11)";
+      ctx.lineWidth=lit?1.3:1;
+      ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.stroke();
+    }
+    for(const n of nodes)sheet(n);
+  }
   function frame(now){
     if(!run)return;
     const dt=Math.min(48,now-(last||now));last=now;
-    ctx.clearRect(0,0,W,H);
-
-    /* the gate: one soft vertical seam, brightening for a moment each time
-       something is decided on it */
-    const g=ctx.createLinearGradient(gate-26,0,gate+26,0);
-    const lift=0.09+flash*0.55;
-    g.addColorStop(0,"rgba("+SIG+",0)");
-    g.addColorStop(0.5,"rgba("+SIG+","+lift+")");
-    g.addColorStop(1,"rgba("+SIG+",0)");
-    ctx.fillStyle=g;ctx.fillRect(gate-26,0,52,H);
-    ctx.strokeStyle="rgba("+SIG+","+(0.34+flash*0.5)+")";
-    ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(gate,0);ctx.lineTo(gate,H);ctx.stroke();
-    flash=Math.max(0,flash-dt/420);
-
-    sheets.sort((a,b)=>a.z-b.z);
-    for(const s of sheets){
-      s.x+=s.vx*dt;s.y+=s.drift*dt;s.rot+=0.00002*dt;
-      if(!s.done&&s.x+s.w>=gate){s.done=true;flash=1}
-      if(s.x>W+s.w+10)Object.assign(s,make(false));
-      sheet(s);
+    if(held){
+      /* the held node is driven straight at the pointer, and we keep its
+         velocity so a flick releases with the momentum it looked like it had */
+      held.vx=(px-held.x)*0.35;held.vy=(py-held.y)*0.35;
+      held.x=px;held.y=py;
     }
+    physics(dt);draw();
     raf=requestAnimationFrame(frame);
   }
-
-  function still(){
-    /* one composed frame: what reduced motion gets, and what a paused tab
-       leaves on screen instead of a blank rectangle */
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle="rgba("+SIG+",0.2)";ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(gate,0);ctx.lineTo(gate,H);ctx.stroke();
-    sheets.sort((a,b)=>a.z-b.z);
-    for(const s of sheets){s.done=s.x+s.w>=gate;sheet(s)}
+  function pick(x,y){
+    let best=null,bd=1e9;
+    for(const n of nodes){
+      const d=Math.hypot(n.x-x,n.y-y);
+      if(d<Math.max(n.bw,n.bh)*1.15&&d<bd){bd=d;best=n}
+    }
+    return best;
   }
+  function pos(e){
+    const r=cv.getBoundingClientRect();
+    return [e.clientX-r.left,e.clientY-r.top];
+  }
+  cv.addEventListener("pointerdown",e=>{
+    const[x,y]=pos(e);const n=pick(x,y);
+    if(!n)return;
+    held=n;px=x;py=y;wrap.classList.add("grabbing");
+    try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  });
+  cv.addEventListener("pointermove",e=>{
+    const[x,y]=pos(e);px=x;py=y;
+    if(!held){const n=pick(x,y);
+      if(n!==hover){hover=n;wrap.classList.toggle("over",!!n);if(!run)draw()}}
+  });
+  function release(e){
+    if(!held)return;
+    held=null;wrap.classList.remove("grabbing");
+    try{cv.releasePointerCapture(e.pointerId)}catch(_){}
+  }
+  cv.addEventListener("pointerup",release);
+  cv.addEventListener("pointercancel",release);
+  cv.addEventListener("pointerleave",()=>{if(!held&&hover){hover=null;
+    wrap.classList.remove("over");if(!run)draw()}});
+
+  function settle(steps){for(let i=0;i<steps;i++)physics(16)}
   function start(){
     if(run)return;
-    size();if(!sheets.length)reset();
-    if(reduced){still();return}
+    size();if(!nodes.length){build();settle(220)}
+    if(reduced){draw();return}   /* interaction still works, nothing self-moves */
     run=true;last=0;raf=requestAnimationFrame(frame);
   }
   function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
-
   new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
     {threshold:0.05}).observe(wrap);
   document.addEventListener("visibilitychange",()=>{
@@ -1462,10 +1517,8 @@ window.__rvScan();
     else if(wrap.getBoundingClientRect().bottom>0)start();
   });
   let rt=0;
-  addEventListener("resize",()=>{
-    clearTimeout(rt);
-    rt=setTimeout(()=>{size();reset();if(reduced)still()},160);
-  },{passive:true});
+  addEventListener("resize",()=>{clearTimeout(rt);
+    rt=setTimeout(()=>{size();build();settle(220);draw()},160);},{passive:true});
 })();
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
