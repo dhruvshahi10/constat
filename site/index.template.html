@@ -141,11 +141,11 @@ display:block;pointer-events:none}
    as a field rather than becoming a texture behind a solid block. */
 .heroscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
 background:
-linear-gradient(90deg,rgba(10,10,12,0.97) 0%,rgba(10,10,12,0.9) 22%,
-rgba(10,10,12,0.42) 44%,rgba(10,10,12,0) 62%,rgba(10,10,12,0.18) 100%),
-radial-gradient(1100px 720px at 76% 42%,rgba(169,180,245,0.07),transparent 68%),
-linear-gradient(180deg,rgba(10,10,12,0.5),transparent 22%,transparent 78%,
-rgba(10,10,12,0.7))}
+linear-gradient(90deg,rgba(10,10,12,0.94) 0%,rgba(10,10,12,0.82) 26%,
+rgba(10,10,12,0.36) 48%,rgba(10,10,12,0.1) 68%,rgba(10,10,12,0.28) 100%),
+radial-gradient(1200px 760px at 72% 46%,rgba(169,180,245,0.06),transparent 70%),
+linear-gradient(180deg,rgba(10,10,12,0.42),transparent 20%,transparent 80%,
+rgba(10,10,12,0.72))}
 .band.first .wrap{position:relative;z-index:2}
 .herocopy{max-width:none}
 .herocopy .display{max-width:15ch}
@@ -1267,28 +1267,25 @@ window.__rvScan();
   setTimeout(end,3200);
 })();
 
-/* ── the hero, full bleed ──────────────────────────────────────────────────
-   Both reference sites do the same structural thing and neither of them puts a
-   diagram in a bordered card: the visual owns the whole screen and the words
-   sit on top of it. Every hero before this one was a widget in a box next to a
-   headline, and swapping what was inside the box was never going to fix that.
+/* ── the hero wall ─────────────────────────────────────────────────────────
+   A questionnaire the size of the screen: ruled cells, the same grid the
+   product spends its life in. This existed before as the ambient canvas and
+   was set so faint, grid at 0.032 and washes at 0.09, that it read as
+   compression artefacts rather than as a grid. It is a wall now.
 
-   What drifts is the evidence library: policy documents at four depths, the
-   near ones large and fast, the far ones small, slow and faint. Depth is the
-   whole effect, so speed, scale, opacity and blur-by-proxy all key off one z.
-
-   Armory's contribution is the register: slow, wide, cinematic, no event to
-   read. Evervault's is the parallax that answers the pointer, so the field has
-   volume rather than being a flat scatter. There is no gate and no verdict
-   here: section 04 owns that, and repeating it is what made the last two
-   attempts read as copies. */
+   Deliberately quiet and deliberately regular. It is the ground the hero
+   component stands on, not the subject: it should be legible as structure at
+   a glance and then stop asking for attention. Nothing here is random per
+   frame; cells hold their state for seconds at a time so the wall never
+   flickers. */
 (function(){
   const cv=document.getElementById("herobg");
   if(!cv||!cv.getContext)return;
   const band=cv.closest(".band");
   const ctx=cv.getContext("2d",{alpha:true});
-  const INK="232,232,228", OK="122,164,124", BAD="217,120,98";
-  let W=0,H=0,dpr=1,S=[],run=false,raf=0,last=0,mx=0,my=0,tx=0,ty=0;
+  const INK="232,232,228", SIG="169,180,245", BAD="217,120,98";
+  const CELL=74;
+  let W=0,H=0,dpr=1,cols=0,rows=0,cells=[],run=false,raf=0,last=0,drift=0;
 
   function size(){
     const r=cv.getBoundingClientRect();
@@ -1296,70 +1293,75 @@ window.__rvScan();
     W=r.width;H=r.height;
     cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
+    cols=Math.ceil(W/CELL)+2;rows=Math.ceil(H/CELL)+2;
+    if(cells.length!==cols*rows)
+      cells=Array.from({length:cols*rows},()=>({
+        life:0, tone:0, wait:900+Math.random()*11000}));
   }
-  const rnd=(a,b)=>a+Math.random()*(b-a);
-  function mk(seed){
-    /* four depth bands rather than a continuous random z: a continuum reads as
-       mush, discrete planes read as depth */
-    const z=[0.3,0.5,0.72,1][(Math.random()*4)|0];
-    const w=rnd(58,96)*z, h=w*rnd(1.2,1.34);
-    return {z,w,h,
-      x: seed? rnd(-w,W+w) : -w-rnd(0,240),
-      y: rnd(-h*0.3,H-h*0.55),
-      v: (7+z*26)/1000,
-      rot: rnd(-0.09,0.09),
-      spin: rnd(-0.000012,0.000012),
-      lines: Math.max(3,Math.round(h/12)),
-      /* a library has stale documents in it, and they are the reason a good
-         share of the refusals exist. Four in ten, as in the sample pack. */
-      stale: Math.random()<0.4};
-  }
-  function reset(){S=Array.from({length:38},()=>mk(true))}
-
-  function sheet(s){
-    /* parallax: nearer planes answer the pointer more, which is the only cue
-       that tells the eye these are at different distances rather than sizes */
-    const ox=tx*(s.z*26), oy=ty*(s.z*16);
-    ctx.save();
-    ctx.translate(s.x+s.w/2+ox,s.y+s.h/2+oy);ctx.rotate(s.rot);
-    ctx.translate(-s.w/2,-s.h/2);
-    const a=0.2+s.z*0.62;
-    ctx.fillStyle="rgba(26,26,31,"+(0.5+s.z*0.42)+")";
-    ctx.strokeStyle="rgba("+INK+","+(a*0.42)+")";
+  function grid(){
+    ctx.strokeStyle="rgba("+INK+",0.055)";
     ctx.lineWidth=1;
-    ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();ctx.stroke();
-    /* status lives on the spine, not as a tint over the page: a document is
-       approved or stale, it is not a verdict, and nothing happens to it here */
-    ctx.fillStyle=(s.stale?"rgba("+BAD+",":"rgba("+OK+",")+(a*0.75)+")";
-    ctx.fillRect(0,0,Math.max(1,1.6*s.z),s.h);
-    ctx.fillStyle="rgba("+INK+","+(a*0.34)+")";
-    const pad=6*s.z,gap=(s.h-pad*2)/s.lines;
-    for(let i=0;i<s.lines;i++)
-      ctx.fillRect(pad+2*s.z,pad+i*gap,
-        (s.w-pad*2-2*s.z)*(i?0.5+((i*37)%44)/100:0.44),Math.max(1,1.4*s.z));
-    ctx.restore();
+    ctx.beginPath();
+    for(let y=-CELL+drift;y<H+CELL;y+=CELL){
+      const yy=Math.round(y)+0.5;ctx.moveTo(0,yy);ctx.lineTo(W,yy);
+    }
+    for(let x=0;x<W+CELL;x+=CELL){
+      const xx=Math.round(x)+0.5;ctx.moveTo(xx,0);ctx.lineTo(xx,H);
+    }
+    ctx.stroke();
+  }
+  function paint(dt){
+    for(let i=0;i<cells.length;i++){
+      const c=cells[i];
+      if(c.life<=0){
+        c.wait-=dt;
+        if(c.wait<=0){
+          c.life=3400;
+          /* four in ten struck, the sample pack's real split */
+          c.tone=Math.random()<0.4?1:0;
+          c.wait=7000+Math.random()*22000;
+        }
+        continue;
+      }
+      c.life-=dt;
+      const p=c.life/3400, a=Math.sin(p*Math.PI);
+      const col=c.tone?BAD:SIG;
+      const x=(i%cols)*CELL, y=((i/cols)|0)*CELL-CELL+drift;
+      ctx.fillStyle="rgba("+col+","+(a*0.16).toFixed(3)+")";
+      ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+      ctx.strokeStyle="rgba("+col+","+(a*0.34).toFixed(3)+")";
+      ctx.lineWidth=1;
+      if(c.tone){
+        /* struck: a rule through the cell */
+        ctx.beginPath();
+        ctx.moveTo(x+13,y+CELL/2);ctx.lineTo(x+CELL-13,y+CELL/2);ctx.stroke();
+      }else{
+        /* answered: a rule down its leading edge, the same mark the workbook
+           uses on a cited row, so the wall speaks the page's own language */
+        ctx.beginPath();
+        ctx.moveTo(x+2,y+6);ctx.lineTo(x+2,y+CELL-6);ctx.stroke();
+      }
+    }
   }
   function frame(now){
     if(!run)return;
     const dt=Math.min(48,now-(last||now));last=now;
-    tx+=(mx-tx)*0.045;ty+=(my-ty)*0.045;   /* ease toward the pointer */
+    drift=(drift+dt*0.0055)%CELL;
     ctx.clearRect(0,0,W,H);
-    S.sort((a,b)=>a.z-b.z);
-    for(const s of S){
-      s.x+=s.v*dt;s.rot+=s.spin*dt;
-      if(s.x>W+s.w+20)Object.assign(s,mk(false));
-      sheet(s);
-    }
+    grid();paint(dt);
     raf=requestAnimationFrame(frame);
   }
   function still(){
-    ctx.clearRect(0,0,W,H);
-    S.sort((a,b)=>a.z-b.z);
-    for(const s of S)sheet(s);
+    ctx.clearRect(0,0,W,H);grid();
+    /* a handful held open, so the wall is not a bare grid when nothing moves */
+    for(let i=0;i<cells.length;i+=13){
+      cells[i].life=1700;cells[i].tone=(i/13)%5===0?1:0;
+    }
+    paint(0);
   }
   function start(){
     if(run)return;
-    size();if(!S.length)reset();
+    size();
     if(reduced){still();return}
     run=true;last=0;raf=requestAnimationFrame(frame);
   }
@@ -1367,17 +1369,13 @@ window.__rvScan();
   if(band)new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
     {threshold:0}).observe(band);
   else start();
-  addEventListener("pointermove",e=>{
-    if(reduced)return;
-    mx=(e.clientX/innerWidth-0.5)*2;my=(e.clientY/innerHeight-0.5)*2;
-  },{passive:true});
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden)stop();
     else if(band&&band.getBoundingClientRect().bottom>0)start();
   });
   let rt=0;
   addEventListener("resize",()=>{clearTimeout(rt);
-    rt=setTimeout(()=>{size();reset();if(reduced)still()},160)},{passive:true});
+    rt=setTimeout(()=>{size();if(reduced)still()},160)},{passive:true});
 })();
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
