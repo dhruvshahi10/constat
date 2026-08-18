@@ -153,6 +153,16 @@ font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;
 color:var(--text-faint);pointer-events:none;
 transition:opacity 260ms var(--ease-out)}
 .corpus.grabbing .corpushint{opacity:0}
+.kbstat{position:absolute;top:11px;left:13px;font-family:var(--font-mono);
+font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;
+color:var(--text-faint);pointer-events:none}
+.kbout{position:absolute;left:13px;bottom:11px;right:13px;
+font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.08em;
+color:var(--signal);pointer-events:none;opacity:0;
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+transition:opacity 180ms var(--ease-out)}
+.corpus.reading .kbout{opacity:1}
+.corpus.reading .corpushint{opacity:0}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -871,12 +881,16 @@ window.__rv = new IntersectionObserver(function (es) {
          the structure follows and settles. -->
     <div class="corpus" id="corpus">
       <canvas id="corpusc"></canvas>
-      <span class="corpushint">drag a document</span>
+      <span class="kbstat" id="kbstat"></span>
+      <span class="corpushint">hover a source, drag anything</span>
+      <span class="kbout" id="kbout"></span>
     </div>
-    <p class="sr-only">An interactive diagram: the company's approved policy
-    documents, drawn as sheets, connected to the other documents they overlap
-    with. Any document can be dragged and the structure settles around it. The
-    sections below describe the same evidence in text.</p>
+    <p class="sr-only">An interactive diagram of a company knowledge base, built
+    from the recorded run. Approved source documents are drawn as sheets, sized
+    by how many answers depend on them, and each question is a cell joined to the
+    source its answer was cited to. Questions with no line to any source are the
+    ones nothing on file can answer, and those are the refusals. The sections
+    below describe the same run in text.</p>
   </div>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
@@ -1336,41 +1350,51 @@ window.__rvScan();
   setTimeout(end,3200);
 })();
 
-/* ── the hero's live object: the corpus ────────────────────────────────────
-   Every other section on this page shows a question being judged. None of them
-   shows the thing doing the judging, which is the company's own evidence, and
-   that is the one object the hero can own without repeating a section below it.
+/* ── the hero's live object: the knowledge base ────────────────────────────
+   The previous version was nine documents and some springs. You could pull it
+   about and learn nothing, which is a fair description of decoration.
 
-   So: the policy corpus as a live structure. Documents are nodes, a spring
-   joins any two that share a topic, and the whole thing is under constant
-   repulsion, so it finds its own shape. Grab one and the structure follows,
-   swings, and settles. That is the tracebit lesson, momentum and release, done
-   with physics rather than with a scroll position.
+   This is the actual graph, built at load from the same recorded run the rest
+   of the page uses: every question in the bank, every source those answers were
+   cited to, and an edge for each real citation. Nothing here is arranged by
+   hand. Two things follow from that, and they are the two things worth knowing
+   about a company's evidence:
 
-   A node is drawn as a document, a small sheet with ruled lines, never as a
-   circle. A constellation of dots is the grey blotch problem again: the viewer
-   has to be told what the dots are, and a thing that needs a caption is not
-   working. A sheet needs no caption. */
+     a source's weight is how many answers depend on it, and
+     a question with no edge is a question nothing on file can answer.
+
+   The unconnected cells are not a rendering gap. They are the product's whole
+   argument drawn structurally: the holes in a knowledge base are visible, and
+   they are where the refusals come from. */
 (function(){
   const wrap=document.getElementById("corpus");
   if(!wrap)return;
   const cv=document.getElementById("corpusc");
   if(!cv||!cv.getContext)return;
   const ctx=cv.getContext("2d");
+  const out=document.getElementById("kbout"),stat=document.getElementById("kbstat");
+  const bank=(typeof DEMO!=="undefined"&&DEMO.bank)?DEMO.bank:[];
+  if(!bank.length)return;
 
   const INK="232,232,228", SIG="169,180,245", OK="122,164,124", BAD="217,120,98";
-  /* the seven real sources the demo runs on, plus the edges between the ones
-     that genuinely cover overlapping ground. The shape is not invented: it is
-     the sample pack's own topic overlap. */
-  const DOCS=[
-    {k:"isms", w:1.25},{k:"iam", w:1.0},{k:"cry", w:1.0},{k:"soc2", w:1.15},
-    {k:"pen", w:0.9, stale:true},{k:"ret1", w:1.0},{k:"ret14", w:0.9, stale:true},
-    {k:"bcp", w:0.95},{k:"vend", w:1.0}];
-  const EDGES=[[0,1],[0,2],[0,3],[0,5],[1,3],[2,3],[3,4],[5,6],[0,7],[3,7],
-               [0,8],[8,5],[1,8],[2,4]];
+  const srcOf=s=>String(s).replace(/\s+para:.*$/,"").trim();
 
-  let W=0,H=0,dpr=1,nodes=[],run=false,raf=0,last=0,held=null,hover=null,
-      px=0,py=0,pvx=0,pvy=0;
+  /* ---- build the graph from the run, not from a layout ------------------ */
+  const policies=new Map(), qs=[];
+  for(const e of bank){
+    const cites=[...new Set((e.citations||[]).map(srcOf))].filter(Boolean);
+    qs.push({q:e.question||"",cites,ok:cites.length>0});
+    for(const s of cites) policies.set(s,(policies.get(s)||0)+1);
+  }
+  /* keep every cited question and a sample of the refused: all 42 at once is a
+     hairball, and a hairball communicates less than nothing */
+  const cited=qs.filter(q=>q.ok), refused=qs.filter(q=>!q.ok).slice(0,9);
+  const QS=cited.concat(refused);
+  const POL=[...policies.entries()].map(([id,n])=>({id,n}));
+  const idx=new Map(POL.map((p,i)=>[p.id,i]));
+
+  let W=0,H=0,dpr=1,nodes=[],edges=[],run=false,raf=0,last=0,
+      held=null,hover=null,px=0,py=0;
 
   function size(){
     const r=wrap.getBoundingClientRect();
@@ -1380,91 +1404,128 @@ window.__rvScan();
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   function build(){
-    const cx=W/2,cy=H/2,R=Math.min(W,H)*0.3;
-    nodes=DOCS.map((d,i)=>{
-      const a=(i/DOCS.length)*Math.PI*2;
-      return {...d,
-        x:cx+Math.cos(a)*R*(0.7+Math.random()*0.5),
-        y:cy+Math.sin(a)*R*(0.7+Math.random()*0.5),
-        vx:0,vy:0,
-        bw:Math.round(40*d.w), bh:Math.round(50*d.w),
-        rot:(Math.random()-0.5)*0.22,
-        lines:Math.max(3,Math.round(50*d.w/10))};
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*0.32;
+    nodes=[];edges=[];
+    POL.forEach((p,i)=>{
+      const a=(i/POL.length)*Math.PI*2;
+      const w=26+Math.min(16,p.n*5);
+      nodes.push({kind:"p",id:p.id,n:p.n,
+        x:cx+Math.cos(a)*R*0.62,y:cy+Math.sin(a)*R*0.62,
+        vx:0,vy:0,mass:2.4,bw:w,bh:Math.round(w*1.26),
+        rot:(Math.random()-0.5)*0.18,
+        lines:Math.max(3,Math.round(w*1.26/9))});
     });
+    QS.forEach((q,i)=>{
+      const a=(i/QS.length)*Math.PI*2+0.4;
+      const rr=q.ok?R*1.02:R*1.34;
+      nodes.push({kind:"q",ok:q.ok,cites:q.cites,q:q.q,
+        x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr,
+        vx:0,vy:0,mass:0.55,bw:11,bh:11});
+    });
+    nodes.forEach((n,i)=>{
+      if(n.kind!=="q")return;
+      for(const s of n.cites){
+        const j=idx.get(s);
+        if(j!==undefined)edges.push([i,j]);
+      }
+    });
+    if(stat)stat.textContent=POL.length+" sources · "+QS.length
+      +" questions · "+refused.length+" with nothing on file";
   }
-  /* one Euler step: springs pull, everything repels, a weak centring force
-     keeps the structure inside its frame, and damping makes a release settle
-     instead of ringing forever */
   function physics(dt){
-    const k=0.0016, rest=Math.min(W,H)*0.23, rep=Math.min(W,H)*3.1, damp=0.9;
-    for(const[a,b]of EDGES){
+    const k=0.0022, rest=Math.min(W,H)*0.16, rep=Math.min(W,H)*2.6, damp=0.9;
+    for(const[a,b]of edges){
       const n=nodes[a],m=nodes[b];
       const dx=m.x-n.x,dy=m.y-n.y,d=Math.hypot(dx,dy)||1;
-      const f=k*(d-rest);
-      const fx=f*dx/d,fy=f*dy/d;
-      if(n!==held){n.vx+=fx;n.vy+=fy}
-      if(m!==held){m.vx-=fx;m.vy-=fy}
+      const f=k*(d-rest), fx=f*dx/d, fy=f*dy/d;
+      if(n!==held){n.vx+=fx/n.mass;n.vy+=fy/n.mass}
+      if(m!==held){m.vx-=fx/m.mass;m.vy-=fy/m.mass}
     }
     for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
       const n=nodes[i],m=nodes[j];
-      const dx=m.x-n.x,dy=m.y-n.y,d2=Math.max(400,dx*dx+dy*dy),d=Math.sqrt(d2);
-      const f=rep/d2;
-      const fx=f*dx/d,fy=f*dy/d;
-      if(n!==held){n.vx-=fx;n.vy-=fy}
-      if(m!==held){m.vx+=fx;m.vy+=fy}
+      const dx=m.x-n.x,dy=m.y-n.y,d2=Math.max(360,dx*dx+dy*dy),d=Math.sqrt(d2);
+      const f=rep/d2, fx=f*dx/d, fy=f*dy/d;
+      if(n!==held){n.vx-=fx/n.mass;n.vy-=fy/n.mass}
+      if(m!==held){m.vx+=fx/m.mass;m.vy+=fy/m.mass}
     }
     const cx=W/2,cy=H/2;
     for(const n of nodes){
       if(n===held)continue;
-      n.vx+=(cx-n.x)*0.00045;n.vy+=(cy-n.y)*0.00045;
+      /* a cell with nothing on file is pushed to the rim rather than into the
+         middle: unanswerable questions belong at the edge of a knowledge base */
+      const pull=(n.kind==="q"&&!n.ok)?0.00034:0.0006;
+      n.vx+=(cx-n.x)*pull;n.vy+=(cy-n.y)*pull;
       n.vx*=damp;n.vy*=damp;
       n.x+=n.vx*dt*0.06;n.y+=n.vy*dt*0.06;
-      const pad=n.bw*0.8;
+      const pad=Math.max(n.bw,n.bh)*0.7+4;
       if(n.x<pad){n.x=pad;n.vx=Math.abs(n.vx)*0.4}
       if(n.x>W-pad){n.x=W-pad;n.vx=-Math.abs(n.vx)*0.4}
       if(n.y<pad){n.y=pad;n.vy=Math.abs(n.vy)*0.4}
       if(n.y>H-pad){n.y=H-pad;n.vy=-Math.abs(n.vy)*0.4}
-      n.rot+=n.vx*0.00016;
+      if(n.kind==="p")n.rot+=n.vx*0.00012;
     }
   }
-  function sheet(n){
-    const on=(n===hover||n===held);
+  function near(n){
+    if(!hover)return true;
+    if(n===hover)return true;
+    for(const[a,b]of edges)
+      if((nodes[a]===hover&&nodes[b]===n)||(nodes[b]===hover&&nodes[a]===n))return true;
+    return false;
+  }
+  function drawPolicy(n){
+    const lit=near(n), on=(n===hover||n===held);
+    const a=lit?1:0.38;
     ctx.save();
     ctx.translate(n.x,n.y);ctx.rotate(n.rot);ctx.translate(-n.bw/2,-n.bh/2);
-    ctx.fillStyle="rgba(24,24,28,0.94)";
-    ctx.strokeStyle=on?"rgba("+SIG+",0.85)"
-      :n.stale?"rgba("+BAD+",0.5)":"rgba("+INK+",0.3)";
-    ctx.lineWidth=on?1.6:1;
+    ctx.fillStyle="rgba(24,24,28,"+(0.94*a+0.03)+")";
+    ctx.strokeStyle=on?"rgba("+SIG+",0.9)":"rgba("+INK+","+(0.3*a)+")";
+    ctx.lineWidth=on?1.7:1;
     ctx.beginPath();ctx.roundRect(0,0,n.bw,n.bh,3);ctx.fill();ctx.stroke();
-    /* a spine in the source's own status colour: approved, or stale */
-    ctx.fillStyle=n.stale?"rgba("+BAD+",0.85)":"rgba("+OK+",0.7)";
-    ctx.fillRect(0,0,2,n.bh);
-    ctx.fillStyle="rgba("+INK+","+(on?0.4:0.22)+")";
+    ctx.fillStyle="rgba("+OK+","+(0.72*a)+")";ctx.fillRect(0,0,2,n.bh);
+    ctx.fillStyle="rgba("+INK+","+(0.24*a)+")";
     const pad=4,gap=(n.bh-pad*2)/n.lines;
     for(let i=0;i<n.lines;i++)
       ctx.fillRect(pad+2,pad+i*gap,(n.bw-pad*2-2)*(i?0.55+((i*37)%40)/100:0.42),1);
     ctx.restore();
   }
+  function drawCell(n){
+    const lit=near(n), on=(n===hover||n===held);
+    const a=lit?1:0.36;
+    const c=n.ok?OK:BAD, s=n.bw;
+    ctx.save();ctx.translate(n.x-s/2,n.y-s/2);
+    ctx.fillStyle="rgba("+c+","+((n.ok?0.34:0.24)*a)+")";
+    ctx.strokeStyle="rgba("+c+","+((on?0.95:0.7)*a)+")";
+    ctx.lineWidth=on?1.7:1;
+    ctx.beginPath();ctx.roundRect(0,0,s,s,1.5);ctx.fill();ctx.stroke();
+    ctx.restore();
+  }
   function draw(){
     ctx.clearRect(0,0,W,H);
-    for(const[a,b]of EDGES){
+    for(const[a,b]of edges){
       const n=nodes[a],m=nodes[b];
-      const lit=(n===hover||m===hover||n===held||m===held);
-      ctx.strokeStyle=lit?"rgba("+SIG+",0.5)":"rgba("+INK+",0.11)";
-      ctx.lineWidth=lit?1.3:1;
+      const lit=(!hover)||n===hover||m===hover;
+      ctx.strokeStyle=lit?(hover?"rgba("+SIG+",0.55)":"rgba("+INK+",0.13)")
+                        :"rgba("+INK+",0.07)";
+      ctx.lineWidth=lit&&hover?1.4:1;
       ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.stroke();
     }
-    for(const n of nodes)sheet(n);
+    for(const n of nodes)if(n.kind==="q")drawCell(n);
+    for(const n of nodes)if(n.kind==="p")drawPolicy(n);
+  }
+  function say(n){
+    if(!out)return;
+    if(!n){out.textContent="";wrap.classList.remove("reading");return}
+    wrap.classList.add("reading");
+    out.textContent = n.kind==="p"
+      ? n.id+"  ·  cited by "+n.n+" answer"+(n.n===1?"":"s")
+      : n.ok ? "cited to "+n.cites[0]
+             : "nothing on file answers this  ·  refused";
   }
   function frame(now){
     if(!run)return;
     const dt=Math.min(48,now-(last||now));last=now;
-    if(held){
-      /* the held node is driven straight at the pointer, and we keep its
-         velocity so a flick releases with the momentum it looked like it had */
-      held.vx=(px-held.x)*0.35;held.vy=(py-held.y)*0.35;
-      held.x=px;held.y=py;
-    }
+    if(held){held.vx=(px-held.x)*0.35;held.vy=(py-held.y)*0.35;
+      held.x=px;held.y=py}
     physics(dt);draw();
     raf=requestAnimationFrame(frame);
   }
@@ -1472,25 +1533,26 @@ window.__rvScan();
     let best=null,bd=1e9;
     for(const n of nodes){
       const d=Math.hypot(n.x-x,n.y-y);
-      if(d<Math.max(n.bw,n.bh)*1.15&&d<bd){bd=d;best=n}
+      const r=n.kind==="p"?Math.max(n.bw,n.bh)*0.95:18;
+      if(d<r&&d<bd){bd=d;best=n}
     }
     return best;
   }
-  function pos(e){
-    const r=cv.getBoundingClientRect();
-    return [e.clientX-r.left,e.clientY-r.top];
-  }
+  const pos=e=>{const r=cv.getBoundingClientRect();
+    return [e.clientX-r.left,e.clientY-r.top]};
   cv.addEventListener("pointerdown",e=>{
     const[x,y]=pos(e);const n=pick(x,y);
     if(!n)return;
-    held=n;px=x;py=y;wrap.classList.add("grabbing");
+    held=n;hover=n;px=x;py=y;say(n);
+    wrap.classList.add("grabbing");
     try{cv.setPointerCapture(e.pointerId)}catch(_){}
     e.preventDefault();
   });
   cv.addEventListener("pointermove",e=>{
     const[x,y]=pos(e);px=x;py=y;
-    if(!held){const n=pick(x,y);
-      if(n!==hover){hover=n;wrap.classList.toggle("over",!!n);if(!run)draw()}}
+    if(held)return;
+    const n=pick(x,y);
+    if(n!==hover){hover=n;say(n);wrap.classList.toggle("over",!!n);if(!run)draw()}
   });
   function release(e){
     if(!held)return;
@@ -1499,14 +1561,16 @@ window.__rvScan();
   }
   cv.addEventListener("pointerup",release);
   cv.addEventListener("pointercancel",release);
-  cv.addEventListener("pointerleave",()=>{if(!held&&hover){hover=null;
-    wrap.classList.remove("over");if(!run)draw()}});
+  cv.addEventListener("pointerleave",()=>{
+    if(held)return;hover=null;say(null);
+    wrap.classList.remove("over");if(!run)draw();
+  });
 
-  function settle(steps){for(let i=0;i<steps;i++)physics(16)}
+  function settle(s){for(let i=0;i<s;i++)physics(16)}
   function start(){
     if(run)return;
-    size();if(!nodes.length){build();settle(220)}
-    if(reduced){draw();return}   /* interaction still works, nothing self-moves */
+    size();if(!nodes.length){build();settle(260)}
+    if(reduced){draw();return}
     run=true;last=0;raf=requestAnimationFrame(frame);
   }
   function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
@@ -1518,7 +1582,7 @@ window.__rvScan();
   });
   let rt=0;
   addEventListener("resize",()=>{clearTimeout(rt);
-    rt=setTimeout(()=>{size();build();settle(220);draw()},160);},{passive:true});
+    rt=setTimeout(()=>{size();build();settle(260);draw()},160)},{passive:true});
 })();
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
