@@ -40,8 +40,6 @@ box-shadow:inset 0 1px 0 var(--line-1),inset 0 -1px 0 var(--line-1)}
 /* Two columns: the claim on the left, the artefact that proves it on the
    right. The product used to appear at screen seven, after 690 words. A
    compliance buyer decides in the first screen whether this is real. */
-.herogrid{display:grid;gap:clamp(28px,4vw,56px);align-items:center}
-@media(min-width:1080px){.herogrid{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}}
 .herocopy .ctarow{margin-top:clamp(20px,2.4vw,30px)}
 .herostage{min-width:0}
 /* Only the copy column recedes as the sheet takes over. This used to fade the
@@ -69,9 +67,6 @@ max-width:46ch;margin-top:clamp(18px,2.2vw,26px);text-wrap:pretty}
 margin-bottom:clamp(20px,2.6vw,34px)}
 
 /* ── ground ────────────────────────────────────────────────────────────── */
-#amb{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;
-transition:opacity 1200ms var(--ease-out)}
-.js #amb.on{opacity:1}
 .ground{position:fixed;inset:0;z-index:-2;pointer-events:none;
 background:radial-gradient(900px 620px at 78% -8%,rgba(183,196,255,0.10),transparent 68%),
 radial-gradient(760px 520px at 4% 34%,rgba(217,120,98,0.075),transparent 70%),
@@ -136,33 +131,31 @@ transform:translateY(6px)}
 transition:opacity 520ms var(--ease-out) 700ms,transform 520ms var(--ease-out) 700ms}
 @media(prefers-reduced-motion:reduce){.js .intro{display:none}}
 
-/* ── the hero's live object: the corpus ──────────────────────────────────── */
-/* With no script the canvas is blank, so rather than show an empty frame
-   inviting a drag that cannot happen, the panel is not there at all and the
-   hero is its type alone, which stands up perfectly well on its own. */
-.corpus{display:none}
-.js .corpus{display:block;position:relative;border:1px solid var(--line-2);
-border-radius:var(--radius-2);overflow:hidden;height:clamp(340px,52vh,500px);
-background:radial-gradient(110% 86% at 50% 46%,rgba(169,180,245,0.045),transparent 64%),
-linear-gradient(180deg,rgba(24,24,27,0.66),rgba(12,12,14,0.94))}
-.corpus canvas{display:block;width:100%;height:100%;touch-action:none}
-.corpus.over canvas{cursor:grab}
-.corpus.grabbing canvas{cursor:grabbing}
-.corpushint{position:absolute;left:13px;bottom:11px;font-family:var(--font-mono);
-font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;
-color:var(--text-faint);pointer-events:none;
-transition:opacity 260ms var(--ease-out)}
-.corpus.grabbing .corpushint{opacity:0}
-.kbstat{position:absolute;top:11px;left:13px;font-family:var(--font-mono);
-font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;
-color:var(--text-faint);pointer-events:none}
-.kbout{position:absolute;left:13px;bottom:11px;right:13px;
-font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.08em;
-color:var(--signal);pointer-events:none;opacity:0;
-white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-transition:opacity 180ms var(--ease-out)}
-.corpus.reading .kbout{opacity:1}
-.corpus.reading .corpushint{opacity:0}
+/* ── the hero, full bleed ────────────────────────────────────────────────── */
+.band.first{position:relative;overflow:hidden;min-height:calc(100svh - 62px);
+display:flex;flex-direction:column;justify-content:center}
+.herobg{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+display:block;pointer-events:none}
+/* Type over a moving field needs a floor under it. The scrim is heavy where the
+   words are and clears to nothing across the rest, so the field stays visible
+   as a field rather than becoming a texture behind a solid block. */
+.heroscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+background:
+linear-gradient(90deg,rgba(10,10,12,0.97) 0%,rgba(10,10,12,0.9) 22%,
+rgba(10,10,12,0.42) 44%,rgba(10,10,12,0) 62%,rgba(10,10,12,0.18) 100%),
+radial-gradient(1100px 720px at 76% 42%,rgba(169,180,245,0.07),transparent 68%),
+linear-gradient(180deg,rgba(10,10,12,0.5),transparent 22%,transparent 78%,
+rgba(10,10,12,0.7))}
+.band.first .wrap{position:relative;z-index:2}
+.herocopy{max-width:none}
+.herocopy .display{max-width:15ch}
+.herocopy .lede{max-width:38ch}
+.herocopy .ctarow{margin-top:clamp(22px,2.8vw,34px)}
+@media(max-width:900px){
+/* on a phone the field sits behind everything and is dimmed further, because a
+   moving background under 38 characters of body copy is where legibility goes */
+.heroscrim{background:linear-gradient(180deg,rgba(10,10,12,0.86),
+rgba(10,10,12,0.7) 40%,rgba(10,10,12,0.9))}}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -834,7 +827,6 @@ window.__rv = new IntersectionObserver(function (es) {
   </div>
 </div>
 <div class="ground" aria-hidden="true"></div>
-<canvas id="amb" aria-hidden="true"></canvas>
 
 <nav class="navbar">
   <div class="wrap">
@@ -863,35 +855,26 @@ window.__rv = new IntersectionObserver(function (es) {
 
 <!-- 01 ─ the hero: the claim, and the machine running beside it ─────────── -->
 <section class="band first">
-  <div class="wrap herogrid">
-    <div class="herocopy">
-      <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
-      <h1 class="display">Send the security questionnaire back today.</h1>
-      <p class="lede">Every answer cites the approved policy it came from. Anything your
-      evidence cannot prove is refused, with the gap named.</p>
-      <div class="ctarow">
-        <a class="btn btn-primary" href="#access">Get early access</a>
-        <a class="btn btn-ghost" href="#proof">Watch it run</a>
-      </div>
+  <!-- Full bleed. The visual is the screen and the type sits on it, which is
+       what both reference sites actually do: no card, no border, no panel with
+       a diagram inside it. Everything I built before this one was a widget in a
+       box beside a headline, and changing what was in the box never fixed that.
+       The scrim below is what makes type over a moving field legible. -->
+  <canvas class="herobg" id="herobg" aria-hidden="true"></canvas>
+  <div class="heroscrim" aria-hidden="true"></div>
+  <div class="wrap herocopy">
+    <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
+    <h1 class="display">Send the security questionnaire back today.</h1>
+    <p class="lede">Every answer cites the approved policy it came from. Anything your
+    evidence cannot prove is refused, with the gap named.</p>
+    <div class="ctarow">
+      <a class="btn btn-primary" href="#access">Get early access</a>
+      <a class="btn btn-ghost" href="#proof">Watch it run</a>
     </div>
-
-    <!-- The live object: the corpus. Every section below shows a question being
-         judged; none shows the evidence doing the judging, so this is the one
-         thing the hero can own without repeating them. Drag any document and
-         the structure follows and settles. -->
-    <div class="corpus" id="corpus">
-      <canvas id="corpusc"></canvas>
-      <span class="kbstat" id="kbstat"></span>
-      <span class="corpushint">hover a source, drag anything</span>
-      <span class="kbout" id="kbout"></span>
-    </div>
-    <p class="sr-only">An interactive diagram of a company knowledge base, built
-    from the recorded run. Approved source documents are drawn as sheets, sized
-    by how many answers depend on them, and each question is a cell joined to the
-    source its answer was cited to. Questions with no line to any source are the
-    ones nothing on file can answer, and those are the refusals. The sections
-    below describe the same run in text.</p>
   </div>
+  <p class="sr-only">A decorative animation fills this screen: the documents of a
+  policy library drifting at different depths. The sections below state what the
+  product does in text.</p>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
 </section>
@@ -1222,72 +1205,6 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ── ambient: a questionnaire the size of the page ───────────────────────
-   A faint grid of cells where answers quietly land and some get struck. It is
-   the product's own image rather than decoration, it costs about sixty lines
-   and no library, and it stops entirely when off screen or under reduced
-   motion. */
-(function(){
-  const cv=document.getElementById("amb");
-  if(!cv||reduced)return;
-  const cx=cv.getContext("2d",{alpha:true});
-  const CELL=94, PAD=1;
-  let w=0,h=0,cols=0,rows=0,cells=[],raf=0,vis=true,t0=0;
-  const SIG="183,196,255", RED="217,120,98";
-  function build(){
-    w=cv.width=innerWidth; h=cv.height=innerHeight;
-    cols=Math.ceil(w/CELL)+1; rows=Math.ceil(h/CELL)+1;
-    cells=[];
-    for(let i=0;i<cols*rows;i++)
-      cells.push({s:0,life:0,tone:0,next:1200+Math.random()*9000});
-  }
-  function draw(ts){
-    if(!t0)t0=ts;
-    const dt=Math.min(48,ts-t0);t0=ts;
-    const drift=(ts*0.006)%CELL;
-    cx.clearRect(0,0,w,h);
-    /* the ruled grid */
-    cx.strokeStyle="rgba(232,232,228,0.032)";cx.lineWidth=1;
-    cx.beginPath();
-    for(let y=-CELL+drift;y<h+CELL;y+=CELL){cx.moveTo(0,y|0);cx.lineTo(w,y|0)}
-    for(let x=0;x<w+CELL;x+=CELL){cx.moveTo(x|0,0);cx.lineTo(x|0,h)}
-    cx.stroke();
-    /* cells that answer, and cells that refuse */
-    for(let i=0;i<cells.length;i++){
-      const c=cells[i];
-      c.next-=dt;
-      if(c.next<=0&&c.life<=0){c.life=2600;c.tone=Math.random()<0.28?1:0;c.next=9000+Math.random()*26000}
-      if(c.life>0){
-        c.life-=dt;
-        const p=c.life/2600, a=Math.sin(p*Math.PI)*0.5;
-        const col=c.tone?RED:SIG;
-        const x=(i%cols)*CELL, y=((i/cols)|0)*CELL-CELL+drift;
-        cx.fillStyle=`rgba(${col},${(a*0.09).toFixed(3)})`;
-        cx.fillRect(x+PAD,y+PAD,CELL-PAD*2,CELL-PAD*2);
-        if(c.tone){ /* a struck cell gets a rule through it */
-          cx.strokeStyle=`rgba(${col},${(a*0.5).toFixed(3)})`;cx.lineWidth=1.4;
-          cx.beginPath();cx.moveTo(x+12,y+CELL/2);cx.lineTo(x+CELL-12,y+CELL/2);cx.stroke();
-        }else{
-          cx.fillStyle=`rgba(${col},${(a*0.45).toFixed(3)})`;
-          cx.fillRect(x+12,y+CELL/2-1,CELL-34,2);
-        }
-      }
-    }
-    raf=vis?requestAnimationFrame(draw):0;
-  }
-  function start(){if(!raf){t0=0;raf=requestAnimationFrame(draw)}}
-  build();cv.classList.add("on");start();
-  addEventListener("resize",()=>{build()},{passive:true});
-  /* only paint while the hero is actually on screen */
-  const hero=document.querySelector(".band.first");
-  if(hero)new IntersectionObserver(es=>es.forEach(e=>{
-    vis=e.isIntersecting;
-    cv.style.opacity=vis?"1":"0";
-    if(vis)start();
-  }),{threshold:0}).observe(hero);
-  document.addEventListener("visibilitychange",()=>{vis=!document.hidden;if(vis)start()});
-})();
-
 /* reveal on scroll: the observer itself is registered in the head script, so
    that elements reveal while the document is still streaming. All that is
    left here is a final sweep for anything added after parsing. */
@@ -1350,239 +1267,117 @@ window.__rvScan();
   setTimeout(end,3200);
 })();
 
-/* ── the hero's live object: the knowledge base ────────────────────────────
-   The previous version was nine documents and some springs. You could pull it
-   about and learn nothing, which is a fair description of decoration.
+/* ── the hero, full bleed ──────────────────────────────────────────────────
+   Both reference sites do the same structural thing and neither of them puts a
+   diagram in a bordered card: the visual owns the whole screen and the words
+   sit on top of it. Every hero before this one was a widget in a box next to a
+   headline, and swapping what was inside the box was never going to fix that.
 
-   This is the actual graph, built at load from the same recorded run the rest
-   of the page uses: every question in the bank, every source those answers were
-   cited to, and an edge for each real citation. Nothing here is arranged by
-   hand. Two things follow from that, and they are the two things worth knowing
-   about a company's evidence:
+   What drifts is the evidence library: policy documents at four depths, the
+   near ones large and fast, the far ones small, slow and faint. Depth is the
+   whole effect, so speed, scale, opacity and blur-by-proxy all key off one z.
 
-     a source's weight is how many answers depend on it, and
-     a question with no edge is a question nothing on file can answer.
-
-   The unconnected cells are not a rendering gap. They are the product's whole
-   argument drawn structurally: the holes in a knowledge base are visible, and
-   they are where the refusals come from. */
+   Armory's contribution is the register: slow, wide, cinematic, no event to
+   read. Evervault's is the parallax that answers the pointer, so the field has
+   volume rather than being a flat scatter. There is no gate and no verdict
+   here: section 04 owns that, and repeating it is what made the last two
+   attempts read as copies. */
 (function(){
-  const wrap=document.getElementById("corpus");
-  if(!wrap)return;
-  const cv=document.getElementById("corpusc");
+  const cv=document.getElementById("herobg");
   if(!cv||!cv.getContext)return;
-  const ctx=cv.getContext("2d");
-  const out=document.getElementById("kbout"),stat=document.getElementById("kbstat");
-  const bank=(typeof DEMO!=="undefined"&&DEMO.bank)?DEMO.bank:[];
-  if(!bank.length)return;
-
-  const INK="232,232,228", SIG="169,180,245", OK="122,164,124", BAD="217,120,98";
-  const srcOf=s=>String(s).replace(/\s+para:.*$/,"").trim();
-
-  /* ---- build the graph from the run, not from a layout ------------------ */
-  const policies=new Map(), qs=[];
-  for(const e of bank){
-    const cites=[...new Set((e.citations||[]).map(srcOf))].filter(Boolean);
-    qs.push({q:e.question||"",cites,ok:cites.length>0});
-    for(const s of cites) policies.set(s,(policies.get(s)||0)+1);
-  }
-  /* keep every cited question and a sample of the refused: all 42 at once is a
-     hairball, and a hairball communicates less than nothing */
-  const cited=qs.filter(q=>q.ok), refused=qs.filter(q=>!q.ok).slice(0,9);
-  const QS=cited.concat(refused);
-  const POL=[...policies.entries()].map(([id,n])=>({id,n}));
-  const idx=new Map(POL.map((p,i)=>[p.id,i]));
-
-  let W=0,H=0,dpr=1,nodes=[],edges=[],run=false,raf=0,last=0,
-      held=null,hover=null,px=0,py=0;
+  const band=cv.closest(".band");
+  const ctx=cv.getContext("2d",{alpha:true});
+  const INK="232,232,228", OK="122,164,124", BAD="217,120,98";
+  let W=0,H=0,dpr=1,S=[],run=false,raf=0,last=0,mx=0,my=0,tx=0,ty=0;
 
   function size(){
-    const r=wrap.getBoundingClientRect();
+    const r=cv.getBoundingClientRect();
     dpr=Math.min(2,devicePixelRatio||1);
     W=r.width;H=r.height;
     cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  function build(){
-    const cx=W/2,cy=H/2,R=Math.min(W,H)*0.32;
-    nodes=[];edges=[];
-    POL.forEach((p,i)=>{
-      const a=(i/POL.length)*Math.PI*2;
-      const w=26+Math.min(16,p.n*5);
-      nodes.push({kind:"p",id:p.id,n:p.n,
-        x:cx+Math.cos(a)*R*0.62,y:cy+Math.sin(a)*R*0.62,
-        vx:0,vy:0,mass:2.4,bw:w,bh:Math.round(w*1.26),
-        rot:(Math.random()-0.5)*0.18,
-        lines:Math.max(3,Math.round(w*1.26/9))});
-    });
-    QS.forEach((q,i)=>{
-      const a=(i/QS.length)*Math.PI*2+0.4;
-      const rr=q.ok?R*1.02:R*1.34;
-      nodes.push({kind:"q",ok:q.ok,cites:q.cites,q:q.q,
-        x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr,
-        vx:0,vy:0,mass:0.55,bw:11,bh:11});
-    });
-    nodes.forEach((n,i)=>{
-      if(n.kind!=="q")return;
-      for(const s of n.cites){
-        const j=idx.get(s);
-        if(j!==undefined)edges.push([i,j]);
-      }
-    });
-    if(stat)stat.textContent=POL.length+" sources · "+QS.length
-      +" questions · "+refused.length+" with nothing on file";
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  function mk(seed){
+    /* four depth bands rather than a continuous random z: a continuum reads as
+       mush, discrete planes read as depth */
+    const z=[0.3,0.5,0.72,1][(Math.random()*4)|0];
+    const w=rnd(58,96)*z, h=w*rnd(1.2,1.34);
+    return {z,w,h,
+      x: seed? rnd(-w,W+w) : -w-rnd(0,240),
+      y: rnd(-h*0.3,H-h*0.55),
+      v: (7+z*26)/1000,
+      rot: rnd(-0.09,0.09),
+      spin: rnd(-0.000012,0.000012),
+      lines: Math.max(3,Math.round(h/12)),
+      /* a library has stale documents in it, and they are the reason a good
+         share of the refusals exist. Four in ten, as in the sample pack. */
+      stale: Math.random()<0.4};
   }
-  function physics(dt){
-    const k=0.0022, rest=Math.min(W,H)*0.16, rep=Math.min(W,H)*2.6, damp=0.9;
-    for(const[a,b]of edges){
-      const n=nodes[a],m=nodes[b];
-      const dx=m.x-n.x,dy=m.y-n.y,d=Math.hypot(dx,dy)||1;
-      const f=k*(d-rest), fx=f*dx/d, fy=f*dy/d;
-      if(n!==held){n.vx+=fx/n.mass;n.vy+=fy/n.mass}
-      if(m!==held){m.vx-=fx/m.mass;m.vy-=fy/m.mass}
-    }
-    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
-      const n=nodes[i],m=nodes[j];
-      const dx=m.x-n.x,dy=m.y-n.y,d2=Math.max(360,dx*dx+dy*dy),d=Math.sqrt(d2);
-      const f=rep/d2, fx=f*dx/d, fy=f*dy/d;
-      if(n!==held){n.vx-=fx/n.mass;n.vy-=fy/n.mass}
-      if(m!==held){m.vx+=fx/m.mass;m.vy+=fy/m.mass}
-    }
-    const cx=W/2,cy=H/2;
-    for(const n of nodes){
-      if(n===held)continue;
-      /* a cell with nothing on file is pushed to the rim rather than into the
-         middle: unanswerable questions belong at the edge of a knowledge base */
-      const pull=(n.kind==="q"&&!n.ok)?0.00034:0.0006;
-      n.vx+=(cx-n.x)*pull;n.vy+=(cy-n.y)*pull;
-      n.vx*=damp;n.vy*=damp;
-      n.x+=n.vx*dt*0.06;n.y+=n.vy*dt*0.06;
-      const pad=Math.max(n.bw,n.bh)*0.7+4;
-      if(n.x<pad){n.x=pad;n.vx=Math.abs(n.vx)*0.4}
-      if(n.x>W-pad){n.x=W-pad;n.vx=-Math.abs(n.vx)*0.4}
-      if(n.y<pad){n.y=pad;n.vy=Math.abs(n.vy)*0.4}
-      if(n.y>H-pad){n.y=H-pad;n.vy=-Math.abs(n.vy)*0.4}
-      if(n.kind==="p")n.rot+=n.vx*0.00012;
-    }
-  }
-  function near(n){
-    if(!hover)return true;
-    if(n===hover)return true;
-    for(const[a,b]of edges)
-      if((nodes[a]===hover&&nodes[b]===n)||(nodes[b]===hover&&nodes[a]===n))return true;
-    return false;
-  }
-  function drawPolicy(n){
-    const lit=near(n), on=(n===hover||n===held);
-    const a=lit?1:0.38;
+  function reset(){S=Array.from({length:38},()=>mk(true))}
+
+  function sheet(s){
+    /* parallax: nearer planes answer the pointer more, which is the only cue
+       that tells the eye these are at different distances rather than sizes */
+    const ox=tx*(s.z*26), oy=ty*(s.z*16);
     ctx.save();
-    ctx.translate(n.x,n.y);ctx.rotate(n.rot);ctx.translate(-n.bw/2,-n.bh/2);
-    ctx.fillStyle="rgba(24,24,28,"+(0.94*a+0.03)+")";
-    ctx.strokeStyle=on?"rgba("+SIG+",0.9)":"rgba("+INK+","+(0.3*a)+")";
-    ctx.lineWidth=on?1.7:1;
-    ctx.beginPath();ctx.roundRect(0,0,n.bw,n.bh,3);ctx.fill();ctx.stroke();
-    ctx.fillStyle="rgba("+OK+","+(0.72*a)+")";ctx.fillRect(0,0,2,n.bh);
-    ctx.fillStyle="rgba("+INK+","+(0.24*a)+")";
-    const pad=4,gap=(n.bh-pad*2)/n.lines;
-    for(let i=0;i<n.lines;i++)
-      ctx.fillRect(pad+2,pad+i*gap,(n.bw-pad*2-2)*(i?0.55+((i*37)%40)/100:0.42),1);
+    ctx.translate(s.x+s.w/2+ox,s.y+s.h/2+oy);ctx.rotate(s.rot);
+    ctx.translate(-s.w/2,-s.h/2);
+    const a=0.2+s.z*0.62;
+    ctx.fillStyle="rgba(26,26,31,"+(0.5+s.z*0.42)+")";
+    ctx.strokeStyle="rgba("+INK+","+(a*0.42)+")";
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(0,0,s.w,s.h,3*s.z);ctx.fill();ctx.stroke();
+    /* status lives on the spine, not as a tint over the page: a document is
+       approved or stale, it is not a verdict, and nothing happens to it here */
+    ctx.fillStyle=(s.stale?"rgba("+BAD+",":"rgba("+OK+",")+(a*0.75)+")";
+    ctx.fillRect(0,0,Math.max(1,1.6*s.z),s.h);
+    ctx.fillStyle="rgba("+INK+","+(a*0.34)+")";
+    const pad=6*s.z,gap=(s.h-pad*2)/s.lines;
+    for(let i=0;i<s.lines;i++)
+      ctx.fillRect(pad+2*s.z,pad+i*gap,
+        (s.w-pad*2-2*s.z)*(i?0.5+((i*37)%44)/100:0.44),Math.max(1,1.4*s.z));
     ctx.restore();
-  }
-  function drawCell(n){
-    const lit=near(n), on=(n===hover||n===held);
-    const a=lit?1:0.36;
-    const c=n.ok?OK:BAD, s=n.bw;
-    ctx.save();ctx.translate(n.x-s/2,n.y-s/2);
-    ctx.fillStyle="rgba("+c+","+((n.ok?0.34:0.24)*a)+")";
-    ctx.strokeStyle="rgba("+c+","+((on?0.95:0.7)*a)+")";
-    ctx.lineWidth=on?1.7:1;
-    ctx.beginPath();ctx.roundRect(0,0,s,s,1.5);ctx.fill();ctx.stroke();
-    ctx.restore();
-  }
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    for(const[a,b]of edges){
-      const n=nodes[a],m=nodes[b];
-      const lit=(!hover)||n===hover||m===hover;
-      ctx.strokeStyle=lit?(hover?"rgba("+SIG+",0.55)":"rgba("+INK+",0.13)")
-                        :"rgba("+INK+",0.07)";
-      ctx.lineWidth=lit&&hover?1.4:1;
-      ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.stroke();
-    }
-    for(const n of nodes)if(n.kind==="q")drawCell(n);
-    for(const n of nodes)if(n.kind==="p")drawPolicy(n);
-  }
-  function say(n){
-    if(!out)return;
-    if(!n){out.textContent="";wrap.classList.remove("reading");return}
-    wrap.classList.add("reading");
-    out.textContent = n.kind==="p"
-      ? n.id+"  ·  cited by "+n.n+" answer"+(n.n===1?"":"s")
-      : n.ok ? "cited to "+n.cites[0]
-             : "nothing on file answers this  ·  refused";
   }
   function frame(now){
     if(!run)return;
     const dt=Math.min(48,now-(last||now));last=now;
-    if(held){held.vx=(px-held.x)*0.35;held.vy=(py-held.y)*0.35;
-      held.x=px;held.y=py}
-    physics(dt);draw();
+    tx+=(mx-tx)*0.045;ty+=(my-ty)*0.045;   /* ease toward the pointer */
+    ctx.clearRect(0,0,W,H);
+    S.sort((a,b)=>a.z-b.z);
+    for(const s of S){
+      s.x+=s.v*dt;s.rot+=s.spin*dt;
+      if(s.x>W+s.w+20)Object.assign(s,mk(false));
+      sheet(s);
+    }
     raf=requestAnimationFrame(frame);
   }
-  function pick(x,y){
-    let best=null,bd=1e9;
-    for(const n of nodes){
-      const d=Math.hypot(n.x-x,n.y-y);
-      const r=n.kind==="p"?Math.max(n.bw,n.bh)*0.95:18;
-      if(d<r&&d<bd){bd=d;best=n}
-    }
-    return best;
+  function still(){
+    ctx.clearRect(0,0,W,H);
+    S.sort((a,b)=>a.z-b.z);
+    for(const s of S)sheet(s);
   }
-  const pos=e=>{const r=cv.getBoundingClientRect();
-    return [e.clientX-r.left,e.clientY-r.top]};
-  cv.addEventListener("pointerdown",e=>{
-    const[x,y]=pos(e);const n=pick(x,y);
-    if(!n)return;
-    held=n;hover=n;px=x;py=y;say(n);
-    wrap.classList.add("grabbing");
-    try{cv.setPointerCapture(e.pointerId)}catch(_){}
-    e.preventDefault();
-  });
-  cv.addEventListener("pointermove",e=>{
-    const[x,y]=pos(e);px=x;py=y;
-    if(held)return;
-    const n=pick(x,y);
-    if(n!==hover){hover=n;say(n);wrap.classList.toggle("over",!!n);if(!run)draw()}
-  });
-  function release(e){
-    if(!held)return;
-    held=null;wrap.classList.remove("grabbing");
-    try{cv.releasePointerCapture(e.pointerId)}catch(_){}
-  }
-  cv.addEventListener("pointerup",release);
-  cv.addEventListener("pointercancel",release);
-  cv.addEventListener("pointerleave",()=>{
-    if(held)return;hover=null;say(null);
-    wrap.classList.remove("over");if(!run)draw();
-  });
-
-  function settle(s){for(let i=0;i<s;i++)physics(16)}
   function start(){
     if(run)return;
-    size();if(!nodes.length){build();settle(260)}
-    if(reduced){draw();return}
+    size();if(!S.length)reset();
+    if(reduced){still();return}
     run=true;last=0;raf=requestAnimationFrame(frame);
   }
   function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
-  new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
-    {threshold:0.05}).observe(wrap);
+  if(band)new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
+    {threshold:0}).observe(band);
+  else start();
+  addEventListener("pointermove",e=>{
+    if(reduced)return;
+    mx=(e.clientX/innerWidth-0.5)*2;my=(e.clientY/innerHeight-0.5)*2;
+  },{passive:true});
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden)stop();
-    else if(wrap.getBoundingClientRect().bottom>0)start();
+    else if(band&&band.getBoundingClientRect().bottom>0)start();
   });
   let rt=0;
   addEventListener("resize",()=>{clearTimeout(rt);
-    rt=setTimeout(()=>{size();build();settle(260);draw()},160)},{passive:true});
+    rt=setTimeout(()=>{size();reset();if(reduced)still()},160)},{passive:true});
 })();
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
