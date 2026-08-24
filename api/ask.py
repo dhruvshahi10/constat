@@ -21,7 +21,9 @@ import json
 from datetime import date
 from http.server import BaseHTTPRequestHandler
 
-from trustops.webapi import EVIDENCE, MAX_QUESTION_CHARS, public_tenants
+from trustops.webapi import (EVIDENCE, MAX_QUESTION_CHARS, RateLimited,
+                             client_ip, enforce_rate_limit, public_tenants,
+                             read_body, safe_error)
 
 from trustops.drafter import MockDrafter
 from trustops.evidence import EvidenceStore
@@ -85,10 +87,14 @@ class handler(BaseHTTPRequestHandler):  # noqa: N801 (Vercel entrypoint contract
 
     def do_POST(self):  # noqa: N802
         try:
-            length = int(self.headers.get("Content-Length", 0) or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
+            enforce_rate_limit(client_ip(self.headers))
+            body = read_body(self)
             self._json(answer(body.get("question", ""), body.get("tenant", "acme")))
+        except RateLimited as exc:
+            self._json({"error": str(exc)}, code=429)
         except (ValueError, PermissionError) as exc:
+            # These carry only messages this module wrote itself — a bad tenant
+            # name, an over-length question — so they are safe to return.
             self._json({"error": str(exc)}, code=400)
-        except Exception as exc:   # never fabricate an answer on failure
-            self._json({"error": f"{type(exc).__name__}: {exc}"}, code=500)
+        except Exception as exc:   # never fabricate an answer, never leak internals
+            self._json(*safe_error(exc))

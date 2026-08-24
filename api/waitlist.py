@@ -24,7 +24,8 @@ import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler
 
-from trustops.webapi import ROOT  # noqa: F401
+from trustops.webapi import (RateLimited, client_ip, enforce_rate_limit,
+                             read_body, safe_error)
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$")
 TABLE = "waitlist"
@@ -78,13 +79,18 @@ class handler(BaseHTTPRequestHandler):  # noqa: N801
 
     def do_POST(self):  # noqa: N802
         try:
-            length = int(self.headers.get("Content-Length", 0) or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
+            enforce_rate_limit("wl:" + client_ip(self.headers))
+            body = read_body(self)
             self._json(submit(body.get("email", ""), body.get("note", ""),
                               body.get("source", "site")))
+        except RateLimited as exc:
+            self._json({"error": str(exc)}, code=429)
         except ValueError as exc:
             self._json({"error": str(exc)}, code=400)
         except RuntimeError as exc:
-            self._json({"error": str(exc), "fallback": "mail"}, code=503)
+            # The caller is told the store is unavailable, never why.
+            print(f"[waitlist] {exc}", file=__import__("sys").stderr)
+            self._json({"error": "The signup store is unavailable, so nothing was saved.",
+                        "fallback": "mail"}, code=503)
         except Exception as exc:
-            self._json({"error": f"{type(exc).__name__}: {exc}"}, code=500)
+            self._json(*safe_error(exc))

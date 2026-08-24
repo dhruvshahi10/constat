@@ -2,7 +2,7 @@
 source_id: STD-INJECTION-RESISTANCE
 title: Prompt Injection Resistance Standard
 type: standard
-version: 1.0
+version: 1.1
 effective_date: 2026-08-24
 expiry_date: 2027-08-24
 owner: dhruv.shahi07@gmail.com
@@ -17,5 +17,7 @@ Why compliance does not become a breach. The controls that matter run after the 
 Injected text cannot approve itself. Approval status, source type, effective and expiry dates are read from governed frontmatter set by a named human during promotion, not from document prose. A sentence inside a document asserting that the document is approved, current, or a certificate has no effect on how the gates treat it.
 
 No privilege to escalate to. The drafter has no tools, no filesystem access and no network access beyond the model endpoint, so an injected instruction has no capability to reach for. There is no agent loop, no code execution and no retrieval-by-URL.
+
+Injection into the reader, not the model. A separate class of injection targets whoever reads the answer rather than the model that drafts it: markup planted in an evidence document, carried verbatim into an answer, and rendered in a browser. No client in this system assigns engine output to innerHTML, all client script is served as external files, and the hosted Content Security Policy forbids inline script so that reintroducing the mistake does not reintroduce the vulnerability.
 
 Blast radius of a successful injection. The realistic worst case is a fluent but unsupported paragraph, which the pipeline discards, and which is counted as a refusal in the run metrics. The adversarial eval suite includes injection attempts in both surfaces and asserts refusal.

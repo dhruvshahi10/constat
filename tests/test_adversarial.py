@@ -39,7 +39,7 @@ PERFECT_REQUIRED = {
 }
 
 FLOOR_CORRECTLY_REFUSED = 42     # of 44
-FLOOR_CORRECTLY_CITED = 11       # of 15
+FLOOR_CORRECTLY_CITED = 12       # of 15 — raised 2026-08-24 after the security pass added real evidence
 
 
 @pytest.fixture(scope="module")

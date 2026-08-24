@@ -2,7 +2,7 @@
 source_id: PLN-HUMAN-IN-LOOP
 title: Human-in-the-Loop Design and Approval Plan
 type: plan
-version: 1.0
+version: 1.1
 effective_date: 2026-08-24
 expiry_date: 2027-08-24
 owner: dhruv.shahi07@gmail.com
@@ -17,5 +17,7 @@ Approval cannot manufacture evidence. The review interface only offers approval 
 Review is part of the record. Every decision writes an event onto the same hash-chained audit log as the run it decided on, naming the reviewer, the action, the resulting status and the citations in force at that moment. Altering who approved something invalidates the chain from that point forward, and this is verified by test.
 
 Approval of evidence is itself a human act. Documents ingested during onboarding are staged as unapproved and are refused by the citation gate. Promotion into the live corpus requires a named approver, which is recorded in a corpus log. Ingestion succeeding is never treated as a document being vouched for.
+
+Identity of the reviewer. A reviewer name is supplied by the operator and is not authenticated; the console has no accounts and binds to loopback. Each decision records the operating system user and host alongside the claimed name, inside the signed, hash-chained event, and records explicitly that the actor was not authenticated. This corroborates a claim; it does not verify one, and the system does not represent it as verification. Authentication is required before Pramana is operated by more than one person.
 
 Operating modes. A run may be executed in manual review mode, in which the engine approves nothing and every drafted answer waits for a person. Demonstration runs use a labelled simulated reviewer that approves only gate-clean, complete-coverage drafts; every such event is recorded in the audit log as a simulated approval and is identified as such in the run report.

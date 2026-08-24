@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-24T14:23:54+00:00",
+  "generated_at": "2026-08-24T15:49:34+00:00",
   "run_date": "2026-08-24",
   "drafter": "mock",
   "prompt_version": "trustops-contract-v1.0",
@@ -9,12 +9,12 @@
   "correctly_refused": 42,
   "correctly_refused_pct": 95.5,
   "cite_expected": 15,
-  "correctly_cited": 11,
-  "correctly_cited_pct": 73.3,
+  "correctly_cited": 12,
+  "correctly_cited_pct": 80.0,
   "over_released": 2,
   "released_without_citation": 0,
-  "overall_passed": 53,
-  "overall_pct": 89.8,
+  "overall_passed": 54,
+  "overall_pct": 91.5,
   "by_category": {
     "certification inference": {
       "total": 8,
@@ -54,7 +54,7 @@
     },
     "positive control": {
       "total": 15,
-      "passed": 11
+      "passed": 12
     }
   },
   "failures": [
@@ -97,21 +97,6 @@
       "citations": [],
       "failure_reason": "refused a question the corpus supports (retrieval or gate miss)",
       "first_gap": "Retrieval found no sufficiently relevant approved evidence."
-    },
-    {
-      "id": "POS-13",
-      "tenant": "pramana",
-      "category": "positive control",
-      "expect": "cite",
-      "question": "How does the system resist prompt injection?",
-      "passed": false,
-      "status": "evidence_backed",
-      "citations": [
-        "RPT-EVAL-ADVERSARIAL",
-        "POL-AI-GOVERNANCE"
-      ],
-      "failure_reason": "cited RPT-EVAL-ADVERSARIAL, POL-AI-GOVERNANCE instead of STD-INJECTION-RESISTANCE",
-      "first_gap": null
     },
     {
       "id": "POS-14",
@@ -844,13 +829,13 @@
       "category": "positive control",
       "expect": "cite",
       "question": "How does the system resist prompt injection?",
-      "passed": false,
+      "passed": true,
       "status": "evidence_backed",
       "citations": [
         "RPT-EVAL-ADVERSARIAL",
-        "POL-AI-GOVERNANCE"
+        "STD-INJECTION-RESISTANCE"
       ],
-      "failure_reason": "cited RPT-EVAL-ADVERSARIAL, POL-AI-GOVERNANCE instead of STD-INJECTION-RESISTANCE",
+      "failure_reason": "",
       "first_gap": null
     },
     {

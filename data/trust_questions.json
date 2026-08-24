@@ -167,6 +167,31 @@
       "id": "TC-AI-09",
       "domain": "AI governance",
       "text": "What is your published accuracy, and how was it measured?"
+    },
+    {
+      "id": "TC-APP-01",
+      "domain": "Product security",
+      "text": "How is output from your system encoded to prevent cross-site scripting?"
+    },
+    {
+      "id": "TC-APP-02",
+      "domain": "Product security",
+      "text": "What security headers and content security policy does your application serve?"
+    },
+    {
+      "id": "TC-APP-03",
+      "domain": "Product security",
+      "text": "Are your public endpoints rate limited, and are request sizes bounded?"
+    },
+    {
+      "id": "TC-LOG-02",
+      "domain": "Logging",
+      "text": "Can your audit log be regenerated or replaced, and how would we know?"
+    },
+    {
+      "id": "TC-IAM-03",
+      "domain": "Identity and access",
+      "text": "How are administrator and reviewer identities authenticated?"
     }
   ]
 }

@@ -4,9 +4,14 @@
     {
       "src": "api/{ask,waitlist}.py",
       "use": "@vercel/python",
-      "config": { "includeFiles": "{trustops/**,data/evidence/**,api/**}" }
+      "config": {
+        "includeFiles": "{trustops/**,data/evidence/**,api/**}"
+      }
     },
-    { "src": "public/**", "use": "@vercel/static" }
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
     {
@@ -14,14 +19,33 @@
       "headers": {
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "strict-origin-when-cross-origin",
-        "X-Frame-Options": "DENY"
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; upgrade-insecure-requests",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), interest-cohort=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "X-Robots-Tag": "index, follow"
       },
       "continue": true
     },
-    { "src": "/api/ask", "dest": "/api/ask.py" },
-    { "src": "/api/waitlist", "dest": "/api/waitlist.py" },
-    { "src": "/", "dest": "/public/index.html" },
-    { "src": "/([a-z0-9-]+)/?$", "dest": "/public/$1/index.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+    {
+      "src": "/api/ask",
+      "dest": "/api/ask.py"
+    },
+    {
+      "src": "/api/waitlist",
+      "dest": "/api/waitlist.py"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/([a-z0-9-]+)/?$",
+      "dest": "/public/$1/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
   ]
 }

@@ -155,54 +155,7 @@ font:400 11.5px "IBM Plex Mono",monospace;padding:6px 10px;cursor:pointer}
 .small{font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);margin-top:8px}
 button:disabled{opacity:.45;cursor:not-allowed}
 </style>
-<script>
-const $=id=>document.getElementById(id);
-const SAMPLES=["Are you ISO/IEC 27001 certified?",
-  "Within how many days of contract termination is customer data deleted?",
-  "Has an independent penetration test been performed in the last 12 months?",
-  "Will you contractually commit to unlimited liability for any breach?",
-  "Is customer data encrypted at rest?",
-  "Do you use customer data to train models?"];
-async function boot(){
-  const info=await (await fetch('/api/ask')).json();
-  $('tenant').innerHTML=(info.tenants||['acme']).map(t=>`<option value="${t}">workspace: ${t}</option>`).join('');
-  $('chips').innerHTML=SAMPLES.map(s=>`<button type="button">${s}</button>`).join('');
-  for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
-}
-function chipClass(v){
-  if(v.startsWith('CITED · GATE-CLEAN'))return 'chip c-ok';
-  if(v.startsWith('CITED'))return 'chip c-rev';
-  return 'chip c-warn';
-}
-$('ask').onclick=async()=>{
-  const q=$('q').value.trim(); if(!q)return;
-  $('spin').style.display='inline';$('result').style.display='none';$('ask').disabled=true;
-  try{
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:q,tenant:$('tenant').value})});
-    const data=await r.json();
-    if(data.error)throw new Error(data.error);
-    const c=data.contract;
-    $('verdict').textContent=data.verdict;$('verdict').className=chipClass(data.verdict);
-    $('answer').innerHTML=c.answer?c.answer:'<em>No answer released.</em>';
-    $('prov').innerHTML=c.citations.length
-      ?'<div class="prov">'+c.citations.map(x=>`${x.source_id} · v${x.version} · ${x.location}`).join('<br>')+'</div>'
-      :`<div class="prov p-warn">no citation released · routed to ${c.route||'no-evidence'}</div>`;
-    $('gaps').innerHTML=c.gaps.map(g=>`<div class="gap">&#9656; ${g}</div>`).join('');
-    $('meta').textContent=`coverage=${c.evidence_coverage} · risk=${c.risk} · drafter=${c.drafter}`
-      +` · human_review=${c.requires_human?'required':'not required'}`
-      +(c.gate_flags.length?` · flags: ${c.gate_flags.join(' | ')}`:'');
-    $('result').style.display='block';
-  }catch(e){
-    $('verdict').textContent='ENGINE ERROR';$('verdict').className='chip c-bad';
-    $('answer').innerHTML='<em>'+e.message+'</em>';
-    $('prov').innerHTML='';$('gaps').innerHTML='';$('meta').textContent='';
-    $('result').style.display='block';
-  }
-  $('spin').style.display='none';$('ask').disabled=false;
-};
-boot();
-</script>
+<script src="/assets/demo.js" defer></script>
 
 <footer class="site">
 Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>

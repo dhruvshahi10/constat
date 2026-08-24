@@ -75,7 +75,7 @@ def waitlist_block(source: str) -> str:
 <p class="sub">Pramana is pre-pilot. If you run security review at a B2B SaaS company and
 questionnaires are eating your sales cycle, tell me what your worst one looks like.</p>
 <div class="console">
-<form class="waitlist" id="wl">
+<form class="waitlist" id="wl" data-source="{source}" data-contact="{CONTACT}">
   <input type="email" id="wlemail" placeholder="you@company.com" required autocomplete="email">
   <input type="text" id="wlnote" placeholder="optional: what's your worst questionnaire?" maxlength="400">
   <button class="btn primary" type="submit">Request access</button>
@@ -84,32 +84,50 @@ questionnaires are eating your sales cycle, tell me what your worst one looks li
 <div class="stamp">No tracking, no newsletter. Falls back to a plain mail link if the
 store is unavailable — this form will never tell you it saved something it did not.</div>
 </div>
-<script>
-document.getElementById('wl').addEventListener('submit', async (e) => {{
-  e.preventDefault();
-  const email = document.getElementById('wlemail').value.trim();
-  const note = document.getElementById('wlnote').value.trim();
-  const msg = document.getElementById('wlmsg');
-  msg.className = 'formmsg'; msg.textContent = '';
-  try {{
-    const r = await fetch('/api/waitlist', {{method:'POST', headers:{{'Content-Type':'application/json'}},
-      body: JSON.stringify({{email, note, source: '{source}'}})}});
-    const data = await r.json();
-    if (data.stored) {{ msg.className = 'formmsg ok'; msg.textContent = 'Recorded — thank you. I read every one.'; return; }}
-    throw new Error(data.error || 'unavailable');
-  }} catch (err) {{
-    msg.className = 'formmsg err';
-    const subject = encodeURIComponent('Pramana early access');
-    const body = encodeURIComponent(note ? ('From: ' + email + '\\n\\n' + note) : ('From: ' + email));
-    msg.innerHTML = 'Signup store is offline right now, so nothing was saved. ' +
-      '<a href="mailto:{CONTACT}?subject=' + subject + '&body=' + body + '">Send it by mail instead &rarr;</a>';
-  }}
-}});
-</script>
+<script src="/assets/waitlist.js" defer></script>
 """
 
 
-# --- pages -------------------------------------------------------------------
+WAITLIST_JS = """// Early-access form. Never reports a signup it did not store.
+(function () {
+  var form = document.getElementById('wl');
+  if (!form) return;
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('wlemail').value.trim();
+    var note = document.getElementById('wlnote').value.trim();
+    var msg = document.getElementById('wlmsg');
+    msg.className = 'formmsg';
+    msg.textContent = '';
+    try {
+      var r = await fetch('/api/waitlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, note: note, source: form.dataset.source || 'site' })
+      });
+      var data = await r.json();
+      if (data.stored) {
+        msg.className = 'formmsg ok';
+        msg.textContent = 'Recorded \u2014 thank you. I read every one.';
+        return;
+      }
+      throw new Error(data.error || 'unavailable');
+    } catch (err) {
+      // Built as DOM nodes, not markup: nothing from the network is ever parsed as HTML.
+      msg.className = 'formmsg err';
+      msg.textContent = 'Signup store is offline right now, so nothing was saved. ';
+      var a = document.createElement('a');
+      a.href = 'mailto:' + form.dataset.contact +
+        '?subject=' + encodeURIComponent('Pramana early access') +
+        '&body=' + encodeURIComponent(note ? ('From: ' + email + '\\n\\n' + note) : ('From: ' + email));
+      a.textContent = 'Send it by mail instead \u2192';
+      msg.appendChild(a);
+    }
+  });
+})();
+"""
+
+
+# --- pages ---# --- pages -------------------------------------------------------------------
 def build_index(metrics: dict) -> str:
     pct = lambda x: f"{round(x * 100)}%"                       # noqa: E731
     body = hero(
@@ -270,54 +288,7 @@ font:400 11.5px "IBM Plex Mono",monospace;padding:6px 10px;cursor:pointer}
 .small{font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);margin-top:8px}
 button:disabled{opacity:.45;cursor:not-allowed}
 </style>
-<script>
-const $=id=>document.getElementById(id);
-const SAMPLES=["Are you ISO/IEC 27001 certified?",
-  "Within how many days of contract termination is customer data deleted?",
-  "Has an independent penetration test been performed in the last 12 months?",
-  "Will you contractually commit to unlimited liability for any breach?",
-  "Is customer data encrypted at rest?",
-  "Do you use customer data to train models?"];
-async function boot(){
-  const info=await (await fetch('/api/ask')).json();
-  $('tenant').innerHTML=(info.tenants||['acme']).map(t=>`<option value="${t}">workspace: ${t}</option>`).join('');
-  $('chips').innerHTML=SAMPLES.map(s=>`<button type="button">${s}</button>`).join('');
-  for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
-}
-function chipClass(v){
-  if(v.startsWith('CITED · GATE-CLEAN'))return 'chip c-ok';
-  if(v.startsWith('CITED'))return 'chip c-rev';
-  return 'chip c-warn';
-}
-$('ask').onclick=async()=>{
-  const q=$('q').value.trim(); if(!q)return;
-  $('spin').style.display='inline';$('result').style.display='none';$('ask').disabled=true;
-  try{
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:q,tenant:$('tenant').value})});
-    const data=await r.json();
-    if(data.error)throw new Error(data.error);
-    const c=data.contract;
-    $('verdict').textContent=data.verdict;$('verdict').className=chipClass(data.verdict);
-    $('answer').innerHTML=c.answer?c.answer:'<em>No answer released.</em>';
-    $('prov').innerHTML=c.citations.length
-      ?'<div class="prov">'+c.citations.map(x=>`${x.source_id} · v${x.version} · ${x.location}`).join('<br>')+'</div>'
-      :`<div class="prov p-warn">no citation released · routed to ${c.route||'no-evidence'}</div>`;
-    $('gaps').innerHTML=c.gaps.map(g=>`<div class="gap">&#9656; ${g}</div>`).join('');
-    $('meta').textContent=`coverage=${c.evidence_coverage} · risk=${c.risk} · drafter=${c.drafter}`
-      +` · human_review=${c.requires_human?'required':'not required'}`
-      +(c.gate_flags.length?` · flags: ${c.gate_flags.join(' | ')}`:'');
-    $('result').style.display='block';
-  }catch(e){
-    $('verdict').textContent='ENGINE ERROR';$('verdict').className='chip c-bad';
-    $('answer').innerHTML='<em>'+e.message+'</em>';
-    $('prov').innerHTML='';$('gaps').innerHTML='';$('meta').textContent='';
-    $('result').style.display='block';
-  }
-  $('spin').style.display='none';$('ask').disabled=false;
-};
-boot();
-</script>
+<script src="/assets/demo.js" defer></script>
 """
     return page(f"Live demo — {site.BRAND}", body, active="/demo/",
                 description="Run a security question through the real evidence gates.")
@@ -674,7 +645,165 @@ this product exists to prevent.</div>
                 description="Pramana's own security answers, generated by Pramana."), own.to_dict()
 
 
+DEMO_JS = """// Live demo client.
+//
+// SECURITY: nothing that comes back from /api/ask is ever assigned to innerHTML.
+// An answer is a paragraph lifted verbatim from an evidence document, and a
+// document is attacker-influenced input in exactly the threat model this
+// product is about — a paragraph containing markup would otherwise execute in
+// the visitor's browser. Every network-derived value below is set with
+// textContent or appended as a text node.
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var SAMPLES = [
+    'Are you ISO/IEC 27001 certified?',
+    'Within how many days of contract termination is customer data deleted?',
+    'Has an independent penetration test been performed in the last 12 months?',
+    'Will you contractually commit to unlimited liability for any breach?',
+    'Is customer data encrypted at rest?',
+    'Do you use customer data to train models?',
+    "What does Globex's policy say about access reviews?"
+  ];
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  function chipClass(v) {
+    if (v.indexOf('CITED \u00b7 GATE-CLEAN') === 0) return 'chip c-ok';
+    if (v.indexOf('CITED') === 0) return 'chip c-rev';
+    return 'chip c-warn';
+  }
+
+  async function boot() {
+    var info = await (await fetch('/api/ask')).json();
+    var tenants = info.tenants || ['acme'];
+    var sel = $('tenant');
+    clear(sel);
+    tenants.forEach(function (t) {
+      var o = document.createElement('option');
+      o.value = t;
+      o.textContent = 'workspace: ' + t;
+      sel.appendChild(o);
+    });
+    var chips = $('chips');
+    clear(chips);
+    SAMPLES.forEach(function (sample) {
+      var b = el('button', null, sample);
+      b.type = 'button';
+      b.addEventListener('click', function () { $('q').value = sample; });
+      chips.appendChild(b);
+    });
+  }
+
+  function render(data) {
+    var c = data.contract;
+    $('verdict').textContent = data.verdict;
+    $('verdict').className = chipClass(data.verdict);
+
+    var answer = $('answer');
+    clear(answer);
+    if (c.answer) {
+      answer.appendChild(document.createTextNode(c.answer));
+    } else {
+      answer.appendChild(el('em', null, 'No answer released.'));
+    }
+
+    var prov = $('prov');
+    clear(prov);
+    if (c.citations.length) {
+      var box = el('div', 'prov');
+      c.citations.forEach(function (x, i) {
+        if (i) box.appendChild(document.createElement('br'));
+        box.appendChild(document.createTextNode(
+          x.source_id + ' \u00b7 v' + x.version + ' \u00b7 ' + x.location));
+      });
+      prov.appendChild(box);
+    } else {
+      prov.appendChild(el('div', 'prov p-warn',
+        'no citation released \u00b7 routed to ' + (c.route || 'no-evidence')));
+    }
+
+    var gaps = $('gaps');
+    clear(gaps);
+    c.gaps.forEach(function (g) { gaps.appendChild(el('div', 'gap', '\u25b8 ' + g)); });
+
+    $('meta').textContent =
+      'coverage=' + c.evidence_coverage + ' \u00b7 risk=' + c.risk +
+      ' \u00b7 drafter=' + c.drafter +
+      ' \u00b7 human_review=' + (c.requires_human ? 'required' : 'not required') +
+      (c.gate_flags.length ? ' \u00b7 flags: ' + c.gate_flags.join(' | ') : '');
+    $('result').style.display = 'block';
+  }
+
+  function renderError(message) {
+    $('verdict').textContent = 'ENGINE ERROR';
+    $('verdict').className = 'chip c-bad';
+    clear($('answer'));
+    $('answer').appendChild(el('em', null, message));
+    clear($('prov'));
+    clear($('gaps'));
+    $('meta').textContent = '';
+    $('result').style.display = 'block';
+  }
+
+  $('ask').addEventListener('click', async function () {
+    var q = $('q').value.trim();
+    if (!q) return;
+    $('spin').style.display = 'inline';
+    $('result').style.display = 'none';
+    $('ask').disabled = true;
+    try {
+      var r = await fetch('/api/ask', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, tenant: $('tenant').value })
+      });
+      var data = await r.json();
+      if (data.error) throw new Error(data.error);
+      render(data);
+    } catch (e) {
+      renderError(e.message);
+    }
+    $('spin').style.display = 'none';
+    $('ask').disabled = false;
+  });
+
+  boot();
+})();
+"""
+
+ASSETS = {"demo.js": DEMO_JS, "waitlist.js": WAITLIST_JS}
+
+
 CHANGELOG = [
+    ("2026-08-24", "Platform security self-review — four findings, all fixed", [
+        "Cross-tenant path traversal: a tenant name was used directly as a path component, so a "
+        "crafted name loaded another tenant's corpus while the store believed the crafted string "
+        "WAS its tenant — defeating the boundary assertion by making it compare a value to "
+        "itself. Tenant names are now validated at the store and query boundary, the directory "
+        "must resolve to a direct child of the evidence root, and symlinks out are refused.",
+        "Stored XSS through evidence content: answer, gap and provenance text was assigned to "
+        "innerHTML, so markup planted in an ingested client PDF would execute in the analyst's "
+        "browser with access to every workspace. All clients now render engine output as text "
+        "nodes, all script is served as external files, and the CSP forbids inline script.",
+        "Information disclosure: unhandled exceptions returned their type and message, which "
+        "could include filesystem paths. Errors now return an opaque message and a correlation "
+        "reference; detail goes to the server log only.",
+        "Unbounded public endpoints: request bodies are capped before parsing, and a "
+        "per-instance limit of 20 requests per minute per client applies.",
+        "Audit log property clarified: the hash chain proves nothing was edited, not that the "
+        "log was not replaced wholesale. Optional HMAC signing added; the system now reports "
+        "which property is in force instead of implying the stronger one.",
+        "Reviewer identity is corroborated, not authenticated — OS user and host recorded beside "
+        "the self-asserted name, inside the signed event, and labelled as unauthenticated.",
+        "Open and stated: no authentication on the operator console, and no independent "
+        "penetration test.",
+    ]),
     ("2026-08-24", "Public site, live demo, and real-client onboarding", [
         "Published accuracy: 59 adversarial prompts, 95.5% correctly refused, 73.3% correctly "
         "cited, 0 answers released without a citation. Every failure listed by name.",
@@ -724,6 +853,12 @@ def build_changelog() -> str:
 
 def main() -> int:
     PUBLIC.mkdir(parents=True, exist_ok=True)
+    # Scripts are external files so the Content-Security-Policy can forbid inline
+    # script entirely: even a missed sink cannot execute injected markup.
+    (PUBLIC / "assets").mkdir(parents=True, exist_ok=True)
+    for name, source in ASSETS.items():
+        (PUBLIC / "assets" / name).write_text(source, encoding="utf-8")
+        print(f"  wrote /assets/{name}")
     print("running the engine for the reference run…")
     metrics = reference_run()
     print(f"  {json.dumps(metrics)}")

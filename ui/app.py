@@ -201,15 +201,28 @@ hash-chained audit log.</p>
 </div>
 <script>
 const $=id=>document.getElementById(id);
+function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;
+  if(text!==undefined&&text!==null)n.textContent=text;return n;}
+function clear(n){while(n.firstChild)n.removeChild(n.firstChild);}
 async function boot(){
   const opts=await (await fetch('/api/options')).json();
   for(const sel of [$('drafter'),$('rundrafter')]){
-    sel.innerHTML=opts.drafters.map(d=>`<option value="${d.id}" ${d.available?'':'disabled'}>`+
-      `${d.label}${d.available?'':' — set API key'}</option>`).join('');
+    clear(sel);
+    for(const d of opts.drafters){
+      const o=document.createElement('option');
+      o.value=d.id;o.disabled=!d.available;
+      o.textContent=`${d.label}${d.available?'':' — set API key'}`;
+      sel.appendChild(o);
+    }
   }
   const tsel=[$('tenant'),$('runtenant')];
   for(const sel of tsel){
-    sel.innerHTML=opts.tenants.map(t=>`<option value="${t.slug}">${t.label} — ${t.sources} source${t.sources===1?'':'s'}</option>`).join('');
+    clear(sel);
+    for(const t of opts.tenants){
+      const o=document.createElement('option');o.value=t.slug;
+      o.textContent=`${t.label} — ${t.sources} source${t.sources===1?'':'s'}`;
+      sel.appendChild(o);
+    }
   }
   const syncMeta=()=>{
     const t=opts.tenants.find(x=>x.slug===$('tenant').value)||opts.tenants[0];
@@ -223,8 +236,12 @@ async function boot(){
     syncMeta();
   };
   syncMeta();
-  $('chips').innerHTML=opts.demo.map(q=>`<button type="button">${q}</button>`).join('');
-  for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
+  clear($('chips'));
+  for(const q of opts.demo){
+    const b=el('button',null,q);b.type='button';
+    b.onclick=()=>{$('q').value=q;};
+    $('chips').appendChild(b);
+  }
 }
 function chipClass(v){
   if(v.startsWith('CITED · GATE-CLEAN'))return 'chip c-ok';
@@ -240,12 +257,28 @@ $('ask').onclick=async()=>{
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const c=data.contract;
+    // SECURITY: an answer is a paragraph lifted verbatim from a client document,
+    // and a client document is attacker-influenced input. Assigning it to
+    // innerHTML would execute markup planted in an ingested PDF inside the
+    // analyst's own browser — with access to every workspace on this console.
+    // Everything derived from the engine is set as text, never parsed as HTML.
     $('verdict').textContent=data.verdict;$('verdict').className=chipClass(data.verdict);
-    $('answer').innerHTML=c.answer?c.answer:'<em>No answer released.</em>';
-    $('prov').innerHTML=c.citations.length
-      ?'<div class="prov">'+c.citations.map(x=>`${x.source_id} · v${x.version} · ${x.location}`).join('<br>')+'</div>'
-      :`<div class="prov p-warn">no citation released · ${c.route||'no-evidence'}</div>`;
-    $('gaps').innerHTML=c.gaps.map(g=>`<div class="gap">&#9656; ${g}</div>`).join('');
+    clear($('answer'));
+    if(c.answer){$('answer').appendChild(document.createTextNode(c.answer));}
+    else{$('answer').appendChild(el('em',null,'No answer released.'));}
+    clear($('prov'));
+    if(c.citations.length){
+      const box=el('div','prov');
+      c.citations.forEach((x,i)=>{
+        if(i)box.appendChild(document.createElement('br'));
+        box.appendChild(document.createTextNode(`${x.source_id} · v${x.version} · ${x.location}`));
+      });
+      $('prov').appendChild(box);
+    }else{
+      $('prov').appendChild(el('div','prov p-warn',`no citation released · ${c.route||'no-evidence'}`));
+    }
+    clear($('gaps'));
+    c.gaps.forEach(g=>$('gaps').appendChild(el('div','gap','▸ '+g)));
     $('meta').textContent=`coverage=${c.evidence_coverage} · risk=${c.risk} · drafter=${c.drafter} (${c.model_version})`
       +` · human_review=${c.requires_human?'required':'not required'}`+(c.gate_flags.length?` · flags: ${c.gate_flags.join(' | ')}`:'');
     $('askresult').style.display='block';
@@ -260,13 +293,19 @@ $('runbtn').onclick=async()=>{
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const m=data.metrics;
-    const tile=(v,l,cls='')=>`<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
-    $('tiles').innerHTML=tile(m.questions,'questions')+
-      tile(Math.round(m.cited_draft_coverage*100)+'%','cited coverage','ok')+
-      tile(Math.round(m.abstention_rate*100)+'%','refusals (by design)','warn')+
-      tile(m.exception_queue,'exceptions &rarr; humans','warn')+
-      tile(m.unsupported_material_claims,'unsupported claims (must be 0)', m.unsupported_material_claims===0?'ok':'bad')+
-      tile(m.audit_chain_valid?'VALID':'BROKEN','audit chain', m.audit_chain_valid?'ok':'bad');
+    const tile=(v,l,cls='')=>{
+      const d=el('div','stat'+(cls?' '+cls:''));
+      d.appendChild(el('b',null,v));d.appendChild(el('span',null,l));
+      return d;
+    };
+    clear($('tiles'));
+    [tile(m.questions,'questions'),
+     tile(Math.round(m.cited_draft_coverage*100)+'%','cited coverage','ok'),
+     tile(Math.round(m.abstention_rate*100)+'%','refusals (by design)','warn'),
+     tile(m.exception_queue,'exceptions → humans','warn'),
+     tile(m.unsupported_material_claims,'unsupported claims (must be 0)', m.unsupported_material_claims===0?'ok':'bad'),
+     tile(m.audit_chain_valid?'VALID':'BROKEN','audit chain', m.audit_chain_valid?'ok':'bad'),
+    ].forEach(t=>$('tiles').appendChild(t));
     $('rlink').href=data.report;$('dlink').href=data.delivered;$('alink').href=data.audit;
     $('runresult').style.display='block';
   }catch(e){alert('Engine error: '+e.message);}

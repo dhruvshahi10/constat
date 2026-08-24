@@ -188,7 +188,7 @@ across this site is synthetic.</div>
 <p class="sub">Pramana is pre-pilot. If you run security review at a B2B SaaS company and
 questionnaires are eating your sales cycle, tell me what your worst one looks like.</p>
 <div class="console">
-<form class="waitlist" id="wl">
+<form class="waitlist" id="wl" data-source="landing" data-contact="dhruv.shahi07@gmail.com">
   <input type="email" id="wlemail" placeholder="you@company.com" required autocomplete="email">
   <input type="text" id="wlnote" placeholder="optional: what's your worst questionnaire?" maxlength="400">
   <button class="btn primary" type="submit">Request access</button>
@@ -197,28 +197,7 @@ questionnaires are eating your sales cycle, tell me what your worst one looks li
 <div class="stamp">No tracking, no newsletter. Falls back to a plain mail link if the
 store is unavailable — this form will never tell you it saved something it did not.</div>
 </div>
-<script>
-document.getElementById('wl').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('wlemail').value.trim();
-  const note = document.getElementById('wlnote').value.trim();
-  const msg = document.getElementById('wlmsg');
-  msg.className = 'formmsg'; msg.textContent = '';
-  try {
-    const r = await fetch('/api/waitlist', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({email, note, source: 'landing'})});
-    const data = await r.json();
-    if (data.stored) { msg.className = 'formmsg ok'; msg.textContent = 'Recorded — thank you. I read every one.'; return; }
-    throw new Error(data.error || 'unavailable');
-  } catch (err) {
-    msg.className = 'formmsg err';
-    const subject = encodeURIComponent('Pramana early access');
-    const body = encodeURIComponent(note ? ('From: ' + email + '\n\n' + note) : ('From: ' + email));
-    msg.innerHTML = 'Signup store is offline right now, so nothing was saved. ' +
-      '<a href="mailto:dhruv.shahi07@gmail.com?subject=' + subject + '&body=' + body + '">Send it by mail instead &rarr;</a>';
-  }
-});
-</script>
+<script src="/assets/waitlist.js" defer></script>
 
 <footer class="site">
 Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>

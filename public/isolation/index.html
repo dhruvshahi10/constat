@@ -128,12 +128,23 @@ that a mismatched request raises. A failure blocks release.</p>
 <h2>Run on this build</h2>
 <p class="sub">Captured from the actual test run during this site's build, not transcribed.</p>
 <pre><code>============================= test session starts ==============================
-tests/test_adversarial.py::test_breach_categories_stay_perfect[cross-tenant isolation] PASSED [ 20%]
-tests/test_adversarial.py::test_breach_categories_stay_perfect[injection via evidence] PASSED [ 40%]
-tests/test_adversarial.py::test_planted_injection_in_evidence_cannot_forge_a_certificate PASSED [ 60%]
-tests/test_gates.py::test_t5_no_cross_tenant_retrieval PASSED            [ 80%]
-tests/test_gates.py::test_t5_tenant_mismatch_raises PASSED               [100%]
-======================= 5 passed, 25 deselected in 0.08s =======================</code></pre>
+tests/test_adversarial.py::test_breach_categories_stay_perfect[cross-tenant isolation] PASSED [  6%]
+tests/test_adversarial.py::test_breach_categories_stay_perfect[injection via evidence] PASSED [ 12%]
+tests/test_adversarial.py::test_planted_injection_in_evidence_cannot_forge_a_certificate PASSED [ 18%]
+tests/test_gates.py::test_t5_no_cross_tenant_retrieval PASSED            [ 25%]
+tests/test_gates.py::test_t5_tenant_mismatch_raises PASSED               [ 31%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[../evidence/globex] PASSED [ 37%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[..] PASSED [ 43%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[acme/../globex] PASSED [ 50%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[/etc] PASSED [ 56%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[acme/] PASSED [ 62%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[ACME] PASSED [ 68%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[] PASSED [ 75%]
+tests/test_platform_security.py::test_s1_tenant_traversal_is_refused[.] PASSED [ 81%]
+tests/test_platform_security.py::test_s1_retriever_validates_the_query_tenant PASSED [ 87%]
+tests/test_platform_security.py::test_s1_valid_tenant_still_loads PASSED [ 93%]
+tests/test_platform_security.py::test_s1_symlink_out_of_the_tenant_directory_is_refused PASSED [100%]
+====================== 16 passed, 35 deselected in 0.12s =======================</code></pre>
 
 <h2>Try to break it</h2>
 <p class="lead">On the <a href="/demo/">live demo</a>, choose the <code>acme</code> workspace and

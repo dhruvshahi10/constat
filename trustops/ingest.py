@@ -38,6 +38,12 @@ from .evidence import parse_source
 
 SUPPORTED = {".md", ".markdown", ".txt", ".pdf", ".docx", ".xlsx"}
 
+# Ingestion consumes files from outside the trust boundary — a client sends
+# them, and a client can be compromised. These bound what one file can cost.
+MAX_FILE_BYTES = 64 * 1024 * 1024        # refuse before reading
+MAX_TEXT_CHARS = 2_000_000               # truncate after extracting
+EXTRACT_TIMEOUT_SECONDS = 120
+
 W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 # --- source typing -----------------------------------------------------------
@@ -131,7 +137,7 @@ def _pdf_text(path: Path) -> str:
     exe = shutil.which("pdftotext")
     if exe:
         proc = subprocess.run([exe, "-layout", "-enc", "UTF-8", str(path), "-"],
-                              capture_output=True, timeout=120)
+                              capture_output=True, timeout=EXTRACT_TIMEOUT_SECONDS)
         if proc.returncode == 0 and proc.stdout.strip():
             return proc.stdout.decode("utf-8", errors="replace")
     try:  # optional, only if the operator installed it
@@ -176,6 +182,10 @@ def extract_text(path: Path) -> str:
     if suffix not in SUPPORTED:
         raise ExtractionError(f"{path.name}: unsupported type '{suffix}' "
                               f"(supported: {', '.join(sorted(SUPPORTED))})")
+    size = path.stat().st_size
+    if size > MAX_FILE_BYTES:
+        raise ExtractionError(
+            f"{path.name}: {size} bytes exceeds the {MAX_FILE_BYTES}-byte ingestion limit")
     if suffix == ".pdf":
         text = _pdf_text(path)
     elif suffix == ".docx":
@@ -187,6 +197,10 @@ def extract_text(path: Path) -> str:
     if not text.strip():
         raise ExtractionError(f"{path.name}: no extractable text "
                               f"(scanned image PDF? needs OCR before ingestion)")
+    if len(text) > MAX_TEXT_CHARS:
+        text = text[:MAX_TEXT_CHARS] + (
+            f"\n\n[TRUNCATED BY PRAMANA: source exceeded {MAX_TEXT_CHARS} characters. "
+            f"Split the document before approving it.]")
     return text
 
 

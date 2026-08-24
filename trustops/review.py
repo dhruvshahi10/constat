@@ -20,7 +20,9 @@ Three properties matter more than the ergonomics:
 """
 from __future__ import annotations
 
+import getpass
 import json
+import socket
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -69,6 +71,26 @@ class QueueItem:
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _operator() -> dict:
+    """Who the operating system says is running this, next to who the reviewer
+    claims to be.
+
+    `--actor` is self-asserted: anyone can type any name. Recording the OS user
+    and host alongside it does not make the claim authenticated, and this does
+    not pretend otherwise — it corroborates. Two fields that disagree are a
+    question worth asking during an audit, and they are inside the signed,
+    hash-chained event, so neither can be quietly changed afterwards."""
+    try:
+        user = getpass.getuser()
+    except Exception:            # no controlling terminal / no passwd entry
+        user = "unknown"
+    try:
+        host = socket.gethostname()
+    except Exception:
+        host = "unknown"
+    return {"os_user": user, "host": host}
 
 
 class ReviewSession:
@@ -203,6 +225,9 @@ class ReviewSession:
         draft = self.drafts[decision.question_id]
         audit.append(decision.actor, approval.action.upper(), decision.question_id, {
             "mode": "HUMAN_REVIEW",
+            "claimed_actor": decision.actor,
+            "operator": _operator(),
+            "actor_authentication": "none — self-asserted, corroborated by OS identity",
             "status_after": draft.status.value,
             "citations": [f"{c.source_id}@{c.location}" for c in draft.citations],
             "note": decision.note,

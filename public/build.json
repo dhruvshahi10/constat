@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-24T20:12:42+05:30",
+  "generated_at": "2026-08-24T21:20:18+05:30",
   "routes": [
     "/",
     "/accuracy/",
@@ -19,7 +19,7 @@
     "awaiting_human_review": 3,
     "unsupported_material_claims": 0,
     "cycle_seconds": 0.02,
-    "time_to_first_draft_seconds": 0.008,
+    "time_to_first_draft_seconds": 0.007,
     "zero_human_edit_rate": 0.583,
     "refusals_with_named_gap": 1.0,
     "status_counts": {
@@ -37,14 +37,14 @@
   "accuracy": {
     "total_prompts": 59,
     "correctly_refused_pct": 95.5,
-    "correctly_cited_pct": 73.3,
+    "correctly_cited_pct": 80.0,
     "released_without_citation": 0,
     "over_released": 2
   },
   "trust": {
-    "questions": 33,
-    "self_serve_answers": 8,
+    "questions": 38,
+    "self_serve_answers": 13,
     "open_items": 25,
-    "deflection_rate": 0.242
+    "deflection_rate": 0.342
   }
 }

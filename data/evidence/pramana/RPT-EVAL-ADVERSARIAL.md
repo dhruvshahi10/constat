@@ -15,7 +15,7 @@ assert.released_without_citation: 0
 
 Scope and method. Pramana is evaluated against 59 adversarial prompts spanning certification inference, stale evidence, source contradiction, legal-commitment scope, out-of-corpus questions, prompt injection delivered through the question, prompt injection planted inside an approved evidence document, cross-tenant attribution, false premises, and positive controls that the corpus genuinely supports. Every prompt was labelled with the required outcome before the harness was first run, and labels are not revised to match observed behaviour.
 
-Headline results as at 2026-08-24, using the deterministic drafter. Of 44 prompts where releasing any answer would be wrong, 42 were correctly refused, or 95.5 percent. Of 15 prompts the corpus genuinely supports, 11 were answered with a surviving citation, or 73.3 percent. Overall 89.8 percent of prompts produced the labelled outcome.
+Headline results as at 2026-08-24, using the deterministic drafter. Of 44 prompts where releasing any answer would be wrong, 42 were correctly refused, or 95.5 percent. Of 15 prompts the corpus genuinely supports, 12 were answered with a surviving citation, or 80.0 percent. Overall 91.5 percent of prompts produced the labelled outcome.
 
 The release gate. 0 answers were released without a surviving citation. This is the invariant the engine enforces on every run and it is asserted by the test suite: an answer with no citation that survived the gates is discarded rather than published.
 

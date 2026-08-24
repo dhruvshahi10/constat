@@ -13,7 +13,9 @@ labeled as such in the log and the report.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
@@ -28,6 +30,22 @@ from .retrieve import Retriever
 from .tenants import foreign_parties
 
 GENESIS = "0" * 64
+AUDIT_KEY_ENV = "PRAMANA_AUDIT_KEY"
+
+
+def _audit_key() -> bytes | None:
+    """Optional HMAC key for the audit log.
+
+    The hash chain proves nobody EDITED history. It does not prove nobody
+    REPLACED it: anyone who can write the file can recompute a whole consistent
+    chain from scratch. With a key the events are also signed, so a regenerated
+    log fails verification unless the forger also holds the key — which is the
+    difference between tamper-evident and tamper-resistant, and a buyer will
+    ask which one this is. Unset by default; the log is honest about which
+    property it has (see `verify_chain`).
+    """
+    key = os.environ.get(AUDIT_KEY_ENV, "")
+    return key.encode() if key else None
 
 
 class AuditLog:
@@ -56,23 +74,50 @@ class AuditLog:
         }
         payload = json.dumps(event, sort_keys=True, ensure_ascii=False)
         event_hash = hashlib.sha256(payload.encode()).hexdigest()
+        record = {**event, "hash": event_hash}
+        key = _audit_key()
+        if key:
+            record["sig"] = hmac.new(key, (payload + event_hash).encode(),
+                                     hashlib.sha256).hexdigest()
         with self.path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps({**event, "hash": event_hash}, ensure_ascii=False) + "\n")
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
         self.prev = event_hash
 
     @staticmethod
     def verify_chain(path: Path) -> bool:
+        """True when no event was edited, and — if the log was signed and the key
+        is present — when no event was forged wholesale."""
+        key = _audit_key()
         prev = GENESIS
         for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
             obj = json.loads(line)
             claimed = obj.pop("hash")
+            signature = obj.pop("sig", None)
             if obj.get("prev_hash") != prev:
                 return False
             payload = json.dumps(obj, sort_keys=True, ensure_ascii=False)
             if hashlib.sha256(payload.encode()).hexdigest() != claimed:
                 return False
+            if key is not None:
+                if signature is None:
+                    return False    # a signed deployment must not accept unsigned events
+                expected = hmac.new(key, (payload + claimed).encode(),
+                                    hashlib.sha256).hexdigest()
+                if not hmac.compare_digest(expected, signature):
+                    return False
             prev = claimed
         return True
+
+    @staticmethod
+    def signed(path: Path) -> bool:
+        """Whether this log carries signatures at all — reported honestly rather
+        than implied by verification passing."""
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                return "sig" in json.loads(line)
+        return False
 
 
 @dataclass

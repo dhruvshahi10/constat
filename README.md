@@ -17,7 +17,7 @@ the rest by name.
 | [59 adversarial prompts](evals/adversarial.json) | Result |
 |---|---|
 | Correctly refused | **42/44 (95.5%)** |
-| Correctly cited | **11/15 (73.3%)** |
+| Correctly cited | **12/15 (80.0%)** |
 | Released with **no citation** | **0** — the release gate |
 | Over-released (answered where refusal was required) | **2** |
 
@@ -132,8 +132,7 @@ python onboard.py commitments --tenant acme
 ```
 
 The trust page publishes only evidence-backed answers; everything else becomes an open item and an
-evidence-collection worklist. Pramana's own trust center answers **24%** of the standard buyer
-set — low, and published as-is: ten approved documents and no certifications of any kind. A trust
+evidence-collection worklist. Pramana's own trust center answers **34%** of the standard buyer set — low, and published as-is: ten approved documents and no certifications of any kind. A trust
 page answering 33 of 33 would be evidence of the failure mode this product exists to prevent.
 
 ## Run it
@@ -141,7 +140,7 @@ page answering 33 of 33 would be evidence of the failure mode this product exist
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
-.venv/bin/python -m pytest tests/ -q          # 30 tests: constitution + review + adversarial
+.venv/bin/python -m pytest tests/ -q          # 51 tests: constitution, review, adversarial, platform security
 .venv/bin/python evals/run_accuracy.py        # score the adversarial suite, publish the number
 .venv/bin/python run_demo.py                  # offline deterministic run
 .venv/bin/python ui/app.py                    # operator console → http://localhost:8787
@@ -159,6 +158,32 @@ Per run in `runs/<stamp>/`: `run_report.html` (audit working paper), `<name>__DE
 Dependencies are `pytest` and `openpyxl`. Everything else is stdlib on purpose — PDF via the
 `pdftotext` binary, DOCX via `zipfile` + `ElementTree`, the console and the serverless functions
 via `http.server`, live model calls via `urllib`.
+
+## Pramana's own security posture
+
+Your buyers are security teams; on day one they send you their questionnaire. So Pramana was
+security-reviewed against itself on 2026-08-24, and the findings are
+[published as evidence in its own corpus](data/evidence/pramana/RPT-SELF-REVIEW-2026-08.md):
+
+- **Cross-tenant path traversal** — a tenant name was a raw path component, so a crafted name
+  loaded another tenant's corpus while the store believed the crafted string *was* its tenant,
+  defeating the boundary assertion by making it compare a value to itself. Fixed at both
+  boundaries; symlinks out of a tenant directory are refused.
+- **Stored XSS through evidence content** — answer text is a paragraph lifted verbatim from a
+  client document, and it was being assigned to `innerHTML`. Markup planted in an ingested PDF
+  would have executed in the analyst's browser with access to every workspace. All clients now
+  render engine output as text nodes; the CSP forbids inline script as a backstop.
+- **Information disclosure** in error responses, and **unbounded public endpoints**. Both fixed.
+- **Audit log**: the hash chain proves nothing was *edited*, not that the log was not *replaced*.
+  Optional HMAC signing (`PRAMANA_AUDIT_KEY`) makes it tamper-**resistant**; unsigned it is
+  tamper-**evident**, and `AuditLog.signed()` reports which.
+- **Reviewer identity is corroborated, not authenticated.** OS user and host are recorded beside
+  the self-asserted name, inside the signed event, explicitly labelled unauthenticated.
+
+Every finding has a regression test in [`tests/test_platform_security.py`](tests/test_platform_security.py),
+and each failed before its fix. **Still open, and stated rather than left to be discovered: there
+is no authentication on the operator console** (loopback-bound, single-operator), and no
+independent penetration test has been performed.
 
 ## Honest limitations
 
@@ -186,6 +211,7 @@ via `http.server`, live model calls via `urllib`.
 | [`trustops/trustpage.py`](trustops/trustpage.py) | trust center generator |
 | [`trustops/commitments.py`](trustops/commitments.py) | sales-to-GRC commitment register |
 | [`tests/test_gates.py`](tests/test_gates.py) | the constitution — never modified by feature work |
+| [`tests/test_platform_security.py`](tests/test_platform_security.py) | one test per self-review finding |
 | [`evals/`](evals/) | the adversarial prompt set, harness and published results |
 | [`DECISIONS.md`](DECISIONS.md) · [`GOTCHAS.md`](GOTCHAS.md) | append-only build logs |
 
