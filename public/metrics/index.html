@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Changelog — Pramana</title>
-<meta name="description" content="What shipped, and when.">
+<title>Outcomes — Pramana</title>
+<meta name="description" content="Instrumented outcome metrics, and the ones not yet measurable.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
@@ -99,9 +99,75 @@ font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
 footer.site a{color:var(--ok)}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 </style></head><body>
-<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/metrics/">Outcomes</a><a class="nl" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl on" href="/changelog/">Changelog</a></div></nav>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl on" href="/metrics/">Outcomes</a><a class="nl" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl" href="/changelog/">Changelog</a></div></nav>
 <div class="wrap">
-<div class="hero"><h1>Changelog</h1><p class="lede">Dated, and honest about what each change did and did not include.</p></div><h2>2026-08-24 — Public site, live demo, and real-client onboarding</h2><ul class="tight"><li>Trust center generator: publishes only evidence-backed answers, everything else shows as open. Pramana's own trust center is its output.</li><li>Certification gate matched a name allowlist and did not know ISO 42001, so a roadmap satisfied an ISO 42001 certification question on our own trust page. The pattern now matches any ISO/IEC number and a wider set of schemes.</li><li>Named-human review: decisions extend the run's own hash chain; approval is unavailable when the gates released nothing; human-written answers are labelled HUMAN_AUTHORED rather than evidence-backed.</li><li>Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.</li><li>Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.</li><li>Client workspaces and a tenant selector; second synthetic client onboarded end to end.</li><li>Certificate and attestation types are never auto-assigned during ingestion.</li><li>First public deployment.</li></ul><h2>2026-08-08 — v0 engine</h2><ul class="tight"><li>Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification evidence class, legal routing, structural tenant isolation.</li><li>Hash-chained tamper-evident audit log.</li><li>Structure-preserving XLSX round trip.</li><li>Adversarial eval suite; zero unsupported material claims as a release gate.</li><li>Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.</li></ul>
+<div class="hero"><h1>Outcome metrics, instrumented</h1><p class="lede">The measures a buyer's security team actually feels. Some are computed from real runs today. The ones that need a live pilot are listed as not yet measured, rather than filled in with something plausible.</p></div>
+<h2>Measured today</h2>
+<div class="grid">
+  <div class="stat"><b>24</b><span>questions per run</span></div>
+  <div class="stat ok"><b>0.007s</b><span>time to first draft</span></div>
+  <div class="stat ok"><b>0.02s</b><span>full run cycle</span></div>
+  <div class="stat ok"><b>58%</b>
+    <span>shipped with zero human edit</span></div>
+  <div class="stat warn"><b>29%</b>
+    <span>refused, by design</span></div>
+  <div class="stat ok"><b>100%</b>
+    <span>refusals naming a gap</span></div>
+  <div class="stat ok"><b>24%</b>
+    <span>trust-page deflection</span></div>
+  <div class="stat ok">
+    <b>0</b><span>unsupported claims</span></div>
+</div>
+<p class="stamp">From the reference run executed during this build, and the trust center generated
+alongside it. Rebuilding the site recomputes every figure on this page.</p>
+
+<h2>What each one is for</h2>
+<div class="tablewrap"><table>
+<tr><th>Metric</th><th>Why a buyer cares</th></tr>
+<tr><td class="qid">time to first draft</td><td>How long after a questionnaire lands before a
+human has something to review, rather than a blank workbook.</td></tr>
+<tr><td class="qid">zero-human-edit rate</td><td>The share of answers that shipped exactly as
+drafted. This is the honest automation number — not "questions processed".</td></tr>
+<tr><td class="qid">refusals naming a gap</td><td>A refusal that does not say what is missing
+creates work instead of removing it. This should be 100%, and it is asserted.</td></tr>
+<tr><td class="qid">trust-page deflection</td><td>Standard buyer questions answerable
+self-service. Every one is an inbound request that never arrives.</td></tr>
+<tr><td class="qid">unsupported claims</td><td>The release gate. A run with any is blocked.</td></tr>
+</table></div>
+
+<h2>Commitment exposure</h2>
+<div class="grid">
+  <div class="stat bad"><b>1</b><span>contradicted</span></div>
+  <div class="stat warn"><b>3</b><span>unsupported</span></div>
+  <div class="stat"><b>3</b><span>evidence expires first</span></div>
+  <div class="stat ok"><b>0</b><span>supported</span></div>
+</div>
+<p class="stamp"><a href="/commitments/">See the register &rarr;</a></p>
+
+<h2>Correctness</h2>
+<div class="grid">
+  <div class="stat ok"><b>95.5%</b><span>correctly refused</span></div>
+  <div class="stat ok"><b>73.3%</b><span>correctly cited</span></div>
+  <div class="stat ok"><b>0</b><span>uncited releases</span></div>
+</div>
+<p class="stamp"><a href="/accuracy/">Method and every failure &rarr;</a></p>
+
+<h2>Not yet measured</h2>
+<p class="lead">These need a live pilot with a real sales cycle behind them. They are instrumented
+and empty, which is the truthful state — a number here today would be invented.</p>
+<ul class="tight">
+  <li><b>Days removed from a security review.</b> Requires before-and-after cycle times from a
+      customer's own deals.</li>
+  <li><b>Inbound questions deflected by the trust page.</b> Requires page analytics against a
+      baseline of inbound volume; deflection potential is measured above, actual deflection is not.</li>
+  <li><b>Analyst hours returned per questionnaire.</b> Requires a measured manual baseline from
+      the same team on the same questionnaires.</li>
+</ul>
+<div class="note"><b>On the automation number.</b> Zero-human-edit rate is reported against a
+simulated reviewer that approves only gate-clean, complete-coverage drafts. Under a real named
+reviewer the number will be lower, and that is the number worth quoting once a pilot produces
+one.</div>
+
 <footer class="site">
 Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>
 All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>

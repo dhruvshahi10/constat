@@ -1,10 +1,13 @@
 {
-  "generated_at": "2026-08-24T19:53:54+05:30",
+  "generated_at": "2026-08-24T19:58:36+05:30",
   "routes": [
     "/",
     "/accuracy/",
     "/changelog/",
+    "/commitments/",
     "/demo/",
+    "/isolation/",
+    "/metrics/",
     "/trust/"
   ],
   "reference_run": {
@@ -15,8 +18,8 @@
     "auto_approved_delivered": 14,
     "awaiting_human_review": 3,
     "unsupported_material_claims": 0,
-    "cycle_seconds": 0.01,
-    "time_to_first_draft_seconds": 0.005,
+    "cycle_seconds": 0.02,
+    "time_to_first_draft_seconds": 0.007,
     "zero_human_edit_rate": 0.583,
     "refusals_with_named_gap": 1.0,
     "status_counts": {

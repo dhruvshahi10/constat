@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -18,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from trustops import site, trustpage                            # noqa: E402
+from trustops import commitments, site, trustpage               # noqa: E402
 from trustops.pipeline import run                               # noqa: E402
 from trustops.report import write_report                        # noqa: E402
 from trustops.site import esc, hero, page                       # noqa: E402
@@ -322,6 +323,35 @@ boot();
                 description="Run a security question through the real evidence gates.")
 
 
+COMMITMENTS = ROOT / "data" / "commitments"
+
+
+def build_commitments() -> tuple[str, dict] | tuple[None, None]:
+    spec = COMMITMENTS / "acme.json"
+    if not spec.is_file():
+        return None, None
+    result = commitments.evaluate("acme", EVIDENCE, spec, date.today())
+    commitments.write(result, ARTIFACTS / "commitments" / "acme")
+    body = hero("The gap nobody reconciles: what sales promised versus what GRC can evidence",
+                "Security commitments are made at the speed of a deal and evidenced at the speed "
+                "of a control. This checks executed contracts, RFP responses and DPAs against the "
+                "same evidence corpus, through the same gates.")
+    body += commitments.render_body(result)
+    body += """
+<div class="note"><b>Read the contradicted one first.</b> A signed MSA commits to deleting
+customer data within 30 days. Two approved policies in the same corpus declare 90 days and 365
+days. That is not a judgement call or a language model's opinion — it is a machine-checkable
+assertion in a governed document disagreeing with a signed number, and it was found without
+anyone rereading the contract.</div>
+<p class="stamp">Synthetic register ·
+<a href="/artifacts/commitments/acme/commitments.json">commitments.json</a> ·
+<a href="/artifacts/commitments/acme/index.html">standalone page</a></p>
+"""
+    return page(f"Commitment register — {site.BRAND}", body, active="/commitments/",
+                description="Flags security commitments that evidence does not support."), \
+           result.to_dict()
+
+
 ACCURACY_JSON = ROOT / "evals" / "accuracy.json"
 PROMPT_SET = ROOT / "evals" / "adversarial.json"
 
@@ -421,6 +451,139 @@ prompt set v{esc(data['prompt_set_version'])} ·
                              f"{data['correctly_cited_pct']}% correctly cited.")), data
 
 
+def build_isolation() -> str:
+    """Isolation, proved by running the tests rather than described in a paragraph."""
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "tests/", "-v", "--no-header", "-p", "no:cacheprovider",
+         "-k", "tenant or isolation or INJE or injection"],
+        cwd=ROOT, capture_output=True, text=True, timeout=300)
+    captured = "\n".join(
+        ln for ln in proc.stdout.splitlines()
+        if ("PASSED" in ln or "FAILED" in ln or ln.startswith("="))
+    ) or proc.stdout[-2000:]
+
+    body = hero("Isolation is a property of the layout, not of a filter somebody remembers",
+                "A buyer asks this on the first call. It deserves a page, not a paragraph.")
+    body += f"""
+<h2>How it works</h2>
+<ul class="tight">
+  <li>Each client is a separate directory, and an evidence store is constructed from exactly one
+      of them. <b>There is no code path that loads two tenants into one store</b>, so there is no
+      query that returns the wrong client's document by forgetting a filter.</li>
+  <li>Every chunk carries the tenant it came from. The retriever raises <code>PermissionError</code>
+      on a tenant mismatch and asserts tenant identity on each chunk before returning it — a
+      mismatch fails loudly rather than degrading to a partial result.</li>
+  <li>Documents awaiting human approval are staged in a subdirectory the store does not read, so
+      unapproved material is invisible to retrieval by construction rather than by a status flag.</li>
+  <li>A separate scope gate refuses questions that <i>name</i> another workspace. Isolation stops
+      another client's documents being retrieved; it does not, on its own, stop the engine
+      answering &ldquo;what does Globex's policy say?&rdquo; out of this client's corpus and
+      quietly attributing one company's controls to another. That was a real finding from our own
+      adversarial suite.</li>
+</ul>
+
+<h2>The decoy</h2>
+<p class="lead">The eval suite contains a decoy workspace whose documents are deliberately worded
+to resemble the primary client's, so that if isolation depended on relevance scoring rather than
+structure, the decoy would surface. The tests assert zero cross-tenant chunks retrieved and assert
+that a mismatched request raises. A failure blocks release.</p>
+
+<h2>Run on this build</h2>
+<p class="sub">Captured from the actual test run during this site's build, not transcribed.</p>
+<pre><code>{esc(captured)}</code></pre>
+
+<h2>Try to break it</h2>
+<p class="lead">On the <a href="/demo/">live demo</a>, choose the <code>acme</code> workspace and
+ask what Globex's or Northwind's policy says. Then ask it to list every tenant on the system.</p>
+<p class="stamp">Exit status {proc.returncode} · generated {date.today().isoformat()}</p>
+"""
+    return page(f"Tenant isolation — {site.BRAND}", body, active="/isolation/",
+                description="How client isolation works, and the tests that prove it.")
+
+
+def build_metrics(metrics: dict, trust: dict, accuracy: dict | None,
+                  register: dict | None) -> str:
+    body = hero("Outcome metrics, instrumented",
+                "The measures a buyer's security team actually feels. Some are computed from real "
+                "runs today. The ones that need a live pilot are listed as not yet measured, "
+                "rather than filled in with something plausible.")
+    ttfd = metrics.get("time_to_first_draft_seconds")
+    body += f"""
+<h2>Measured today</h2>
+<div class="grid">
+  <div class="stat"><b>{metrics['questions']}</b><span>questions per run</span></div>
+  <div class="stat ok"><b>{ttfd if ttfd is not None else '—'}s</b><span>time to first draft</span></div>
+  <div class="stat ok"><b>{metrics['cycle_seconds']}s</b><span>full run cycle</span></div>
+  <div class="stat ok"><b>{round(metrics['zero_human_edit_rate'] * 100)}%</b>
+    <span>shipped with zero human edit</span></div>
+  <div class="stat warn"><b>{round(metrics['abstention_rate'] * 100)}%</b>
+    <span>refused, by design</span></div>
+  <div class="stat ok"><b>{round(metrics['refusals_with_named_gap'] * 100)}%</b>
+    <span>refusals naming a gap</span></div>
+  <div class="stat ok"><b>{round(trust['deflection_rate'] * 100)}%</b>
+    <span>trust-page deflection</span></div>
+  <div class="stat {'ok' if metrics['unsupported_material_claims'] == 0 else 'bad'}">
+    <b>{metrics['unsupported_material_claims']}</b><span>unsupported claims</span></div>
+</div>
+<p class="stamp">From the reference run executed during this build, and the trust center generated
+alongside it. Rebuilding the site recomputes every figure on this page.</p>
+
+<h2>What each one is for</h2>
+<div class="tablewrap"><table>
+<tr><th>Metric</th><th>Why a buyer cares</th></tr>
+<tr><td class="qid">time to first draft</td><td>How long after a questionnaire lands before a
+human has something to review, rather than a blank workbook.</td></tr>
+<tr><td class="qid">zero-human-edit rate</td><td>The share of answers that shipped exactly as
+drafted. This is the honest automation number — not "questions processed".</td></tr>
+<tr><td class="qid">refusals naming a gap</td><td>A refusal that does not say what is missing
+creates work instead of removing it. This should be 100%, and it is asserted.</td></tr>
+<tr><td class="qid">trust-page deflection</td><td>Standard buyer questions answerable
+self-service. Every one is an inbound request that never arrives.</td></tr>
+<tr><td class="qid">unsupported claims</td><td>The release gate. A run with any is blocked.</td></tr>
+</table></div>
+"""
+    if register:
+        body += f"""
+<h2>Commitment exposure</h2>
+<div class="grid">
+  <div class="stat bad"><b>{register['by_verdict']['CONTRADICTED']}</b><span>contradicted</span></div>
+  <div class="stat warn"><b>{register['by_verdict']['UNSUPPORTED']}</b><span>unsupported</span></div>
+  <div class="stat"><b>{register['by_verdict']['EXPIRING']}</b><span>evidence expires first</span></div>
+  <div class="stat ok"><b>{register['by_verdict']['SUPPORTED']}</b><span>supported</span></div>
+</div>
+<p class="stamp"><a href="/commitments/">See the register &rarr;</a></p>
+"""
+    if accuracy:
+        body += f"""
+<h2>Correctness</h2>
+<div class="grid">
+  <div class="stat ok"><b>{accuracy['correctly_refused_pct']}%</b><span>correctly refused</span></div>
+  <div class="stat ok"><b>{accuracy['correctly_cited_pct']}%</b><span>correctly cited</span></div>
+  <div class="stat ok"><b>{accuracy['released_without_citation']}</b><span>uncited releases</span></div>
+</div>
+<p class="stamp"><a href="/accuracy/">Method and every failure &rarr;</a></p>
+"""
+    body += """
+<h2>Not yet measured</h2>
+<p class="lead">These need a live pilot with a real sales cycle behind them. They are instrumented
+and empty, which is the truthful state — a number here today would be invented.</p>
+<ul class="tight">
+  <li><b>Days removed from a security review.</b> Requires before-and-after cycle times from a
+      customer's own deals.</li>
+  <li><b>Inbound questions deflected by the trust page.</b> Requires page analytics against a
+      baseline of inbound volume; deflection potential is measured above, actual deflection is not.</li>
+  <li><b>Analyst hours returned per questionnaire.</b> Requires a measured manual baseline from
+      the same team on the same questionnaires.</li>
+</ul>
+<div class="note"><b>On the automation number.</b> Zero-human-edit rate is reported against a
+simulated reviewer that approves only gate-clean, complete-coverage drafts. Under a real named
+reviewer the number will be lower, and that is the number worth quoting once a pilot produces
+one.</div>
+"""
+    return page(f"Outcomes — {site.BRAND}", body, active="/metrics/",
+                description="Instrumented outcome metrics, and the ones not yet measurable.")
+
+
 def build_trust() -> tuple[str, dict]:
     """Pramana's own trust center — the same generator a client would run,
     pointed at our own corpus. Also emits each client's page as an artifact, so
@@ -513,10 +676,22 @@ def main() -> int:
               f"{accuracy['correctly_cited_pct']}% cited / "
               f"{accuracy['released_without_citation']} uncited releases")
 
+    print("evaluating the commitment register…")
+    commitments_html, register = build_commitments()
+    if register:
+        print(f"  {register['at_risk']}/{register['commitments']} commitments not defensible")
+
+    print("proving isolation…")
+    isolation_html = build_isolation()
+
     routes = {"/": build_index, "/trust/": lambda: trust_html,
-              "/demo/": build_demo, "/changelog/": build_changelog}
+              "/demo/": build_demo, "/changelog/": build_changelog,
+              "/isolation/": lambda: isolation_html,
+              "/metrics/": lambda: build_metrics(metrics, trust_data, accuracy, register)}
     if accuracy_html:
         routes["/accuracy/"] = lambda: accuracy_html
+    if commitments_html:
+        routes["/commitments/"] = lambda: commitments_html
     site.set_available(set(routes))
     for route, builder in routes.items():
         write(route, builder(metrics) if route == "/" else builder())

@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Changelog — Pramana</title>
-<meta name="description" content="What shipped, and when.">
+<title>Tenant isolation — Pramana</title>
+<meta name="description" content="How client isolation works, and the tests that prove it.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
@@ -99,9 +99,47 @@ font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
 footer.site a{color:var(--ok)}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 </style></head><body>
-<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/metrics/">Outcomes</a><a class="nl" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl on" href="/changelog/">Changelog</a></div></nav>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/metrics/">Outcomes</a><a class="nl on" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl" href="/changelog/">Changelog</a></div></nav>
 <div class="wrap">
-<div class="hero"><h1>Changelog</h1><p class="lede">Dated, and honest about what each change did and did not include.</p></div><h2>2026-08-24 — Public site, live demo, and real-client onboarding</h2><ul class="tight"><li>Trust center generator: publishes only evidence-backed answers, everything else shows as open. Pramana's own trust center is its output.</li><li>Certification gate matched a name allowlist and did not know ISO 42001, so a roadmap satisfied an ISO 42001 certification question on our own trust page. The pattern now matches any ISO/IEC number and a wider set of schemes.</li><li>Named-human review: decisions extend the run's own hash chain; approval is unavailable when the gates released nothing; human-written answers are labelled HUMAN_AUTHORED rather than evidence-backed.</li><li>Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.</li><li>Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.</li><li>Client workspaces and a tenant selector; second synthetic client onboarded end to end.</li><li>Certificate and attestation types are never auto-assigned during ingestion.</li><li>First public deployment.</li></ul><h2>2026-08-08 — v0 engine</h2><ul class="tight"><li>Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification evidence class, legal routing, structural tenant isolation.</li><li>Hash-chained tamper-evident audit log.</li><li>Structure-preserving XLSX round trip.</li><li>Adversarial eval suite; zero unsupported material claims as a release gate.</li><li>Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.</li></ul>
+<div class="hero"><h1>Isolation is a property of the layout, not of a filter somebody remembers</h1><p class="lede">A buyer asks this on the first call. It deserves a page, not a paragraph.</p></div>
+<h2>How it works</h2>
+<ul class="tight">
+  <li>Each client is a separate directory, and an evidence store is constructed from exactly one
+      of them. <b>There is no code path that loads two tenants into one store</b>, so there is no
+      query that returns the wrong client's document by forgetting a filter.</li>
+  <li>Every chunk carries the tenant it came from. The retriever raises <code>PermissionError</code>
+      on a tenant mismatch and asserts tenant identity on each chunk before returning it — a
+      mismatch fails loudly rather than degrading to a partial result.</li>
+  <li>Documents awaiting human approval are staged in a subdirectory the store does not read, so
+      unapproved material is invisible to retrieval by construction rather than by a status flag.</li>
+  <li>A separate scope gate refuses questions that <i>name</i> another workspace. Isolation stops
+      another client's documents being retrieved; it does not, on its own, stop the engine
+      answering &ldquo;what does Globex's policy say?&rdquo; out of this client's corpus and
+      quietly attributing one company's controls to another. That was a real finding from our own
+      adversarial suite.</li>
+</ul>
+
+<h2>The decoy</h2>
+<p class="lead">The eval suite contains a decoy workspace whose documents are deliberately worded
+to resemble the primary client's, so that if isolation depended on relevance scoring rather than
+structure, the decoy would surface. The tests assert zero cross-tenant chunks retrieved and assert
+that a mismatched request raises. A failure blocks release.</p>
+
+<h2>Run on this build</h2>
+<p class="sub">Captured from the actual test run during this site's build, not transcribed.</p>
+<pre><code>============================= test session starts ==============================
+tests/test_adversarial.py::test_breach_categories_stay_perfect[cross-tenant isolation] PASSED [ 20%]
+tests/test_adversarial.py::test_breach_categories_stay_perfect[injection via evidence] PASSED [ 40%]
+tests/test_adversarial.py::test_planted_injection_in_evidence_cannot_forge_a_certificate PASSED [ 60%]
+tests/test_gates.py::test_t5_no_cross_tenant_retrieval PASSED            [ 80%]
+tests/test_gates.py::test_t5_tenant_mismatch_raises PASSED               [100%]
+======================= 5 passed, 25 deselected in 0.10s =======================</code></pre>
+
+<h2>Try to break it</h2>
+<p class="lead">On the <a href="/demo/">live demo</a>, choose the <code>acme</code> workspace and
+ask what Globex's or Northwind's policy says. Then ask it to list every tenant on the system.</p>
+<p class="stamp">Exit status 0 · generated 2026-08-24</p>
+
 <footer class="site">
 Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>
 All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>

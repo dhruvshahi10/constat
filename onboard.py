@@ -24,7 +24,7 @@ from trustops import tenants as tn                                  # noqa: E402
 from trustops.export import layout_of                               # noqa: E402
 from trustops.ingest import (ExtractionError, promote,              # noqa: E402
                              stage_corpus, staging_dir)
-from trustops import trustpage                                     # noqa: E402
+from trustops import commitments, trustpage                        # noqa: E402
 
 EVIDENCE = ROOT / "data" / "evidence"
 
@@ -92,6 +92,22 @@ def cmd_promote(args) -> int:
         return 2
     state = "draft (still not citable)" if args.as_draft else "approved"
     print(f"{args.id} → {target}  [{state}, by {args.actor}]")
+    return 0
+
+
+def cmd_commitments(args) -> int:
+    spec = Path(args.register) if args.register else ROOT / "data" / "commitments" / f"{args.tenant}.json"
+    if not spec.is_file():
+        print(f"error: no commitment register at {spec}", file=sys.stderr)
+        return 2
+    result = commitments.evaluate(args.tenant, args.evidence_root, spec)
+    out = Path(args.out).expanduser() if args.out else ROOT / "commitment_register" / args.tenant
+    html_path, json_path = commitments.write(result, out)
+    print(f"{args.tenant}: {result.at_risk} of {len(result.findings)} commitments are not "
+          f"currently defensible")
+    for f in result.findings:
+        print(f"  {f.verdict:<13} {f.commitment_id:<10} {f.detail[:82]}")
+    print(f"\n  page → {html_path}\n  data → {json_path}")
     return 0
 
 
@@ -167,6 +183,12 @@ def main() -> int:
     p.add_argument("--out", default="")
     p.add_argument("--contact", default="")
     p.set_defaults(func=cmd_trustpage)
+
+    p = sub.add_parser("commitments", help="check sales commitments against the evidence corpus")
+    p.add_argument("--tenant", required=True)
+    p.add_argument("--register", default="")
+    p.add_argument("--out", default="")
+    p.set_defaults(func=cmd_commitments)
 
     p = sub.add_parser("inspect", help="show the detected layout of a questionnaire file")
     p.add_argument("--questionnaire", required=True)
