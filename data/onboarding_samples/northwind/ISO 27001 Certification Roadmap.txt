@@ -1,0 +1,5 @@
+Northwind Health — ISO/IEC 27001 Certification Roadmap
+Version 0.9
+Issued: 2026-04-02
+
+Target state: Northwind intends to achieve ISO/IEC 27001 certification by Q3 2027. Stage 1 audit is planned for Q1 2027. This document is a planning artifact and does not represent a certification.

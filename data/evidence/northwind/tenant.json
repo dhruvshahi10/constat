@@ -1,0 +1,12 @@
+{
+  "slug": "northwind",
+  "display_name": "Northwind Health",
+  "owner": "priya.nair@northwind.example",
+  "created": "2026-08-24",
+  "trust_page": {
+    "enabled": true,
+    "headline": "",
+    "contact_email": "security@northwind.example",
+    "intro": ""
+  }
+}

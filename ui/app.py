@@ -1,4 +1,4 @@
-"""TrustOps console — zero-dependency web UI over the evidence-gated engine.
+"""Pramana console — zero-dependency web UI over the evidence-gated engine.
 
   .venv/bin/python ui/app.py          # http://localhost:8787
   .venv/bin/python ui/app.py --port N
@@ -29,12 +29,34 @@ from trustops.models import Draft, Question                   # noqa: E402
 from trustops.pipeline import run                             # noqa: E402
 from trustops.report import CSS, write_report                 # noqa: E402
 from trustops.retrieve import Retriever                       # noqa: E402
+from trustops import tenants as tn                            # noqa: E402
 
 import os                                                     # noqa: E402
 
 EVIDENCE = ROOT / "data" / "evidence"
-QNR = ROOT / "data" / "questionnaires" / "acme_security_questionnaire.xlsx"
+QUESTIONNAIRES = ROOT / "data" / "questionnaires"
+DEFAULT_QNR = QUESTIONNAIRES / "acme_security_questionnaire.xlsx"
 RUNS = ROOT / "runs"
+
+
+def questionnaire_for(tenant: str) -> Path:
+    """A tenant's own workbook if it has one, else the shared CAIQ-style subset.
+
+    Layout is detected per file (see `export.detect_layout`), so a client can
+    drop in the buyer's actual questionnaire without any code change."""
+    for pattern in (f"{tenant}_*.xlsx", f"{tenant}-*.xlsx", f"{tenant}.xlsx"):
+        matches = sorted(QUESTIONNAIRES.glob(pattern))
+        if matches:
+            return matches[0]
+    return DEFAULT_QNR
+
+
+def tenant_options() -> list[dict]:
+    return [{"slug": t.slug, "label": t.title,
+             "sources": tn.source_count(EVIDENCE, t.slug),
+             "staged": tn.staged_count(EVIDENCE, t.slug),
+             "questionnaire": questionnaire_for(t.slug).name}
+            for t in tn.list_tenants(EVIDENCE)]
 
 DEMO_QUESTIONS = [
     "Is your organization ISO/IEC 27001 certified?",
@@ -88,12 +110,15 @@ def answer_one(question_text: str, drafter_kind: str, tenant: str = "acme") -> d
 def run_batch(drafter_kind: str, tenant: str = "acme") -> dict:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     out = RUNS / f"{stamp}-{tenant}-{drafter_kind}-console"
-    res = run(QNR, tenant=tenant, evidence_root=EVIDENCE, out_dir=out,
+    questionnaire = questionnaire_for(tenant)
+    res = run(questionnaire, tenant=tenant, evidence_root=EVIDENCE, out_dir=out,
               drafter_kind=drafter_kind, today=date.today())
     report = write_report(res, date.today())
     rel = out.relative_to(ROOT).as_posix()
     return {
         "metrics": res.metrics,
+        "tenant": tenant,
+        "questionnaire": questionnaire.name,
         "report": f"/{rel}/{report.name}",
         "delivered": f"/{rel}/{res.delivered_xlsx.name}",
         "audit": f"/{rel}/{res.audit_path.name}",
@@ -120,13 +145,13 @@ a.filelink{font:600 12px "IBM Plex Mono",monospace;color:var(--ok)}
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TrustOps console</title>
+<title>Pramana console</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>/*CSS*/</style></head><body><div class="wrap">
 <header>
-<div class="eyebrow">TrustOps Desk · Evidence-Gated Answer Engine · v0</div>
+<div class="eyebrow">Pramana · Evidence-Gated Answer Engine</div>
 <h1>Every answer cited to an approved source — or refused.</h1>
-<div class="runmeta">tenant=acme (synthetic) · gates: cite-or-abstain · cert-evidence-class · staleness · contradiction · legal-routing · tenant-isolation</div>
+<div class="runmeta" id="tenantmeta">gates: cite-or-abstain · cert-evidence-class · staleness · contradiction · legal-routing · tenant-isolation</div>
 </header>
 
 <h2>Ask a security question</h2>
@@ -136,6 +161,7 @@ gates. No surviving citation &rarr; the engine refuses and names the gap. Try th
 <textarea id="q" placeholder="e.g. Is customer data encrypted in transit?"></textarea>
 <div class="chips" id="chips"></div>
 <div class="row">
+  <select id="tenant" title="Client workspace — each is a separate evidence store"></select>
   <select id="drafter"></select>
   <button class="primary" id="ask">Run through gates</button>
   <span class="spin" id="askspin">drafting &rarr; gating&hellip;</span>
@@ -150,11 +176,12 @@ gates. No surviving citation &rarr; the engine refuses and names the gap. Try th
 </div>
 
 <h2>Run the full questionnaire</h2>
-<p class="sub">Processes the 24-question CAIQ-style workbook end to end: ingest &rarr; classify &rarr; draft &rarr; gates
+<p class="sub">Processes the selected client\'s workbook end to end: ingest &rarr; classify &rarr; draft &rarr; gates
 &rarr; simulated review &rarr; export. Produces the audit working paper, the DELIVERED workbook, and the
 hash-chained audit log.</p>
 <div class="console">
 <div class="row">
+  <select id="runtenant" title="Client workspace"></select>
   <select id="rundrafter"></select>
   <button class="primary" id="runbtn">Run questionnaire</button>
   <span class="spin" id="runspin">running pipeline&hellip;</span>
@@ -169,7 +196,7 @@ hash-chained audit log.</p>
 </div>
 </div>
 
-<footer>TrustOps v0 · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
+<footer>Pramana · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
 </div>
 <script>
 const $=id=>document.getElementById(id);
@@ -179,6 +206,22 @@ async function boot(){
     sel.innerHTML=opts.drafters.map(d=>`<option value="${d.id}" ${d.available?'':'disabled'}>`+
       `${d.label}${d.available?'':' — set API key'}</option>`).join('');
   }
+  const tsel=[$('tenant'),$('runtenant')];
+  for(const sel of tsel){
+    sel.innerHTML=opts.tenants.map(t=>`<option value="${t.slug}">${t.label} — ${t.sources} source${t.sources===1?'':'s'}</option>`).join('');
+  }
+  const syncMeta=()=>{
+    const t=opts.tenants.find(x=>x.slug===$('tenant').value)||opts.tenants[0];
+    if(!t)return;
+    $('tenantmeta').textContent=`workspace=${t.slug} · ${t.sources} approved source(s)`+
+      (t.staged?` · ${t.staged} awaiting review`:'')+` · questionnaire=${t.questionnaire}`+
+      ` · gates: cite-or-abstain · cert-evidence-class · staleness · contradiction · legal-routing · tenant-isolation`;
+  };
+  for(const sel of tsel) sel.onchange=()=>{
+    for(const other of tsel) other.value=sel.value;
+    syncMeta();
+  };
+  syncMeta();
   $('chips').innerHTML=opts.demo.map(q=>`<button type="button">${q}</button>`).join('');
   for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
 }
@@ -192,7 +235,7 @@ $('ask').onclick=async()=>{
   $('askspin').style.display='inline';$('askresult').style.display='none';$('ask').disabled=true;
   try{
     const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:q,drafter:$('drafter').value})});
+      body:JSON.stringify({question:q,drafter:$('drafter').value,tenant:$('tenant').value})});
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const c=data.contract;
@@ -212,7 +255,7 @@ $('runbtn').onclick=async()=>{
   $('runspin').style.display='inline';$('runresult').style.display='none';$('runbtn').disabled=true;
   try{
     const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({drafter:$('rundrafter').value})});
+      body:JSON.stringify({drafter:$('rundrafter').value,tenant:$('runtenant').value})});
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const m=data.metrics;
@@ -248,7 +291,8 @@ class Handler(BaseHTTPRequestHandler):
             page = PAGE.replace("/*CSS*/", CSS + EXTRA_CSS)
             self._send(200, page.encode(), "text/html; charset=utf-8")
         elif self.path == "/api/options":
-            self._json({"drafters": drafter_options(), "demo": DEMO_QUESTIONS})
+            self._json({"drafters": drafter_options(), "demo": DEMO_QUESTIONS,
+                        "tenants": tenant_options()})
         elif self.path.startswith("/runs/"):
             target = (ROOT / self.path.lstrip("/")).resolve()
             if not target.is_relative_to(RUNS.resolve()) or not target.is_file():
@@ -268,24 +312,26 @@ class Handler(BaseHTTPRequestHandler):
             load_env(ROOT)
             body = json.loads(self.rfile.read(length) or b"{}")
             if self.path == "/api/ask":
-                self._json(answer_one(body["question"], body.get("drafter", "mock")))
+                self._json(answer_one(body["question"], body.get("drafter", "mock"),
+                                      tenant=body.get("tenant", "acme")))
             elif self.path == "/api/run":
-                self._json(run_batch(body.get("drafter", "mock")))
+                self._json(run_batch(body.get("drafter", "mock"),
+                                     tenant=body.get("tenant", "acme")))
             else:
                 self._send(404, b"not found", "text/plain")
         except Exception as exc:  # fail loudly to the UI, never fabricate an answer
             self._json({"error": f"{type(exc).__name__}: {exc}"}, code=500)
 
     def log_message(self, fmt: str, *args) -> None:
-        print(f"[trustops-console] {self.address_string()} {fmt % args}")
+        print(f"[pramana-console] {self.address_string()} {fmt % args}")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="TrustOps zero-dependency web console")
+    ap = argparse.ArgumentParser(description="Pramana zero-dependency web console")
     ap.add_argument("--port", type=int, default=8787)
     args = ap.parse_args()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"TrustOps console → http://localhost:{args.port}  (Ctrl-C to stop)")
+    print(f"Pramana console → http://localhost:{args.port}  (Ctrl-C to stop)")
     server.serve_forever()
 
 

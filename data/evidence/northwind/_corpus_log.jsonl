@@ -1,0 +1,4 @@
+{"ts": "2026-08-24T13:42:43.920247+00:00", "actor": "Priya Nair <priya.nair@northwind.example>", "action": "APPROVED_SOURCE", "source_id": "POL-ACCESS-CONTROL"}
+{"ts": "2026-08-24T13:42:44.003313+00:00", "actor": "Priya Nair <priya.nair@northwind.example>", "action": "APPROVED_SOURCE", "source_id": "STD-DATA-RETENTION"}
+{"ts": "2026-08-24T13:42:44.075975+00:00", "actor": "Priya Nair <priya.nair@northwind.example>", "action": "APPROVED_SOURCE", "source_id": "RMP-ISO-27001"}
+{"ts": "2026-08-24T13:42:44.150402+00:00", "actor": "Priya Nair <priya.nair@northwind.example>", "action": "APPROVED_SOURCE", "source_id": "PLN-INCIDENT-RESPONSE"}
