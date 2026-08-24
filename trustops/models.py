@@ -28,6 +28,31 @@ class Risk(str, Enum):
     HIGH = "high"
 
 
+class AnswerStatus(str, Enum):
+    """What is true about the evidence behind an answer.
+
+    Deliberately not a confidence score. A score invites someone to ship a 0.72;
+    a status names the state of the evidence and is derived in code from
+    citations that survived the gates, never from the drafter's self-report.
+    """
+    EVIDENCE_BACKED = "evidence_backed"   # cited, gate-clean, no gaps, ready to ship
+    PARTIAL = "partial"                   # cited, but gaps recorded against it
+    REQUIRES_HUMAN = "requires_human"     # cited and clean, but a person must sign it
+    NO_EVIDENCE = "no_evidence"           # refused: nothing approved supports an answer
+    ROUTED = "routed"                     # removed from automation before drafting
+    HUMAN_AUTHORED = "human_authored"     # a named person wrote this; not derived from evidence
+
+    @property
+    def label(self) -> str:
+        return self.value.replace("_", " ").upper()
+
+    @property
+    def released(self) -> bool:
+        """Whether an answer left the system at all."""
+        return self in (AnswerStatus.EVIDENCE_BACKED, AnswerStatus.PARTIAL,
+                        AnswerStatus.REQUIRES_HUMAN, AnswerStatus.HUMAN_AUTHORED)
+
+
 class QState(str, Enum):
     RECEIVED = "RECEIVED"
     CLASSIFIED = "CLASSIFIED"
@@ -93,6 +118,7 @@ class Draft:
     answer: Optional[str]
     citations: list[Citation] = field(default_factory=list)
     evidence_coverage: Coverage = Coverage.NONE
+    status: AnswerStatus = AnswerStatus.NO_EVIDENCE
     risk: Risk = Risk.MEDIUM
     gaps: list[str] = field(default_factory=list)
     requires_human: bool = True
@@ -106,8 +132,30 @@ class Draft:
     def to_contract(self) -> dict:
         d = asdict(self)
         d["evidence_coverage"] = self.evidence_coverage.value
+        d["status"] = self.status.value
         d["risk"] = self.risk.value
         return d
+
+    @classmethod
+    def from_contract(cls, data: dict) -> "Draft":
+        """Rehydrate a draft from a persisted contract — used by the review
+        session, which reopens a completed run to record human decisions."""
+        return cls(
+            question_id=data["question_id"],
+            answer=data.get("answer"),
+            citations=[Citation(**c) for c in data.get("citations", [])],
+            evidence_coverage=Coverage(data.get("evidence_coverage", "none")),
+            status=AnswerStatus(data.get("status", "no_evidence")),
+            risk=Risk(data.get("risk", "medium")),
+            gaps=list(data.get("gaps", [])),
+            requires_human=bool(data.get("requires_human", True)),
+            abstained=bool(data.get("abstained", False)),
+            route=data.get("route"),
+            gate_flags=list(data.get("gate_flags", [])),
+            drafter=data.get("drafter", "unset"),
+            model_version=data.get("model_version", "n/a"),
+            prompt_version=data.get("prompt_version", "n/a"),
+        )
 
 
 @dataclass

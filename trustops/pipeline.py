@@ -23,17 +23,25 @@ from .drafter import make_drafter
 from .evidence import EvidenceStore
 from .export import export_answers, ingest_questionnaire
 from .gates import post_gate, pre_gate
-from .models import Coverage, Draft, QState, Question
+from .models import AnswerStatus, Coverage, Draft, QState, Question
 from .retrieve import Retriever
 
 GENESIS = "0" * 64
 
 
 class AuditLog:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, resume: bool = False):
         self.path = path
         self.prev = GENESIS
         path.parent.mkdir(parents=True, exist_ok=True)
+        if resume and path.is_file():
+            # A review session continues the SAME chain rather than starting a
+            # new one: a human decision belongs to the run it decided on, and a
+            # second file would make the two independently forgeable.
+            lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            if lines:
+                self.prev = json.loads(lines[-1])["hash"]
+            return
         path.write_text("", encoding="utf-8")
 
     def append(self, actor: str, action: str, subject: str, detail: dict | None = None) -> None:
@@ -80,7 +88,17 @@ class RunResult:
 
 def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         drafter_kind: str = "mock", today: date | None = None,
-        reviewer: str = "demo-grc-reviewer (simulated)") -> RunResult:
+        reviewer: str = "demo-grc-reviewer (simulated)",
+        reviewer_mode: str = "simulated") -> RunResult:
+    """Execute a questionnaire end to end.
+
+    `reviewer_mode="manual"` performs no approvals at all: every drafted answer
+    waits for a named human in the review session. `"simulated"` keeps the
+    labelled demo behaviour — it approves only gate-clean, complete-coverage
+    drafts, and every such event is written to the log as SIMULATED_DEMO_APPROVAL.
+    """
+    if reviewer_mode not in ("simulated", "manual"):
+        raise ValueError(f"unknown reviewer_mode '{reviewer_mode}'")
     today = today or date.today()
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
@@ -115,6 +133,7 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         audit.append("system", "EVIDENCE_INTEGRITY_SCAN", tenant, integrity)
 
     drafts: dict[str, Draft] = {}
+    first_draft_at: float | None = None
     for q in questions:
         d = Draft(question_id=q.question_id, answer=None)
         d = pre_gate(q, d)
@@ -124,6 +143,8 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         else:
             d.drafter, d.model_version, d.prompt_version = "gate", "n/a", "pre-gate-v1"
         q.state = QState.DRAFTED
+        if first_draft_at is None:
+            first_draft_at = time.perf_counter()
         d = post_gate(q, d, store, today)
 
         if d.abstained or d.route:
@@ -138,16 +159,30 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
                           "coverage": d.evidence_coverage.value})
 
         # simulated named-reviewer approval — only for clean, complete drafts
-        if (q.state == QState.GRC_REVIEW and d.evidence_coverage == Coverage.COMPLETE
-                and not d.requires_human):
+        if (reviewer_mode == "simulated" and q.state == QState.GRC_REVIEW
+                and d.evidence_coverage == Coverage.COMPLETE and not d.requires_human):
             q.state = QState.DELIVERED
             audit.append(reviewer, "APPROVED", q.question_id,
                          {"mode": "SIMULATED_DEMO_APPROVAL",
                           "citations": [f"{c.source_id}@{c.location}" for c in d.citations]})
         drafts[q.question_id] = d
 
+    # A run manifest so a review session can reopen this run later: which file,
+    # which tenant, and the row identity of every question.
+    (out_dir / "manifest.json").write_text(json.dumps({
+        "tenant": tenant,
+        "questionnaire": str(questionnaire.resolve()),
+        "evidence_root": str(Path(evidence_root).resolve()),
+        "drafter": drafter_kind,
+        "reviewer_mode": reviewer_mode,
+        "run_date": today.isoformat(),
+        "questions": [{"question_id": q.question_id, "row": q.row,
+                       "domain": q.domain, "text": q.text, "state": q.state.value}
+                      for q in questions],
+    }, indent=2, ensure_ascii=False), encoding="utf-8")
+
     # DELIVERED — export back into the original format
-    delivered = out_dir / f"{questionnaire.stem}__DELIVERED.xlsx"
+    delivered = out_dir / f"{questionnaire.stem}__DELIVERED{questionnaire.suffix}"
     export_answers(questionnaire, delivered, questions, drafts)
     audit.append("system", "EXPORTED", delivered.name,
                  {"sha256": hashlib.sha256(delivered.read_bytes()).hexdigest()})
@@ -171,6 +206,14 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
         "awaiting_human_review": review_n,
         "unsupported_material_claims": unsupported,   # release gate: MUST be 0
         "cycle_seconds": round(elapsed, 2),
+        "time_to_first_draft_seconds": round(first_draft_at - t0, 3) if first_draft_at else None,
+        "zero_human_edit_rate": round(delivered_n / n, 3) if n else 0.0,
+        "refusals_with_named_gap": round(
+            sum(1 for d in drafts.values() if d.abstained and d.gaps) / abstained, 3
+        ) if abstained else 1.0,
+        "status_counts": {s.value: sum(1 for d in drafts.values() if d.status is s)
+                          for s in AnswerStatus},
+        "reviewer_mode": reviewer_mode,
         "drafter": drafter_kind,
         "audit_chain_valid": AuditLog.verify_chain(out_dir / "audit_log.jsonl"),
     }

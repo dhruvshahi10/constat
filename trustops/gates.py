@@ -15,7 +15,7 @@ import re
 from datetime import date
 
 from .evidence import EvidenceStore
-from .models import Coverage, Draft, Question, Risk
+from .models import AnswerStatus, Coverage, Draft, Question, Risk
 
 # --- classification patterns -------------------------------------------------
 CERT_PAT = re.compile(
@@ -57,8 +57,27 @@ def pre_gate(q: Question, draft: Draft) -> Draft:
     return draft
 
 
+def answer_status(draft: Draft) -> AnswerStatus:
+    """Derive the published status from what actually survived the gates.
+
+    Ordered so the most restrictive true statement wins. Nothing here consults
+    the drafter's opinion of itself; `draft.citations` at this point contains
+    only citations the gates kept.
+    """
+    if draft.route == "LEGAL":
+        return AnswerStatus.ROUTED
+    if not draft.citations or draft.answer is None or draft.abstained:
+        return AnswerStatus.NO_EVIDENCE
+    if draft.gaps:
+        return AnswerStatus.PARTIAL
+    if draft.requires_human:
+        return AnswerStatus.REQUIRES_HUMAN
+    return AnswerStatus.EVIDENCE_BACKED
+
+
 def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> Draft:
     if draft.route == "LEGAL":
+        draft.status = answer_status(draft)
         return draft  # already terminal for automation
 
     stale = store.stale_ids(today)
@@ -123,4 +142,5 @@ def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> D
         )
         # coverage gaps keep a human in the loop even when something is citable
         draft.requires_human = bool(gaps) or draft.risk == Risk.HIGH or is_cert
+    draft.status = answer_status(draft)
     return draft

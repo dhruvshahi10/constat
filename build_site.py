@@ -32,6 +32,19 @@ DEMO_TENANT = "acme"
 CONTACT = "dhruv.shahi07@gmail.com"
 
 
+def cta_buttons(buttons: list[tuple[str, str, bool]]) -> str:
+    """Only link to routes this build actually produced. A dead CTA on a page
+    arguing that the product never overstates its evidence is a bad look and a
+    real defect."""
+    live = [(href, label, primary) for href, label, primary in buttons
+            if href in site._AVAILABLE]
+    if not live:
+        return ""
+    return ('<div class="cta">' + "".join(
+        f'<a class="btn{" primary" if primary else ""}" href="{href}">{esc(label)}</a>'
+        for href, label, primary in live) + '</div>')
+
+
 def write(route: str, html: str) -> None:
     target = PUBLIC / route.strip("/") / "index.html" if route != "/" else PUBLIC / "index.html"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -103,11 +116,9 @@ def build_index(metrics: dict) -> str:
         "approved document, version and paragraph it came from — and when the evidence "
         "isn't there, it refuses, names the gap, and routes it to a human. "
         "The refusals are the product.",
-        '<div class="cta">'
-        '<a class="btn primary" href="/demo/">Try the live demo</a>'
-        '<a class="btn" href="/trust/">Our own trust center</a>'
-        '<a class="btn" href="/accuracy/">Published accuracy</a>'
-        '</div>')
+        cta_buttons([("/demo/", "Try the live demo", True),
+                     ("/trust/", "Our own trust center", False),
+                     ("/accuracy/", "Published accuracy", False)]))
 
     body += f"""
 <h2>Three jobs, in the order that matters</h2>

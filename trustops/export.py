@@ -284,7 +284,8 @@ def _notes_text(d: Draft) -> str:
         parts.append("Gaps: " + " | ".join(d.gaps))
     if d.route:
         parts.append(f"Routed: {d.route}")
-    parts.append(f"[coverage={d.evidence_coverage.value} risk={d.risk.value} "
+    parts.append(f"[status={d.status.label} coverage={d.evidence_coverage.value} "
+                 f"risk={d.risk.value} "
                  f"human_review={'yes' if d.requires_human else 'approved'}]")
     return "\n".join(parts)
 
