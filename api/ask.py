@@ -28,6 +28,7 @@ from trustops.evidence import EvidenceStore
 from trustops.gates import post_gate, pre_gate
 from trustops.models import Draft, Question
 from trustops.retrieve import Retriever
+from trustops.tenants import foreign_parties
 
 
 def verdict_of(d: Draft) -> str:
@@ -56,11 +57,12 @@ def answer(question_text: str, tenant: str) -> dict:
     retriever = Retriever(store)
     q = Question(question_id="ADHOC", row=0, domain="Ad hoc", text=text)
 
+    others = foreign_parties(EVIDENCE, tenant)
     d = Draft(question_id=q.question_id, answer=None)
-    d = pre_gate(q, d)
-    if d.route != "LEGAL":
+    d = pre_gate(q, d, tenant, others)
+    if not d.abstained:
         d = MockDrafter(retriever).draft(q, tenant)
-        d = pre_gate(q, d)
+        d = pre_gate(q, d, tenant, others)
     else:
         d.drafter, d.model_version, d.prompt_version = "gate", "n/a", "pre-gate-v1"
     d = post_gate(q, d, store, date.today())

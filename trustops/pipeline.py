@@ -25,6 +25,7 @@ from .export import export_answers, ingest_questionnaire
 from .gates import post_gate, pre_gate
 from .models import AnswerStatus, Coverage, Draft, QState, Question
 from .retrieve import Retriever
+from .tenants import foreign_parties
 
 GENESIS = "0" * 64
 
@@ -105,6 +106,7 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
 
     audit = AuditLog(out_dir / "audit_log.jsonl")
     store = EvidenceStore(tenant, evidence_root)
+    others = foreign_parties(evidence_root, tenant)
     retriever = Retriever(store)
     drafter = make_drafter(drafter_kind, retriever)
 
@@ -136,10 +138,10 @@ def run(questionnaire: Path, tenant: str, evidence_root: Path, out_dir: Path,
     first_draft_at: float | None = None
     for q in questions:
         d = Draft(question_id=q.question_id, answer=None)
-        d = pre_gate(q, d)
-        if d.route != "LEGAL":
+        d = pre_gate(q, d, tenant, others)
+        if not d.abstained:
             d = drafter.draft(q, tenant)
-            d = pre_gate(q, d)          # re-apply flags onto the drafted object
+            d = pre_gate(q, d, tenant, others)   # re-apply flags onto the drafted object
         else:
             d.drafter, d.model_version, d.prompt_version = "gate", "n/a", "pre-gate-v1"
         q.state = QState.DRAFTED

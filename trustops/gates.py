@@ -36,7 +36,17 @@ CERT_PAT = re.compile(
     r"nist\s*(?:sp\s*)?800-\d+|cmmc|hipaa|gdpr|dora|nis\s*2)\b",
     re.I,
 )
-CERT_VERB = re.compile(r"\b(certif(?:ied|icate|ication)|attestation|attested|accredit)", re.I)
+# The verb half of a certification claim. Originally certified/certificate/
+# attestation/accredited only, which let "do you HOLD a SOC 2 Type II REPORT"
+# through unclassified — a question that is obviously a certification claim to
+# any reader. Possession and assurance language now counts too. Over-matching is
+# safe here: the only consequence is requiring certificate-class evidence, which
+# fails closed.
+CERT_VERB = re.compile(
+    r"\b(certif(?:y|ied|icate|ication)s?|attest(?:ed|ation)s?|accredit\w+|"
+    r"authoriz\w+|authoris\w+|compliant|compliance|"
+    r"hold|holds|held|obtain\w*|maintain\w*|"
+    r"report|letter|audited|assessed|status|level)\b", re.I)
 LEGAL_PAT = re.compile(
     r"\b(unlimited liability|indemnif\w*|contractual(?:ly)? (?:commit|guarantee)|"
     r"financial penalt\w*|liquidated damages|warrant(?:y|ies)\b|guarantee\s+a?\s*\d)",
@@ -46,6 +56,31 @@ LEGAL_PAT = re.compile(
 # evidence classes allowed to support a certification/attestation claim
 CERT_EVIDENCE_TYPES = {"certificate", "attestation"}
 
+# --- scope patterns ----------------------------------------------------------
+# Questions about the system's own configuration, or about parties other than
+# the one being answered for. Isolation stops another tenant's DOCUMENTS being
+# retrieved, but it does not stop the engine answering "what does Globex's
+# policy say?" out of the current tenant's corpus — which silently
+# re-attributes one company's control to another. That is a different failure
+# from a leak and needs its own gate.
+INTROSPECTION_PAT = re.compile(
+    r"\b(list|enumerate|show|dump|reveal|name)\b[^.?]{0,50}\b"
+    r"(tenants?|workspaces?|clients?|customers?|organi[sz]ations?|corpora|corpus)\b"
+    r"|\ball\s+(?:other\s+)?(tenants?|workspaces?|clients?)\b"
+    r"|\b(other|another|every)\s+(tenant|workspace|client)('?s)?\b", re.I)
+
+
+def scope_flag(q: Question, tenant: str, foreign_parties: set[str] | None = None) -> str | None:
+    """Name the party a question is actually about, when it is not this one."""
+    if INTROSPECTION_PAT.search(q.text):
+        return "SYSTEM_CONFIGURATION"
+    for party in sorted(foreign_parties or (), key=len, reverse=True):
+        if len(party) < 3:
+            continue
+        if re.search(rf"\b{re.escape(party)}\b", q.text, re.I):
+            return party
+    return None
+
 
 def classify(q: Question) -> dict:
     is_cert = bool(CERT_PAT.search(q.text)) and bool(CERT_VERB.search(q.text))
@@ -53,8 +88,26 @@ def classify(q: Question) -> dict:
     return {"certification_claim": is_cert, "legal_commitment": is_legal}
 
 
-def pre_gate(q: Question, draft: Draft) -> Draft:
+def pre_gate(q: Question, draft: Draft, tenant: str = "",
+             foreign_parties: set[str] | None = None) -> Draft:
     flags = classify(q)
+    other = scope_flag(q, tenant, foreign_parties)
+    if other:
+        subject = ("this system's own configuration" if other == "SYSTEM_CONFIGURATION"
+                   else f"'{other}'")
+        draft.answer = None
+        draft.abstained = True
+        draft.citations = []
+        draft.evidence_coverage = Coverage.NONE
+        draft.risk = Risk.HIGH
+        draft.requires_human = True
+        draft.route = draft.route or "SME"
+        draft.gate_flags.append(f"OUT_OF_SCOPE_PARTY:{other}")
+        draft.gaps.append(
+            f"Question concerns {subject}, not "
+            f"{'this workspace' if not tenant else tenant}. Answering it from this "
+            f"workspace's evidence would attribute one party's controls to another; "
+            f"refused and routed to a human.")
     if flags["legal_commitment"]:
         draft.answer = None
         draft.abstained = True
@@ -89,7 +142,12 @@ def answer_status(draft: Draft) -> AnswerStatus:
 
 
 def post_gate(q: Question, draft: Draft, store: EvidenceStore, today: date) -> Draft:
-    if draft.route == "LEGAL":
+    if draft.route == "LEGAL" or any(f.startswith("OUT_OF_SCOPE_PARTY")
+                                     for f in draft.gate_flags):
+        draft.citations = []
+        draft.answer = None
+        draft.abstained = True
+        draft.evidence_coverage = Coverage.NONE
         draft.status = answer_status(draft)
         return draft  # already terminal for automation
 

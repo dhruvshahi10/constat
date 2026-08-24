@@ -85,11 +85,12 @@ def answer_one(question_text: str, drafter_kind: str, tenant: str = "acme") -> d
     retriever = Retriever(store)
     q = Question(question_id="ADHOC", row=0, domain="Ad hoc", text=question_text.strip())
 
+    others = tn.foreign_parties(EVIDENCE, tenant)
     d = Draft(question_id=q.question_id, answer=None)
-    d = pre_gate(q, d)
-    if d.route != "LEGAL":
+    d = pre_gate(q, d, tenant, others)
+    if not d.abstained:
         d = make_drafter(drafter_kind, retriever).draft(q, tenant)
-        d = pre_gate(q, d)
+        d = pre_gate(q, d, tenant, others)
     else:
         d.drafter, d.model_version, d.prompt_version = "gate", "n/a", "pre-gate-v1"
     d = post_gate(q, d, store, today)

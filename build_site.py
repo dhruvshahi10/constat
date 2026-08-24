@@ -322,6 +322,105 @@ boot();
                 description="Run a security question through the real evidence gates.")
 
 
+ACCURACY_JSON = ROOT / "evals" / "accuracy.json"
+PROMPT_SET = ROOT / "evals" / "adversarial.json"
+
+
+def build_accuracy() -> tuple[str, dict] | tuple[None, None]:
+    """The published accuracy page.
+
+    Rendered from the harness's own output. Every failure is listed by name with
+    the reason, because a published pass rate with the failures removed is worth
+    nothing to the person reading it."""
+    if not ACCURACY_JSON.is_file():
+        return None, None
+    data = json.loads(ACCURACY_JSON.read_text(encoding="utf-8"))
+    shutil.copy(ACCURACY_JSON, ARTIFACTS / "accuracy.json")
+    shutil.copy(PROMPT_SET, ARTIFACTS / "adversarial.json")
+
+    body = hero("Published accuracy, including what it gets wrong",
+                f"{data['total_prompts']} adversarial prompts. Every label was written before "
+                f"the harness first ran and none was revised to match the result. Every failure "
+                f"is named below.")
+    body += f"""
+<div class="grid">
+  <div class="stat ok"><b>{data['correctly_refused_pct']}%</b><span>correctly refused</span></div>
+  <div class="stat ok"><b>{data['correctly_cited_pct']}%</b><span>correctly cited</span></div>
+  <div class="stat {'ok' if data['released_without_citation'] == 0 else 'bad'}">
+    <b>{data['released_without_citation']}</b><span>released with no citation</span></div>
+  <div class="stat warn"><b>{data['over_released']}</b><span>over-released</span></div>
+  <div class="stat"><b>{data['total_prompts']}</b><span>prompts</span></div>
+  <div class="stat"><b>{data['overall_pct']}%</b><span>overall</span></div>
+</div>
+
+<h2>Why two numbers, not one</h2>
+<p class="lead">A system that refuses everything scores 100% on refusal and is useless. A system
+that answers everything scores 100% on citation and is dangerous. Neither number means anything
+without the other, so both are published, and so is the count of answers released with no
+citation at all — which is the invariant the engine actually enforces on every run.</p>
+<p class="lead">The {data['over_released']} over-releases are worth being precise about: in both
+cases the released answer carried a valid citation to a real, approved, in-force document. The
+failure was that the question contained a clause the evidence did not cover, and the engine
+answered the part it could. That is a genuine defect in question scoping. It is not the same
+thing as inventing a fact, and collapsing the two into one "hallucination rate" would hide which
+one happened.</p>
+
+<h2>Method</h2>
+<ul class="tight">
+  <li>Each prompt is labelled <code>refuse</code> or <code>cite</code> — the outcome a competent
+      security reviewer would demand. Labels were fixed before the first run.</li>
+  <li><code>refuse</code> passes only if no answer text is released. <code>cite</code> passes only
+      if an answer is released with at least one citation that survived the gates; where a specific
+      source is named in the label, that source must be the one cited.</li>
+  <li>Prompts run against four separate evidence corpora, including a red-team corpus containing an
+      approved document whose prose declares itself a certificate and instructs the model to cite
+      itself as one.</li>
+  <li>Scored with the deterministic drafter, so the number is reproducible. The harness runs
+      against a live model with one flag; the gates are identical either way.</li>
+  <li>A positive control the engine fails to cite — including a plain retrieval miss — is published
+      as a failure, not excused as out of scope.</li>
+</ul>
+
+<h2>By category</h2>
+<div class="tablewrap"><table>
+<tr><th>Category</th><th>Passed</th><th></th></tr>"""
+    for name, entry in sorted(data["by_category"].items()):
+        clean = entry["passed"] == entry["total"]
+        chip = ('<span class="chip c-ok">CLEAN</span>' if clean
+                else '<span class="chip c-warn">SEE FAILURES</span>')
+        body += (f'<tr><td>{esc(name)}</td>'
+                 f'<td><b>{entry["passed"]}/{entry["total"]}</b></td><td>{chip}</td></tr>')
+    body += "</table></div>"
+
+    body += f"<h2>Every failure, named ({len(data['failures'])})</h2>"
+    body += ('<p class="sub">Published in full. A pass rate with the failures removed tells the '
+             'reader nothing they can act on.</p><div class="tablewrap"><table>'
+             '<tr><th>ID</th><th>Category</th><th>Prompt</th><th>What went wrong</th></tr>')
+    for f in data["failures"]:
+        body += (f'<tr><td class="qid">{esc(f["id"])}</td><td class="dom">{esc(f["category"])}</td>'
+                 f'<td class="ans">{esc(f["question"])}</td>'
+                 f'<td class="ans">{esc(f["failure_reason"])}</td></tr>')
+    body += "</table></div>"
+
+    body += f"""
+<div class="note"><b>What the failures say about the product.</b> The categories that would
+represent an outright breach — certification inference, contradiction, stale evidence, legal
+scope, cross-tenant attribution, injection planted in evidence, out-of-corpus questions — are
+clean, and the test suite fails the build if any of them regresses. What is not solved is
+compound questions where one clause is unsupported, false premises stated as fact, and the
+precision of lexical retrieval. Those are named here rather than left for a buyer to discover.</div>
+
+<p class="stamp">Scored {esc(data['run_date'])} · drafter {esc(data['drafter'])} ·
+prompt set v{esc(data['prompt_set_version'])} ·
+<a href="/artifacts/accuracy.json">full per-prompt results (JSON)</a> ·
+<a href="/artifacts/adversarial.json">the prompt set itself</a></p>
+"""
+    return page(f"Accuracy — {site.BRAND}", body, active="/accuracy/",
+                description=(f"{data['total_prompts']} adversarial prompts: "
+                             f"{data['correctly_refused_pct']}% correctly refused, "
+                             f"{data['correctly_cited_pct']}% correctly cited.")), data
+
+
 def build_trust() -> tuple[str, dict]:
     """Pramana's own trust center — the same generator a client would run,
     pointed at our own corpus. Also emits each client's page as an artifact, so
@@ -407,8 +506,17 @@ def main() -> int:
     print(f"  pramana deflection {trust_data['deflection_rate']:.1%} "
           f"({trust_data['self_serve_answers']}/{trust_data['questions']})")
 
+    print("scoring the adversarial suite…")
+    accuracy_html, accuracy = build_accuracy()
+    if accuracy:
+        print(f"  {accuracy['correctly_refused_pct']}% refused / "
+              f"{accuracy['correctly_cited_pct']}% cited / "
+              f"{accuracy['released_without_citation']} uncited releases")
+
     routes = {"/": build_index, "/trust/": lambda: trust_html,
               "/demo/": build_demo, "/changelog/": build_changelog}
+    if accuracy_html:
+        routes["/accuracy/"] = lambda: accuracy_html
     site.set_available(set(routes))
     for route, builder in routes.items():
         write(route, builder(metrics) if route == "/" else builder())
@@ -416,6 +524,9 @@ def main() -> int:
     (PUBLIC / "build.json").write_text(json.dumps({
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "routes": sorted(routes), "reference_run": metrics,
+        "accuracy": {k: accuracy[k] for k in
+                     ("total_prompts", "correctly_refused_pct", "correctly_cited_pct",
+                      "released_without_citation", "over_released")} if accuracy else None,
         "trust": {k: trust_data[k] for k in
                   ("questions", "self_serve_answers", "open_items", "deflection_rate")},
     }, indent=2), encoding="utf-8")

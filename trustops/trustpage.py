@@ -30,7 +30,7 @@ from .gates import post_gate, pre_gate
 from .models import AnswerStatus, Draft, Question
 from .report import CSS
 from .retrieve import Retriever
-from .tenants import Tenant, load_tenant
+from .tenants import Tenant, foreign_parties, load_tenant
 
 DEFAULT_QUESTION_SET = Path(__file__).resolve().parents[1] / "data" / "trust_questions.json"
 
@@ -100,15 +100,16 @@ def generate(tenant_slug: str, evidence_root: Path, today: date | None = None,
     retriever = Retriever(store)
     drafter = make_drafter(drafter_kind, retriever)
     _, questions = load_question_set(question_set)
+    others = foreign_parties(evidence_root, tenant_slug)
 
     answers: list[TrustAnswer] = []
     for spec in questions:
         q = Question(question_id=spec["id"], row=0, domain=spec["domain"], text=spec["text"])
         d = Draft(question_id=q.question_id, answer=None)
-        d = pre_gate(q, d)
-        if d.route != "LEGAL":
+        d = pre_gate(q, d, tenant_slug, others)
+        if not d.abstained:
             d = drafter.draft(q, tenant_slug)
-            d = pre_gate(q, d)
+            d = pre_gate(q, d, tenant_slug, others)
         d = post_gate(q, d, store, today)
         answers.append(TrustAnswer(
             question_id=q.question_id, domain=q.domain, text=q.text, status=d.status,

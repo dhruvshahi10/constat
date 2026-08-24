@@ -3,37 +3,170 @@
   "version": "1.0",
   "note": "The questions a security reviewer asks before they send a questionnaire. Each one answered here is one that never becomes an inbound request.",
   "questions": [
-    {"id": "TC-GRC-01", "domain": "Security program", "text": "Do you maintain a formal, approved information security program and policy?"},
-    {"id": "TC-GRC-02", "domain": "Security program", "text": "Are formal risk assessments performed at least annually?"},
-    {"id": "TC-AA-01", "domain": "Audit and assurance", "text": "Do you hold a current SOC 2 Type II attestation?"},
-    {"id": "TC-AA-02", "domain": "Audit and assurance", "text": "Is your organization ISO/IEC 27001 certified?"},
-    {"id": "TC-AA-03", "domain": "Audit and assurance", "text": "Are you certified to ISO/IEC 42001 for AI management systems?"},
-    {"id": "TC-AA-04", "domain": "Audit and assurance", "text": "Has an independent penetration test been performed in the last 12 months?"},
-    {"id": "TC-CEK-01", "domain": "Cryptography", "text": "Is customer data encrypted in transit?"},
-    {"id": "TC-CEK-02", "domain": "Cryptography", "text": "Is customer data encrypted at rest, and how are keys managed?"},
-    {"id": "TC-IAM-01", "domain": "Identity and access", "text": "Is multi-factor authentication enforced for workforce access to production?"},
-    {"id": "TC-IAM-02", "domain": "Identity and access", "text": "How often are user access rights reviewed, and how quickly is access revoked on termination?"},
-    {"id": "TC-DSP-01", "domain": "Data handling", "text": "Within how many days of contract termination is customer data deleted?"},
-    {"id": "TC-DSP-02", "domain": "Data handling", "text": "Do you maintain a published subprocessor list?"},
-    {"id": "TC-DSP-03", "domain": "Data handling", "text": "Where is customer data hosted, and in which regions?"},
-    {"id": "TC-DSP-04", "domain": "Data handling", "text": "What personal data does the service retain, and for how long?"},
-    {"id": "TC-SEF-01", "domain": "Incident response", "text": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?"},
-    {"id": "TC-SEF-02", "domain": "Incident response", "text": "Is the incident response plan tested at least annually?"},
-    {"id": "TC-BCR-01", "domain": "Resilience", "text": "What are your RTO and RPO for production services?"},
-    {"id": "TC-AIS-01", "domain": "Product security", "text": "Do production code changes require peer review and automated security testing before release?"},
-    {"id": "TC-TVM-01", "domain": "Product security", "text": "What are your remediation timelines for critical and high severity vulnerabilities?"},
-    {"id": "TC-LOG-01", "domain": "Logging", "text": "Are audit logs centrally collected and protected from tampering?"},
-    {"id": "TC-HRS-01", "domain": "People", "text": "Do employees complete security awareness training at hire and annually?"},
-    {"id": "TC-HRS-02", "domain": "People", "text": "Are background checks performed for new hires where legally permitted?"},
-    {"id": "TC-UEM-01", "domain": "Endpoints", "text": "Are company endpoints centrally managed with disk encryption and enforced patching?"},
-    {"id": "TC-STA-01", "domain": "Supply chain", "text": "Do you assess the security posture of critical third parties and subprocessors?"},
-    {"id": "TC-AI-01", "domain": "AI governance", "text": "Do you use customer data to train, fine-tune or improve any model?"},
-    {"id": "TC-AI-02", "domain": "AI governance", "text": "What data can your models access, and what are the boundaries on that access?"},
-    {"id": "TC-AI-03", "domain": "AI governance", "text": "How is a human kept in the loop over AI-generated output?"},
-    {"id": "TC-AI-04", "domain": "AI governance", "text": "How does the system resist prompt injection?"},
-    {"id": "TC-AI-05", "domain": "AI governance", "text": "What agent permissions and MCP exposure does the system have?"},
-    {"id": "TC-AI-06", "domain": "AI governance", "text": "How is data leakage between tenants prevented?"},
-    {"id": "TC-AI-07", "domain": "AI governance", "text": "Do you have an AI governance policy, and what does it require?"},
-    {"id": "TC-AI-08", "domain": "AI governance", "text": "Which third-party model providers process data, and under what terms?"}
+    {
+      "id": "TC-GRC-01",
+      "domain": "Security program",
+      "text": "Do you maintain a formal, approved information security program and policy?"
+    },
+    {
+      "id": "TC-GRC-02",
+      "domain": "Security program",
+      "text": "Are formal risk assessments performed at least annually?"
+    },
+    {
+      "id": "TC-AA-01",
+      "domain": "Audit and assurance",
+      "text": "Do you hold a current SOC 2 Type II attestation?"
+    },
+    {
+      "id": "TC-AA-02",
+      "domain": "Audit and assurance",
+      "text": "Is your organization ISO/IEC 27001 certified?"
+    },
+    {
+      "id": "TC-AA-03",
+      "domain": "Audit and assurance",
+      "text": "Are you certified to ISO/IEC 42001 for AI management systems?"
+    },
+    {
+      "id": "TC-AA-04",
+      "domain": "Audit and assurance",
+      "text": "Has an independent penetration test been performed in the last 12 months?"
+    },
+    {
+      "id": "TC-CEK-01",
+      "domain": "Cryptography",
+      "text": "Is customer data encrypted in transit?"
+    },
+    {
+      "id": "TC-CEK-02",
+      "domain": "Cryptography",
+      "text": "Is customer data encrypted at rest, and how are keys managed?"
+    },
+    {
+      "id": "TC-IAM-01",
+      "domain": "Identity and access",
+      "text": "Is multi-factor authentication enforced for workforce access to production?"
+    },
+    {
+      "id": "TC-IAM-02",
+      "domain": "Identity and access",
+      "text": "How often are user access rights reviewed, and how quickly is access revoked on termination?"
+    },
+    {
+      "id": "TC-DSP-01",
+      "domain": "Data handling",
+      "text": "Within how many days of contract termination is customer data deleted?"
+    },
+    {
+      "id": "TC-DSP-02",
+      "domain": "Data handling",
+      "text": "Do you maintain a published subprocessor list?"
+    },
+    {
+      "id": "TC-DSP-03",
+      "domain": "Data handling",
+      "text": "Where is customer data hosted, and in which regions?"
+    },
+    {
+      "id": "TC-DSP-04",
+      "domain": "Data handling",
+      "text": "What personal data does the service retain, and for how long?"
+    },
+    {
+      "id": "TC-SEF-01",
+      "domain": "Incident response",
+      "text": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?"
+    },
+    {
+      "id": "TC-SEF-02",
+      "domain": "Incident response",
+      "text": "Is the incident response plan tested at least annually?"
+    },
+    {
+      "id": "TC-BCR-01",
+      "domain": "Resilience",
+      "text": "What are your RTO and RPO for production services?"
+    },
+    {
+      "id": "TC-AIS-01",
+      "domain": "Product security",
+      "text": "Do production code changes require peer review and automated security testing before release?"
+    },
+    {
+      "id": "TC-TVM-01",
+      "domain": "Product security",
+      "text": "What are your remediation timelines for critical and high severity vulnerabilities?"
+    },
+    {
+      "id": "TC-LOG-01",
+      "domain": "Logging",
+      "text": "Are audit logs centrally collected and protected from tampering?"
+    },
+    {
+      "id": "TC-HRS-01",
+      "domain": "People",
+      "text": "Do employees complete security awareness training at hire and annually?"
+    },
+    {
+      "id": "TC-HRS-02",
+      "domain": "People",
+      "text": "Are background checks performed for new hires where legally permitted?"
+    },
+    {
+      "id": "TC-UEM-01",
+      "domain": "Endpoints",
+      "text": "Are company endpoints centrally managed with disk encryption and enforced patching?"
+    },
+    {
+      "id": "TC-STA-01",
+      "domain": "Supply chain",
+      "text": "Do you assess the security posture of critical third parties and subprocessors?"
+    },
+    {
+      "id": "TC-AI-01",
+      "domain": "AI governance",
+      "text": "Do you use customer data to train, fine-tune or improve any model?"
+    },
+    {
+      "id": "TC-AI-02",
+      "domain": "AI governance",
+      "text": "What data can your models access, and what are the boundaries on that access?"
+    },
+    {
+      "id": "TC-AI-03",
+      "domain": "AI governance",
+      "text": "How is a human kept in the loop over AI-generated output?"
+    },
+    {
+      "id": "TC-AI-04",
+      "domain": "AI governance",
+      "text": "How does the system resist prompt injection?"
+    },
+    {
+      "id": "TC-AI-05",
+      "domain": "AI governance",
+      "text": "What agent permissions and MCP exposure does the system have?"
+    },
+    {
+      "id": "TC-AI-06",
+      "domain": "AI governance",
+      "text": "How is data leakage between tenants prevented?"
+    },
+    {
+      "id": "TC-AI-07",
+      "domain": "AI governance",
+      "text": "Do you have an AI governance policy, and what does it require?"
+    },
+    {
+      "id": "TC-AI-08",
+      "domain": "AI governance",
+      "text": "Which third-party model providers process data, and under what terms?"
+    },
+    {
+      "id": "TC-AI-09",
+      "domain": "AI governance",
+      "text": "What is your published accuracy, and how was it measured?"
+    }
   ]
 }

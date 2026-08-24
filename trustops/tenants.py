@@ -100,6 +100,22 @@ def staged_count(evidence_root: Path, slug: str) -> int:
     return len([p for p in staging.glob("*.md") if p.name != "REVIEW.md"])
 
 
+def foreign_parties(evidence_root: Path, slug: str) -> set[str]:
+    """Names of every OTHER workspace on this install, slug and display name.
+
+    Used by the scope gate: a question naming one of these is a question about
+    somebody else, and answering it from this workspace's evidence would
+    attribute one company's controls to another."""
+    names: set[str] = set()
+    for t in list_tenants(evidence_root):
+        if t.slug == slug:
+            continue
+        names.add(t.slug)
+        if t.display_name:
+            names.add(t.display_name)
+    return names
+
+
 def create_tenant(evidence_root: Path, slug: str, display_name: str = "",
                   owner: str = "", contact_email: str = "",
                   headline: str = "", intro: str = "") -> Tenant:
