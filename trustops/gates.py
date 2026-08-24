@@ -18,9 +18,22 @@ from .evidence import EvidenceStore
 from .models import AnswerStatus, Coverage, Draft, Question, Risk
 
 # --- classification patterns -------------------------------------------------
+# Certification schemes are matched by SHAPE, not by an allowlist of names.
+#
+# The allowlist version of this pattern shipped knowing ISO 27001, 27017, 27701,
+# PCI DSS, HITRUST, FedRAMP, CSA STAR and SOC 2 — and not knowing ISO 42001. A
+# question asking whether we were certified to 42001 was therefore never
+# classified as a certification claim, and a ROADMAP satisfied it. That is the
+# exact failure this system exists to prevent, and it was found on our own trust
+# page. Any ISO/IEC number now matches, as do the named schemes; an unknown
+# scheme costs at most an unnecessary evidence-class check, while a missing one
+# costs a false certification claim to a buyer.
 CERT_PAT = re.compile(
-    r"\b(iso[\s/]?(?:iec\s*)?27001|iso\s*27017|iso\s*27701|pci[\s-]?dss|hitrust|"
-    r"fedramp|csa\s+star|cyber\s+essentials|soc\s*[12]\s*(type\s*(i{1,2}|[12]))?)\b",
+    r"\b(iso[\s/]*(?:iec[\s/]*)?\d{4,5}(?:[-:]\d+)?|"
+    r"pci[\s-]?dss|hitrust|fedramp|statramp|stateramp|csa\s+star|cyber\s+essentials|"
+    r"tisax|irap|c5\b|essential\s+eight|isae\s*3402|ssae\s*1[68]|"
+    r"soc\s*[123]\b(?:\s*type\s*(?:i{1,2}|[123]))?|"
+    r"nist\s*(?:sp\s*)?800-\d+|cmmc|hipaa|gdpr|dora|nis\s*2)\b",
     re.I,
 )
 CERT_VERB = re.compile(r"\b(certif(?:ied|icate|ication)|attestation|attested|accredit)", re.I)

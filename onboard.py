@@ -24,6 +24,7 @@ from trustops import tenants as tn                                  # noqa: E402
 from trustops.export import layout_of                               # noqa: E402
 from trustops.ingest import (ExtractionError, promote,              # noqa: E402
                              stage_corpus, staging_dir)
+from trustops import trustpage                                     # noqa: E402
 
 EVIDENCE = ROOT / "data" / "evidence"
 
@@ -111,6 +112,24 @@ def cmd_inspect(args) -> int:
     return 0
 
 
+def cmd_trustpage(args) -> int:
+    result = trustpage.generate(args.tenant, args.evidence_root)
+    out = Path(args.out).expanduser() if args.out else ROOT / "trust_center" / args.tenant
+    html_path, json_path = trustpage.write(result, out, args.contact)
+    print(f"{args.tenant}: {len(result.published)}/{len(result.answers)} standard questions "
+          f"answered without a human ({result.deflection_rate:.1%} deflection)")
+    print(f"  page  → {html_path}")
+    print(f"  data  → {json_path}")
+    if result.open_items:
+        print(f"\n{len(result.open_items)} open item(s) — evidence to collect if you want them "
+              f"self-serve:")
+        for a in result.open_items[:8]:
+            print(f"  {a.question_id:<10} {a.text[:70]}")
+        if len(result.open_items) > 8:
+            print(f"  … {len(result.open_items) - 8} more (see deflection.json)")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Pramana onboarding — client corpus and questionnaires")
     ap.add_argument("--evidence-root", default=str(EVIDENCE), type=Path)
@@ -142,6 +161,12 @@ def main() -> int:
     p.add_argument("--as-draft", action="store_true",
                    help="promote into the corpus but leave it unapproved (not citable)")
     p.set_defaults(func=cmd_promote)
+
+    p = sub.add_parser("trustpage", help="generate a self-service trust center for a client")
+    p.add_argument("--tenant", required=True)
+    p.add_argument("--out", default="")
+    p.add_argument("--contact", default="")
+    p.set_defaults(func=cmd_trustpage)
 
     p = sub.add_parser("inspect", help="show the detected layout of a questionnaire file")
     p.add_argument("--questionnaire", required=True)

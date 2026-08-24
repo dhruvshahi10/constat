@@ -1,0 +1,178 @@
+{
+  "tenant": "acme",
+  "questionnaire": "/Users/dhruvshahi_07/Downloads/TrustOps Tool/data/questionnaires/acme_security_questionnaire.xlsx",
+  "evidence_root": "/Users/dhruvshahi_07/Downloads/TrustOps Tool/data/evidence",
+  "drafter": "mock",
+  "reviewer_mode": "simulated",
+  "run_date": "2026-08-24",
+  "questions": [
+    {
+      "question_id": "GRC-01.1",
+      "row": 4,
+      "domain": "Governance & Risk",
+      "text": "Do you maintain a formal, approved information security program and policy reviewed at least annually?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "GRC-02.1",
+      "row": 5,
+      "domain": "Governance & Risk",
+      "text": "Are formal risk assessments performed at least annually and upon significant change?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "A&A-01.1",
+      "row": 6,
+      "domain": "Audit & Assurance",
+      "text": "Do you hold a current SOC 2 Type II attestation? If yes, state the trust services criteria covered and period.",
+      "state": "GRC_REVIEW"
+    },
+    {
+      "question_id": "A&A-02.1",
+      "row": 7,
+      "domain": "Audit & Assurance",
+      "text": "Is your organization ISO/IEC 27001 certified? Provide certificate number and expiry.",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "AIS-01.1",
+      "row": 8,
+      "domain": "Application Security",
+      "text": "Has an independent penetration test of the application been performed in the last 12 months? Summarize scope and outcome.",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "AIS-02.1",
+      "row": 9,
+      "domain": "Application Security",
+      "text": "Do all production code changes require peer review and automated security testing (SAST/dependency scanning) before release?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "IAM-01.1",
+      "row": 10,
+      "domain": "Identity & Access",
+      "text": "Is multi-factor authentication enforced for all workforce access to production and corporate systems?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "IAM-02.1",
+      "row": 11,
+      "domain": "Identity & Access",
+      "text": "Are user access rights reviewed on a defined cadence, and is access revoked promptly on termination?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "CEK-01.1",
+      "row": 12,
+      "domain": "Cryptography",
+      "text": "Is customer data encrypted in transit? Specify minimum protocol versions.",
+      "state": "GRC_REVIEW"
+    },
+    {
+      "question_id": "CEK-02.1",
+      "row": 13,
+      "domain": "Cryptography",
+      "text": "Is customer data encrypted at rest? Specify algorithms and key management approach.",
+      "state": "GRC_REVIEW"
+    },
+    {
+      "question_id": "DSP-01.1",
+      "row": 14,
+      "domain": "Data Security & Privacy",
+      "text": "Within how many days of contract termination is customer data deleted from your systems, including backups?",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "DSP-02.1",
+      "row": 15,
+      "domain": "Data Security & Privacy",
+      "text": "Do you maintain a published subprocessor list with advance notice of changes?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "IVS-01.1",
+      "row": 16,
+      "domain": "Infrastructure",
+      "text": "Where is customer data hosted (provider and regions)?",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "LOG-01.1",
+      "row": 17,
+      "domain": "Logging & Monitoring",
+      "text": "Are audit logs centrally collected, protected from tampering, and monitored for anomalous activity?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "SEF-01.1",
+      "row": 18,
+      "domain": "Incident Management",
+      "text": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "SEF-02.1",
+      "row": 19,
+      "domain": "Incident Management",
+      "text": "Is the incident response plan tested at least annually? State the date of the most recent exercise.",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "BCR-01.1",
+      "row": 20,
+      "domain": "Resilience",
+      "text": "State your RTO and RPO for production services and the date of your most recent DR test.",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "HRS-01.1",
+      "row": 21,
+      "domain": "Human Resources",
+      "text": "Do all employees complete security awareness training at hire and annually?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "HRS-02.1",
+      "row": 22,
+      "domain": "Human Resources",
+      "text": "Are background checks performed for new hires where legally permitted?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "TVM-01.1",
+      "row": 23,
+      "domain": "Threat & Vulnerability",
+      "text": "What are your remediation SLAs for critical and high vulnerabilities?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "UEM-01.1",
+      "row": 24,
+      "domain": "Endpoint Management",
+      "text": "Are company endpoints centrally managed with anti-malware, disk encryption, and enforced patching?",
+      "state": "DELIVERED"
+    },
+    {
+      "question_id": "STA-01.1",
+      "row": 25,
+      "domain": "Supply Chain",
+      "text": "Do you assess the security posture of critical third parties/subprocessors?",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "LGL-01.1",
+      "row": 26,
+      "domain": "Customer Legal Addendum",
+      "text": "Will Vendor contractually commit to unlimited liability for any security breach and guarantee a 99.99% uptime SLA with financial penalties?",
+      "state": "EXCEPTION"
+    },
+    {
+      "question_id": "PRV-01.1",
+      "row": 27,
+      "domain": "Privacy",
+      "text": "Do you support verified deletion (certificate of deletion) on customer request?",
+      "state": "EXCEPTION"
+    }
+  ]
+}

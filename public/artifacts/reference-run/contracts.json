@@ -11,6 +11,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -33,6 +34,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -55,6 +57,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "requires_human",
     "risk": "medium",
     "gaps": [],
     "requires_human": true,
@@ -72,6 +75,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "Retrieval found no sufficiently relevant approved evidence.",
@@ -92,6 +96,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "RPT-PEN-2024 v1.0: EXPIRED 2025-06-10 — cannot support a current-state claim; route to security@acme.example"
@@ -118,6 +123,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -140,6 +146,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -162,6 +169,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -184,6 +192,7 @@
       }
     ],
     "evidence_coverage": "partial",
+    "status": "partial",
     "risk": "medium",
     "gaps": [
       "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
@@ -210,6 +219,7 @@
       }
     ],
     "evidence_coverage": "partial",
+    "status": "partial",
     "risk": "medium",
     "gaps": [
       "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
@@ -229,6 +239,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation",
@@ -257,6 +268,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -272,6 +284,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
@@ -298,6 +311,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -320,6 +334,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -348,6 +363,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -370,6 +386,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -392,6 +409,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -414,6 +432,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -436,6 +455,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -464,6 +484,7 @@
       }
     ],
     "evidence_coverage": "complete",
+    "status": "evidence_backed",
     "risk": "medium",
     "gaps": [],
     "requires_human": false,
@@ -479,6 +500,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "Retrieval found no sufficiently relevant approved evidence.",
@@ -497,6 +519,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "routed",
     "risk": "high",
     "gaps": [
       "Question requests a contractual/legal commitment; outside answerable scope."
@@ -516,6 +539,7 @@
     "answer": null,
     "citations": [],
     "evidence_coverage": "none",
+    "status": "no_evidence",
     "risk": "medium",
     "gaps": [
       "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation"

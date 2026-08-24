@@ -1,0 +1,308 @@
+{
+  "tenant": "pramana",
+  "generated": "2026-08-24",
+  "questions": 32,
+  "self_serve_answers": 7,
+  "open_items": 25,
+  "deflection_rate": 0.219,
+  "answers": [
+    {
+      "question_id": "TC-GRC-01",
+      "domain": "Security program",
+      "question": "Do you maintain a formal, approved information security program and policy?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-GRC-02",
+      "domain": "Security program",
+      "question": "Are formal risk assessments performed at least annually?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AA-01",
+      "domain": "Audit and assurance",
+      "question": "Do you hold a current SOC 2 Type II attestation?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AA-02",
+      "domain": "Audit and assurance",
+      "question": "Is your organization ISO/IEC 27001 certified?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AA-03",
+      "domain": "Audit and assurance",
+      "question": "Are you certified to ISO/IEC 42001 for AI management systems?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AA-04",
+      "domain": "Audit and assurance",
+      "question": "Has an independent penetration test been performed in the last 12 months?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-CEK-01",
+      "domain": "Cryptography",
+      "question": "Is customer data encrypted in transit?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-CEK-02",
+      "domain": "Cryptography",
+      "question": "Is customer data encrypted at rest, and how are keys managed?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-IAM-01",
+      "domain": "Identity and access",
+      "question": "Is multi-factor authentication enforced for workforce access to production?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-IAM-02",
+      "domain": "Identity and access",
+      "question": "How often are user access rights reviewed, and how quickly is access revoked on termination?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-DSP-01",
+      "domain": "Data handling",
+      "question": "Within how many days of contract termination is customer data deleted?",
+      "status": "evidence_backed",
+      "answer": "Per Data Retention and Deletion Policy v1.0: Hosted site. The only data the public site retains is an email address and an optional note voluntarily submitted through the early-access form. These are deleted within 30 days of a request to the owner. Questions typed into the public demo are processed in memory and are not wr…",
+      "citations": [
+        {
+          "source_id": "POL-RETENTION",
+          "version": "1.0",
+          "location": "para:1"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-DSP-02",
+      "domain": "Data handling",
+      "question": "Do you maintain a published subprocessor list?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-DSP-03",
+      "domain": "Data handling",
+      "question": "Where is customer data hosted, and in which regions?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-DSP-04",
+      "domain": "Data handling",
+      "question": "What personal data does the service retain, and for how long?",
+      "status": "evidence_backed",
+      "answer": "Per Customer Data Use and Model Training Policy v1.0: Retention on hosted surfaces. The public site persists exactly one category of personal data: an email address, and an optional free-text note, submitted voluntarily through the early-access form. Nothing else entered on the site is stored.",
+      "citations": [
+        {
+          "source_id": "POL-DATA-USE",
+          "version": "1.0",
+          "location": "para:5"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-SEF-01",
+      "domain": "Incident response",
+      "question": "Do you have a documented incident response plan, and within what timeframe are customers notified of a confirmed breach?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-SEF-02",
+      "domain": "Incident response",
+      "question": "Is the incident response plan tested at least annually?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-BCR-01",
+      "domain": "Resilience",
+      "question": "What are your RTO and RPO for production services?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AIS-01",
+      "domain": "Product security",
+      "question": "Do production code changes require peer review and automated security testing before release?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-TVM-01",
+      "domain": "Product security",
+      "question": "What are your remediation timelines for critical and high severity vulnerabilities?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-LOG-01",
+      "domain": "Logging",
+      "question": "Are audit logs centrally collected and protected from tampering?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-HRS-01",
+      "domain": "People",
+      "question": "Do employees complete security awareness training at hire and annually?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-HRS-02",
+      "domain": "People",
+      "question": "Are background checks performed for new hires where legally permitted?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-UEM-01",
+      "domain": "Endpoints",
+      "question": "Are company endpoints centrally managed with disk encryption and enforced patching?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-STA-01",
+      "domain": "Supply chain",
+      "question": "Do you assess the security posture of critical third parties and subprocessors?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AI-01",
+      "domain": "AI governance",
+      "question": "Do you use customer data to train, fine-tune or improve any model?",
+      "status": "evidence_backed",
+      "answer": "Per Customer Data Use and Model Training Policy v1.0: No training on customer content. Pramana does not train, fine-tune, or adapt any model on customer evidence, customer questionnaires, or customer answers. The system has no training pipeline. Retrieval is lexical and computed at query time from the tenant's files; there is no emb…",
+      "citations": [
+        {
+          "source_id": "POL-DATA-USE",
+          "version": "1.0",
+          "location": "para:1"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-AI-02",
+      "domain": "AI governance",
+      "question": "What data can your models access, and what are the boundaries on that access?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AI-03",
+      "domain": "AI governance",
+      "question": "How is a human kept in the loop over AI-generated output?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AI-04",
+      "domain": "AI governance",
+      "question": "How does the system resist prompt injection?",
+      "status": "evidence_backed",
+      "answer": "Per AI Governance Policy v1.0: Measured behaviour. The system's safety properties are asserted by an adversarial evaluation suite that runs on every change, including certification inference, evidence staleness, source contradiction, legal-commitment scope, cross-tenant retrieval, prompt injection and audit-lo…",
+      "citations": [
+        {
+          "source_id": "POL-AI-GOVERNANCE",
+          "version": "1.0",
+          "location": "para:4"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-AI-05",
+      "domain": "AI governance",
+      "question": "What agent permissions and MCP exposure does the system have?",
+      "status": "evidence_backed",
+      "answer": "Per Agent Permissions and MCP Exposure Standard v1.0: No MCP server is exposed. Pramana does not run, publish or embed a Model Context Protocol server, and exposes no tool surface to any external agent. There is no endpoint through which a third-party model or agent can query a tenant's evidence.",
+      "citations": [
+        {
+          "source_id": "STD-AGENT-SCOPE",
+          "version": "1.0",
+          "location": "para:1"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-AI-06",
+      "domain": "AI governance",
+      "question": "How is data leakage between tenants prevented?",
+      "status": "no_evidence",
+      "answer": null,
+      "citations": []
+    },
+    {
+      "question_id": "TC-AI-07",
+      "domain": "AI governance",
+      "question": "Do you have an AI governance policy, and what does it require?",
+      "status": "evidence_backed",
+      "answer": "Per ISO/IEC 42001 Alignment Roadmap v0.2: Honest characterisation. The correct description of Pramana today is a pre-pilot system whose AI governance controls are implemented in code and demonstrable by test, and whose management-system documentation is not certified by anyone.",
+      "citations": [
+        {
+          "source_id": "PLN-ISO42001-ALIGNMENT",
+          "version": "0.2",
+          "location": "para:5"
+        }
+      ]
+    },
+    {
+      "question_id": "TC-AI-08",
+      "domain": "AI governance",
+      "question": "Which third-party model providers process data, and under what terms?",
+      "status": "evidence_backed",
+      "answer": "Per Customer Data Use and Model Training Policy v1.0: Third-party model providers. When an operator enables a live drafter, retrieved excerpts and the question are sent to that provider's API for the duration of the request. Two providers are supported: Anthropic and Google. Provider data-use terms differ by plan, and this is the ma…",
+      "citations": [
+        {
+          "source_id": "POL-DATA-USE",
+          "version": "1.0",
+          "location": "para:2"
+        }
+      ]
+    }
+  ]
+}

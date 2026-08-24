@@ -8,3 +8,4 @@ __pycache__/
 .claude/
 trustops-v0.zip
 .vercel
+trust_center/

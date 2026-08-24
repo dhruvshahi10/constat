@@ -7,6 +7,18 @@
   "awaiting_human_review": 3,
   "unsupported_material_claims": 0,
   "cycle_seconds": 0.02,
+  "time_to_first_draft_seconds": 0.007,
+  "zero_human_edit_rate": 0.583,
+  "refusals_with_named_gap": 1.0,
+  "status_counts": {
+    "evidence_backed": 14,
+    "partial": 2,
+    "requires_human": 1,
+    "no_evidence": 6,
+    "routed": 1,
+    "human_authored": 0
+  },
+  "reviewer_mode": "simulated",
   "drafter": "mock",
   "audit_chain_valid": true
 }
