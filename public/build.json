@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-08-24T19:21:26+05:30",
+  "routes": [
+    "/",
+    "/changelog/",
+    "/demo/"
+  ],
+  "reference_run": {
+    "questions": 24,
+    "cited_draft_coverage": 0.708,
+    "abstention_rate": 0.292,
+    "exception_queue": 7,
+    "auto_approved_delivered": 14,
+    "awaiting_human_review": 3,
+    "unsupported_material_claims": 0,
+    "cycle_seconds": 0.02,
+    "drafter": "mock",
+    "audit_chain_valid": true
+  }
+}

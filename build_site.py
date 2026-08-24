@@ -1,0 +1,361 @@
+"""Generate the public site from the engine.
+
+Nothing on the site is asserted by hand. The numbers come from a run executed
+during the build, the trust center is the trust-page generator's output, and the
+accuracy page is the eval harness's output. If a page cannot be generated from
+real output, it is not published and its navigation link does not appear.
+
+  python build_site.py            # regenerate public/
+"""
+from __future__ import annotations
+
+import json
+import shutil
+import sys
+from datetime import date, datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from trustops import site                                       # noqa: E402
+from trustops.pipeline import run                               # noqa: E402
+from trustops.report import write_report                        # noqa: E402
+from trustops.site import esc, hero, page                       # noqa: E402
+
+PUBLIC = ROOT / "public"
+EVIDENCE = ROOT / "data" / "evidence"
+QNR = ROOT / "data" / "questionnaires" / "acme_security_questionnaire.xlsx"
+ARTIFACTS = PUBLIC / "artifacts"
+DEMO_TENANT = "acme"
+
+CONTACT = "dhruv.shahi07@gmail.com"
+
+
+def write(route: str, html: str) -> None:
+    target = PUBLIC / route.strip("/") / "index.html" if route != "/" else PUBLIC / "index.html"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(html, encoding="utf-8")
+
+
+# --- the reference run -------------------------------------------------------
+def reference_run() -> dict:
+    """Execute a real deterministic run and publish its artifacts.
+
+    The landing page's numbers are this run's numbers. Rebuilding the site
+    re-runs the engine, so the site cannot drift away from what the code does.
+    """
+    out = ARTIFACTS / "reference-run"
+    if out.exists():
+        shutil.rmtree(out)
+    result = run(QNR, tenant=DEMO_TENANT, evidence_root=EVIDENCE, out_dir=out,
+                 drafter_kind="mock", today=date.today())
+    write_report(result, date.today())
+    return result.metrics
+
+
+def waitlist_block(source: str) -> str:
+    return f"""
+<h2>Early access</h2>
+<p class="sub">Pramana is pre-pilot. If you run security review at a B2B SaaS company and
+questionnaires are eating your sales cycle, tell me what your worst one looks like.</p>
+<div class="console">
+<form class="waitlist" id="wl">
+  <input type="email" id="wlemail" placeholder="you@company.com" required autocomplete="email">
+  <input type="text" id="wlnote" placeholder="optional: what's your worst questionnaire?" maxlength="400">
+  <button class="btn primary" type="submit">Request access</button>
+</form>
+<div class="formmsg" id="wlmsg"></div>
+<div class="stamp">No tracking, no newsletter. Falls back to a plain mail link if the
+store is unavailable — this form will never tell you it saved something it did not.</div>
+</div>
+<script>
+document.getElementById('wl').addEventListener('submit', async (e) => {{
+  e.preventDefault();
+  const email = document.getElementById('wlemail').value.trim();
+  const note = document.getElementById('wlnote').value.trim();
+  const msg = document.getElementById('wlmsg');
+  msg.className = 'formmsg'; msg.textContent = '';
+  try {{
+    const r = await fetch('/api/waitlist', {{method:'POST', headers:{{'Content-Type':'application/json'}},
+      body: JSON.stringify({{email, note, source: '{source}'}})}});
+    const data = await r.json();
+    if (data.stored) {{ msg.className = 'formmsg ok'; msg.textContent = 'Recorded — thank you. I read every one.'; return; }}
+    throw new Error(data.error || 'unavailable');
+  }} catch (err) {{
+    msg.className = 'formmsg err';
+    const subject = encodeURIComponent('Pramana early access');
+    const body = encodeURIComponent(note ? ('From: ' + email + '\\n\\n' + note) : ('From: ' + email));
+    msg.innerHTML = 'Signup store is offline right now, so nothing was saved. ' +
+      '<a href="mailto:{CONTACT}?subject=' + subject + '&body=' + body + '">Send it by mail instead &rarr;</a>';
+  }}
+}});
+</script>
+"""
+
+
+# --- pages -------------------------------------------------------------------
+def build_index(metrics: dict) -> str:
+    pct = lambda x: f"{round(x * 100)}%"                       # noqa: E731
+    body = hero(
+        "Most questionnaire tools answer everything. The useful one knows when to refuse.",
+        "Pramana is an evidence-gated customer assurance engine. Every answer names the "
+        "approved document, version and paragraph it came from — and when the evidence "
+        "isn't there, it refuses, names the gap, and routes it to a human. "
+        "The refusals are the product.",
+        '<div class="cta">'
+        '<a class="btn primary" href="/demo/">Try the live demo</a>'
+        '<a class="btn" href="/trust/">Our own trust center</a>'
+        '<a class="btn" href="/accuracy/">Published accuracy</a>'
+        '</div>')
+
+    body += f"""
+<h2>Three jobs, in the order that matters</h2>
+<div class="cols">
+  <div class="card">
+    <h3>1 · Deflect</h3>
+    <p>Generate a self-service trust center from the same evidence corpus. Every question a
+    buyer can answer themselves is a question that never reaches your security team, and never
+    adds a day to the deal.</p>
+  </div>
+  <div class="card rev">
+    <h3>2 · Answer</h3>
+    <p>What the trust page can't deflect gets drafted from approved, in-force sources — cited
+    to source id, version and paragraph, then written back into the buyer's own workbook with
+    its structure intact.</p>
+  </div>
+  <div class="card warn">
+    <h3>3 · Refuse</h3>
+    <p>No evidence, stale evidence, contradictory evidence, or a contractual commitment
+    dressed as a question: the engine declines, names the specific gap, and routes it to a
+    named human. It never invents a plausible answer.</p>
+  </div>
+</div>
+
+<h2>What one real run looks like</h2>
+<p class="sub">A {metrics['questions']}-question CAIQ-style workbook, run by the deterministic
+drafter during this site's build. These are not illustrative figures — rebuilding the site
+re-runs the engine and rewrites this block.</p>
+<div class="grid">
+  <div class="stat"><b>{metrics['questions']}</b><span>questions</span></div>
+  <div class="stat ok"><b>{pct(metrics['cited_draft_coverage'])}</b><span>cited coverage</span></div>
+  <div class="stat warn"><b>{pct(metrics['abstention_rate'])}</b><span>refused, by design</span></div>
+  <div class="stat warn"><b>{metrics['exception_queue']}</b><span>routed to humans</span></div>
+  <div class="stat {'ok' if metrics['unsupported_material_claims'] == 0 else 'bad'}">
+    <b>{metrics['unsupported_material_claims']}</b><span>unsupported claims</span></div>
+  <div class="stat {'ok' if metrics['audit_chain_valid'] else 'bad'}">
+    <b>{'VALID' if metrics['audit_chain_valid'] else 'BROKEN'}</b><span>audit chain</span></div>
+</div>
+<p class="stamp">Artifacts from this exact run:
+<a href="/artifacts/reference-run/run_report.html">audit working paper</a> ·
+<a href="/artifacts/reference-run/contracts.json">answer contracts (JSON)</a> ·
+<a href="/artifacts/reference-run/audit_log.jsonl">hash-chained audit log</a> ·
+<a href="/artifacts/reference-run/metrics.json">metrics</a></p>
+
+<h2>Every answer carries a status, not a confidence score</h2>
+<p class="lead">A confidence score invites you to ship a 0.72. A status tells you what is
+actually true about the evidence, and it is derived in code from citations that survived the
+gates — never from what the model thought of itself.</p>
+<div class="tablewrap"><table>
+<tr><th>Status</th><th>Means</th><th>What happens next</th></tr>
+<tr><td><span class="chip c-ok">EVIDENCE-BACKED</span></td>
+    <td>Every claim cited to an approved, in-force source.</td><td>Ships.</td></tr>
+<tr><td><span class="chip c-rev">PARTIAL</span></td>
+    <td>Citable, but with gaps recorded against it.</td><td>Human reviews before it ships.</td></tr>
+<tr><td><span class="chip c-warn">NO EVIDENCE</span></td>
+    <td>Nothing approved supports an answer.</td>
+    <td>Refused. Gap named, routed for collection.</td></tr>
+<tr><td><span class="chip c-warn">REQUIRES HUMAN</span></td>
+    <td>Certification claim, high risk, or a contradiction between sources.</td>
+    <td>Routed to the named owner.</td></tr>
+</table></div>
+
+<h2>The gates do not trust the drafter</h2>
+<pre><code>questionnaire (any layout)
+      |  ingest — row identity preserved
+      v
+RECEIVED -&gt; CLASSIFIED -&gt; DRAFTED -&gt; [EXCEPTION | GRC_REVIEW] -&gt; DELIVERED
+      |          |            |             |                        |
+      |     pre-gates      drafter      post-gates            written back into
+      |     legal routing  (any model)  cite-or-abstain       the original file,
+      |     cert tagging                staleness            structure intact
+      |                                 contradiction
+      |                                 cert evidence class
+      +---------- hash-chained, append-only audit log --------------+</code></pre>
+<p class="lead">Tenant isolation, forbidden claims, staleness and approval are enforced in
+code, not in a prompt. Swapping the deterministic drafter for a live model changes fluency,
+not safety posture — which is the entire point of building it this way.</p>
+
+<div class="note"><b>Honest scope.</b> Pramana is pre-pilot and runs as an operator-run
+control plane, not self-serve SaaS. Onboarding a client is a one-time evidence-corpus pass;
+after that, each questionnaire is minutes. Retrieval is lexical today, so it will miss some
+paraphrased questions — it fails closed and refuses rather than guessing. All data shown
+across this site is synthetic.</div>
+""" + waitlist_block("landing")
+    return page(f"{site.BRAND} — {site.TAGLINE}", body, active="/",
+                description="Evidence-gated security questionnaire automation: every answer "
+                            "cited to an approved source, or refused.")
+
+
+def build_demo() -> str:
+    body = hero(
+        "Ask it something. Try to make it lie.",
+        "This runs the real engine — the same retrieval, the same deterministic gates, the "
+        "same refusal logic the eval suite tests. The deterministic drafter is used so the "
+        "result is reproducible and your question is never sent to a third-party model.")
+    body += """
+<div class="console">
+<textarea id="q" placeholder="e.g. Are you ISO 27001 certified?"></textarea>
+<div class="chips" id="chips"></div>
+<div class="row">
+  <select id="tenant"></select>
+  <button class="btn primary" id="ask">Run through gates</button>
+  <span class="spin" id="spin">retrieving &rarr; drafting &rarr; gating&hellip;</span>
+</div>
+<div class="result" id="result">
+  <span class="chip" id="verdict"></span>
+  <div class="answer-box" id="answer"></div>
+  <div id="prov"></div>
+  <div id="gaps"></div>
+  <div class="small" id="meta"></div>
+</div>
+</div>
+
+<h2>What to try</h2>
+<ul class="tight">
+  <li><b>Certification inference.</b> Ask whether Acme is ISO 27001 certified. Only a roadmap
+      exists. A plan is not a certificate, and the gate will not let one become the other.</li>
+  <li><b>Contradiction.</b> Ask how many days after termination customer data is deleted. Two
+      approved Acme policies disagree — both get quarantined and the question routes to both
+      owners.</li>
+  <li><b>Stale evidence.</b> Ask about recent penetration testing. The report on file expired;
+      an expired document cannot support a present-tense claim.</li>
+  <li><b>Legal commitment.</b> Demand unlimited liability or an uptime guarantee. It never
+      reaches the drafter — contractual commitments route to counsel before drafting.</li>
+  <li><b>Out of corpus.</b> Ask something no document covers. Watch it refuse and name what
+      is missing, rather than producing a confident paragraph.</li>
+</ul>
+<div class="note"><b>Both workspaces are synthetic.</b> <code>acme</code> is the demo corpus
+with deliberately planted traps. <code>northwind</code> was onboarded from PDF and DOCX files
+through the real ingestion path, and has only four approved sources — so it refuses a lot
+more, which is the correct behaviour for a thin corpus.</div>
+
+<style>
+.console{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ok);padding:20px 22px;margin:24px 0}
+textarea{width:100%;min-height:64px;font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;color:var(--ink);
+background:var(--paper);border:1px solid var(--line);padding:10px 12px;resize:vertical}
+select{font:600 12px "IBM Plex Mono",monospace;padding:11px 14px;border:1.5px solid var(--ink);
+background:var(--card);color:var(--ink);cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chips button{border:1px solid var(--line);background:var(--card);color:var(--muted);
+font:400 11.5px "IBM Plex Mono",monospace;padding:6px 10px;cursor:pointer}
+.chips button:hover{color:var(--ok);border-color:var(--ok)}
+.result{margin-top:18px;display:none}
+.answer-box{border:1px solid var(--line);background:var(--paper);padding:14px 16px;margin-top:10px;font-size:14px}
+.spin{display:none;font:12px "IBM Plex Mono",monospace;color:var(--muted)}
+.small{font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);margin-top:8px}
+button:disabled{opacity:.45;cursor:not-allowed}
+</style>
+<script>
+const $=id=>document.getElementById(id);
+const SAMPLES=["Are you ISO/IEC 27001 certified?",
+  "Within how many days of contract termination is customer data deleted?",
+  "Has an independent penetration test been performed in the last 12 months?",
+  "Will you contractually commit to unlimited liability for any breach?",
+  "Is customer data encrypted at rest?",
+  "Do you use customer data to train models?"];
+async function boot(){
+  const info=await (await fetch('/api/ask')).json();
+  $('tenant').innerHTML=(info.tenants||['acme']).map(t=>`<option value="${t}">workspace: ${t}</option>`).join('');
+  $('chips').innerHTML=SAMPLES.map(s=>`<button type="button">${s}</button>`).join('');
+  for(const b of $('chips').querySelectorAll('button')) b.onclick=()=>{$('q').value=b.textContent;};
+}
+function chipClass(v){
+  if(v.startsWith('CITED · GATE-CLEAN'))return 'chip c-ok';
+  if(v.startsWith('CITED'))return 'chip c-rev';
+  return 'chip c-warn';
+}
+$('ask').onclick=async()=>{
+  const q=$('q').value.trim(); if(!q)return;
+  $('spin').style.display='inline';$('result').style.display='none';$('ask').disabled=true;
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:q,tenant:$('tenant').value})});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    const c=data.contract;
+    $('verdict').textContent=data.verdict;$('verdict').className=chipClass(data.verdict);
+    $('answer').innerHTML=c.answer?c.answer:'<em>No answer released.</em>';
+    $('prov').innerHTML=c.citations.length
+      ?'<div class="prov">'+c.citations.map(x=>`${x.source_id} · v${x.version} · ${x.location}`).join('<br>')+'</div>'
+      :`<div class="prov p-warn">no citation released · routed to ${c.route||'no-evidence'}</div>`;
+    $('gaps').innerHTML=c.gaps.map(g=>`<div class="gap">&#9656; ${g}</div>`).join('');
+    $('meta').textContent=`coverage=${c.evidence_coverage} · risk=${c.risk} · drafter=${c.drafter}`
+      +` · human_review=${c.requires_human?'required':'not required'}`
+      +(c.gate_flags.length?` · flags: ${c.gate_flags.join(' | ')}`:'');
+    $('result').style.display='block';
+  }catch(e){
+    $('verdict').textContent='ENGINE ERROR';$('verdict').className='chip c-bad';
+    $('answer').innerHTML='<em>'+e.message+'</em>';
+    $('prov').innerHTML='';$('gaps').innerHTML='';$('meta').textContent='';
+    $('result').style.display='block';
+  }
+  $('spin').style.display='none';$('ask').disabled=false;
+};
+boot();
+</script>
+"""
+    return page(f"Live demo — {site.BRAND}", body, active="/demo/",
+                description="Run a security question through the real evidence gates.")
+
+
+CHANGELOG = [
+    ("2026-08-24", "Public site, live demo, and real-client onboarding", [
+        "Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.",
+        "Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.",
+        "Client workspaces and a tenant selector; second synthetic client onboarded end to end.",
+        "Certificate and attestation types are never auto-assigned during ingestion.",
+        "First public deployment.",
+    ]),
+    ("2026-08-08", "v0 engine", [
+        "Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification "
+        "evidence class, legal routing, structural tenant isolation.",
+        "Hash-chained tamper-evident audit log.",
+        "Structure-preserving XLSX round trip.",
+        "Adversarial eval suite; zero unsupported material claims as a release gate.",
+        "Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.",
+    ]),
+]
+
+
+def build_changelog() -> str:
+    body = hero("Changelog",
+                "Dated, and honest about what each change did and did not include.")
+    for stamp, title, items in CHANGELOG:
+        body += (f'<h2>{esc(stamp)} — {esc(title)}</h2><ul class="tight">'
+                 + "".join(f"<li>{esc(i)}</li>" for i in items) + "</ul>")
+    return page(f"Changelog — {site.BRAND}", body, active="/changelog/",
+                description="What shipped, and when.")
+
+
+def main() -> int:
+    PUBLIC.mkdir(parents=True, exist_ok=True)
+    print("running the engine for the reference run…")
+    metrics = reference_run()
+    print(f"  {json.dumps(metrics)}")
+
+    routes = {"/": build_index, "/demo/": build_demo, "/changelog/": build_changelog}
+    site.set_available(set(routes))
+    for route, builder in routes.items():
+        write(route, builder(metrics) if route == "/" else builder())
+        print(f"  wrote {route}")
+    (PUBLIC / "build.json").write_text(json.dumps({
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "routes": sorted(routes), "reference_run": metrics}, indent=2), encoding="utf-8")
+    print(f"site → {PUBLIC}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

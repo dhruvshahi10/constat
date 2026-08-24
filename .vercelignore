@@ -1,0 +1,16 @@
+.venv/
+runs/
+.pytest_cache/
+__pycache__/
+*.pyc
+trustops-v0.zip
+docs/
+tests/
+examples/
+data/onboarding_samples/
+data/questionnaires/
+.claude/
+ui/
+run_demo.py
+onboard.py
+build_site.py

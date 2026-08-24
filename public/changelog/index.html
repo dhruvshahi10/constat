@@ -1,0 +1,109 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Changelog — Pramana</title>
+<meta name="description" content="What shipped, and when.">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
+--ok:#1E6B47;--okbg:#E4EFE7;--warn:#A25E00;--warnbg:#F6EBD9;--rev:#34506B;--revbg:#E5EBF2;
+--bad:#A02C21;--badbg:#F4E2E0;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif;padding:0 0 64px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+header{border-bottom:2px solid var(--ink);padding:44px 0 22px;margin-bottom:30px}
+.eyebrow{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--ok);margin-bottom:14px}
+h1{font-family:"Space Grotesk",sans-serif;font-size:clamp(28px,4vw,42px);font-weight:600;letter-spacing:-.015em}
+.runmeta{margin-top:14px;font:12px/1.7 "IBM Plex Mono",monospace;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:26px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ink);padding:14px 14px 12px}
+.stat b{display:block;font-family:"Space Grotesk",sans-serif;font-size:30px;font-weight:600;line-height:1.1}
+.stat span{font:600 10px/1.4 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat.ok{border-top-color:var(--ok)} .stat.warn{border-top-color:var(--warn)}
+.stat.bad{border-top-color:var(--bad)} .stat.bad b{color:var(--bad)}
+.stat.ok b{color:var(--ok)} .stat.warn b{color:var(--warn)}
+h2{font-family:"Space Grotesk",sans-serif;font-size:19px;font-weight:600;margin:38px 0 6px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px;max-width:70ch}
+.panel{background:var(--card);border:1px solid var(--line);padding:16px 18px;margin-bottom:10px}
+.panel h3{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;color:var(--warn)}
+.panel p{font-size:13.5px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line)}
+th{font:600 10px/1.3 "IBM Plex Mono",monospace;letter-spacing:.13em;text-transform:uppercase;text-align:left;
+padding:10px 12px;border-bottom:2px solid var(--ink);color:var(--muted)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13.5px}
+tr:last-child td{border-bottom:none}
+.qid{font:600 12px "IBM Plex Mono",monospace;white-space:nowrap}
+.dom{color:var(--muted);font-size:11.5px}
+.chip{display:inline-block;font:700 10px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;padding:5px 8px;
+border:1.5px solid;white-space:nowrap}
+.c-ok{color:var(--ok);border-color:var(--ok);background:var(--okbg)}
+.c-rev{color:var(--rev);border-color:var(--rev);background:var(--revbg)}
+.c-warn{color:var(--warn);border-color:var(--warn);background:var(--warnbg)}
+.c-bad{color:var(--bad);border-color:var(--bad);background:var(--badbg)}
+.ans{max-width:52ch}
+.gap{color:var(--warn);font-size:12.5px;margin-top:6px}
+.prov{margin-top:8px;font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);
+border-left:3px solid var(--ok);padding:2px 0 2px 8px;background:linear-gradient(90deg,var(--okbg),transparent 70%)}
+.prov.p-warn{border-left-color:var(--warn);background:linear-gradient(90deg,var(--warnbg),transparent 70%)}
+.evals td:first-child{font:600 12px "IBM Plex Mono",monospace;white-space:nowrap}
+footer{margin-top:44px;padding-top:18px;border-top:2px solid var(--ink);
+font:12px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
+.pass{color:var(--ok);font-weight:700}
+@media(max-width:720px){td:nth-child(2),th:nth-child(2){display:none}}
+
+body{padding:0}
+.wrap{max-width:1080px}
+nav.top{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:20}
+nav.top .inner{max-width:1080px;margin:0 auto;padding:0 28px;display:flex;align-items:center;
+gap:22px;flex-wrap:wrap;min-height:56px}
+nav.top a.brand{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:17px;
+color:var(--ink);text-decoration:none;letter-spacing:-.01em;margin-right:6px}
+nav.top a.brand span{color:var(--ok)}
+nav.top a.nl{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+color:var(--muted);text-decoration:none;padding:6px 0;border-bottom:2px solid transparent}
+nav.top a.nl:hover{color:var(--ink)}
+nav.top a.nl.on{color:var(--ok);border-bottom-color:var(--ok)}
+.hero{padding:60px 0 34px;border-bottom:2px solid var(--ink);margin-bottom:34px}
+.hero h1{font-family:"Space Grotesk",sans-serif;font-size:clamp(30px,5vw,50px);font-weight:600;
+letter-spacing:-.02em;line-height:1.08;max-width:20ch}
+.hero p.lede{margin-top:18px;font-size:17px;line-height:1.6;color:var(--muted);max-width:62ch}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px;align-items:center}
+.btn{font:600 12px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;
+padding:12px 20px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);
+text-decoration:none;cursor:pointer;display:inline-block}
+.btn.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn:hover{border-color:var(--ok);color:var(--ok)}
+.btn.primary:hover{background:var(--ok);color:var(--card);border-color:var(--ok)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin:22px 0}
+.card{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ok);padding:18px 20px}
+.card h3{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;margin-bottom:8px}
+.card p{font-size:13.5px;line-height:1.6;color:var(--muted)}
+.card.warn{border-top-color:var(--warn)} .card.rev{border-top-color:var(--rev)}
+.lead{font-size:15px;line-height:1.65;max-width:70ch;margin-bottom:14px}
+ul.tight{margin:10px 0 16px 20px} ul.tight li{font-size:14px;line-height:1.65;margin-bottom:7px}
+code{font:12.5px "IBM Plex Mono",monospace;background:var(--okbg);padding:1px 5px;border:1px solid var(--line)}
+pre{background:var(--ink);color:#DDE7E0;padding:16px 18px;overflow-x:auto;font:12.5px/1.65 "IBM Plex Mono",monospace;
+margin:14px 0;border-left:3px solid var(--ok)}
+pre code{background:none;border:none;color:inherit;padding:0}
+.note{border-left:3px solid var(--warn);background:var(--warnbg);padding:12px 16px;margin:16px 0;font-size:13.5px;line-height:1.6}
+.note b{color:var(--warn)}
+.tablewrap{overflow-x:auto;margin:16px 0}
+.stamp{font:11px/1.7 "IBM Plex Mono",monospace;color:var(--muted);margin-top:10px}
+form.waitlist{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+form.waitlist input{font:14px "IBM Plex Sans",system-ui,sans-serif;padding:11px 13px;border:1.5px solid var(--line);
+background:var(--card);color:var(--ink);min-width:260px;flex:1}
+form.waitlist input:focus{outline:none;border-color:var(--ok)}
+.formmsg{font:12px "IBM Plex Mono",monospace;margin-top:10px;display:none}
+.formmsg.ok{color:var(--ok);display:block} .formmsg.err{color:var(--bad);display:block}
+footer.site{margin-top:56px;padding:22px 0 60px;border-top:2px solid var(--ink);
+font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
+footer.site a{color:var(--ok)}
+@media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
+</style></head><body>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/demo/">Live demo</a><a class="nl on" href="/changelog/">Changelog</a></div></nav>
+<div class="wrap">
+<div class="hero"><h1>Changelog</h1><p class="lede">Dated, and honest about what each change did and did not include.</p></div><h2>2026-08-24 — Public site, live demo, and real-client onboarding</h2><ul class="tight"><li>Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.</li><li>Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.</li><li>Client workspaces and a tenant selector; second synthetic client onboarded end to end.</li><li>Certificate and attestation types are never auto-assigned during ingestion.</li><li>First public deployment.</li></ul><h2>2026-08-08 — v0 engine</h2><ul class="tight"><li>Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification evidence class, legal routing, structural tenant isolation.</li><li>Hash-chained tamper-evident audit log.</li><li>Structure-preserving XLSX round trip.</li><li>Adversarial eval suite; zero unsupported material claims as a release gate.</li><li>Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.</li></ul>
+<footer class="site">
+Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>
+All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>
+</footer>
+</div></body></html>

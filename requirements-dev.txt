@@ -1,0 +1,6 @@
+# Local development only. Deliberately NOT named requirements.txt: a root
+# requirements.txt makes Vercel detect this repo as a single Python app rather
+# than a static site plus serverless functions. Function deps live in
+# api/requirements.txt.
+pytest
+openpyxl
