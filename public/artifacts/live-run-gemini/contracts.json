@@ -1,0 +1,555 @@
+{
+  "GRC-01.1": {
+    "question_id": "GRC-01.1",
+    "answer": "Yes, Acme maintains a formal information security program and policy that is reviewed and approved annually by the CISO and executive leadership.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:2",
+        "excerpt": "Acme maintains a formal information security program governed by this policy, reviewed and approved annually by the CISO and executive leadership."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "GRC-02.1": {
+    "question_id": "GRC-02.1",
+    "answer": "Yes, formal risk assessments are performed at least annually and upon significant change.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:3",
+        "excerpt": "Formal risk assessments are performed at least annually and upon significant change."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "A&A-01.1": {
+    "question_id": "A&A-01.1",
+    "answer": "Yes, Acme holds a current SOC 2 Type II attestation covering the Security and Availability trust services criteria for the twelve-month period ending 31 December 2025.",
+    "citations": [
+      {
+        "source_id": "CRT-SOC2-2025",
+        "version": "1.0",
+        "location": "para:2",
+        "excerpt": "Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "requires_human",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": true,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [
+      "CERT_CLAIM: certification evidence class required"
+    ],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "A&A-02.1": {
+    "question_id": "A&A-02.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "The organization is not currently ISO/IEC 27001 certified, so no certificate number or expiry date is available.",
+      "PLN-ISO-RM (type=roadmap): not a certificate/attestation — certification status is never inferred from plans or policies"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [
+      "CERT_CLAIM: certification evidence class required",
+      "CERT_INFERENCE_BLOCKED:PLN-ISO-RM"
+    ],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "AIS-01.1": {
+    "question_id": "AIS-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "RPT-PEN-2024 v1.0: EXPIRED 2025-06-10 — cannot support a current-state claim; route to security@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [
+      "STALE_EVIDENCE:RPT-PEN-2024"
+    ],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "AIS-02.1": {
+    "question_id": "AIS-02.1",
+    "answer": "Yes, all production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge.",
+    "citations": [
+      {
+        "source_id": "POL-SDLC-001",
+        "version": "1.2",
+        "location": "para:2",
+        "excerpt": "All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IAM-01.1": {
+    "question_id": "IAM-01.1",
+    "answer": "Yes, multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.",
+    "citations": [
+      {
+        "source_id": "POL-AC-001",
+        "version": "2.3",
+        "location": "para:2",
+        "excerpt": "Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IAM-02.1": {
+    "question_id": "IAM-02.1",
+    "answer": "Yes, user access rights are reviewed on a quarterly cadence by system owners, and access is revoked within 24 hours of termination as part of the offboarding runbook.",
+    "citations": [
+      {
+        "source_id": "POL-AC-001",
+        "version": "2.3",
+        "location": "para:3",
+        "excerpt": "Access rights are reviewed quarterly by system owners; review evidence is retained. Access is revoked within 24 hours of termination as part of the offboarding runbook."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "CEK-01.1": {
+    "question_id": "CEK-01.1",
+    "answer": "Yes, customer data in transit is protected using TLS 1.2 or higher on all external and inter-service connections, and weak ciphers are disabled.",
+    "citations": [
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:2",
+        "excerpt": "Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "CEK-02.1": {
+    "question_id": "CEK-02.1",
+    "answer": "Yes, customer data at rest is encrypted using AES-256 across databases, object storage, and backups. Encryption keys are managed in a cloud Key Management Service (KMS) featuring annual rotation, split administrative duties, and audit logging of key usage.",
+    "citations": [
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:2",
+        "excerpt": "Data at rest is encrypted with AES-256 across databases, object storage and backups."
+      },
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:3",
+        "excerpt": "Encryption keys are managed in a cloud KMS with annual rotation, split administrative duties and audit logging of key usage."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "DSP-01.1": {
+    "question_id": "DSP-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation",
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SOURCE_OWNER:infra@acme.example,privacy@acme.example",
+    "gate_flags": [
+      "CONTRADICTION:POL-RET-001",
+      "STALE_EVIDENCE:POL-RET-002"
+    ],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "DSP-02.1": {
+    "question_id": "DSP-02.1",
+    "answer": "Yes, a published subprocessor list is maintained, and customers are notified of subprocessor changes at least 30 days in advance via the trust portal subscription.",
+    "citations": [
+      {
+        "source_id": "LST-SUBPROC-001",
+        "version": "4.0",
+        "location": "para:1",
+        "excerpt": "Subprocessor List"
+      },
+      {
+        "source_id": "LST-SUBPROC-001",
+        "version": "4.0",
+        "location": "para:3",
+        "excerpt": "Customers are notified of subprocessor changes at least 30 days in advance via the trust portal subscription."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IVS-01.1": {
+    "question_id": "IVS-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "The approved excerpts do not contain information regarding where customer data is hosted, including the provider and regions.",
+      "No approved evidence retrieved for this question."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "LOG-01.1": {
+    "question_id": "LOG-01.1",
+    "answer": "Yes, production systems emit centralized audit logs that are retained for security analysis, protected against tampering, and monitored for anomalous activity with 24x7 alerting.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:4",
+        "excerpt": "Production systems emit centralized audit logs retained for security analysis. Logs are protected against tampering and monitored for anomalous activity with 24x7 alerting."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "SEF-01.1": {
+    "question_id": "SEF-01.1",
+    "answer": "Yes, Acme operates a documented incident response process, and confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation.",
+    "citations": [
+      {
+        "source_id": "PLN-IR-001",
+        "version": "2.1",
+        "location": "para:2",
+        "excerpt": "Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract"
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "SEF-02.1": {
+    "question_id": "SEF-02.1",
+    "answer": "Yes, the incident response plan is tested at least annually via a tabletop exercise. The most recent exercise was completed in March 2026.",
+    "citations": [
+      {
+        "source_id": "PLN-IR-001",
+        "version": "2.1",
+        "location": "para:3",
+        "excerpt": "The plan is tested at least annually via tabletop exercise; the most recent exercise was completed in March 2026."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "BCR-01.1": {
+    "question_id": "BCR-01.1",
+    "answer": "The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services. The most recent full disaster recovery failover test was completed in March 2026.",
+    "citations": [
+      {
+        "source_id": "PLN-BCP-001",
+        "version": "1.8",
+        "location": "para:2",
+        "excerpt": "The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services, using cross-region replication and automated failover runbooks."
+      },
+      {
+        "source_id": "PLN-BCP-001",
+        "version": "1.8",
+        "location": "para:3",
+        "excerpt": "DR procedures are tested at least annually; the most recent full failover test was completed in March 2026 and met both objectives."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "HRS-01.1": {
+    "question_id": "HRS-01.1",
+    "answer": "Yes, all employees complete security awareness training at hire and annually thereafter, and completion is tracked to 100%.",
+    "citations": [
+      {
+        "source_id": "POL-HR-001",
+        "version": "1.0",
+        "location": "para:2",
+        "excerpt": "All employees complete security awareness training at hire and annually thereafter, with completion tracked to 100%."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "HRS-02.1": {
+    "question_id": "HRS-02.1",
+    "answer": "Yes, background checks are performed for all new hires prior to their start date, to the extent permitted by local law.",
+    "citations": [
+      {
+        "source_id": "POL-HR-001",
+        "version": "1.0",
+        "location": "para:3",
+        "excerpt": "Background checks are performed for all new hires prior to start, to the extent permitted by local law."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "TVM-01.1": {
+    "question_id": "TVM-01.1",
+    "answer": "Critical and high vulnerabilities are remediated within 15 and 30 days respectively.",
+    "citations": [
+      {
+        "source_id": "POL-SDLC-001",
+        "version": "1.2",
+        "location": "para:2",
+        "excerpt": "Critical and high vulnerabilities are remediated within 15 and 30 days respectively."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "UEM-01.1": {
+    "question_id": "UEM-01.1",
+    "answer": "Yes, company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:5",
+        "excerpt": "Company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "low",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "STA-01.1": {
+    "question_id": "STA-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "The approved excerpts do not contain information regarding the assessment of the security posture of critical third parties or subprocessors.",
+      "No approved evidence retrieved for this question."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "LGL-01.1": {
+    "question_id": "LGL-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "routed",
+    "risk": "high",
+    "gaps": [
+      "Question requests a contractual/legal commitment; outside answerable scope."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "LEGAL",
+    "gate_flags": [
+      "LEGAL_COMMITMENT: routed to counsel; never drafted as fact"
+    ],
+    "drafter": "gate",
+    "model_version": "n/a",
+    "prompt_version": "pre-gate-v1"
+  },
+  "PRV-01.1": {
+    "question_id": "PRV-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "low",
+    "gaps": [
+      "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SOURCE_OWNER:infra@acme.example,privacy@acme.example",
+    "gate_flags": [
+      "CONTRADICTION:POL-RET-001"
+    ],
+    "drafter": "gemini",
+    "model_version": "gemini-flash-lite-latest",
+    "prompt_version": "trustops-contract-v1.0"
+  }
+}

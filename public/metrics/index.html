@@ -105,7 +105,7 @@ footer.site a{color:var(--ok)}
 <h2>Measured today</h2>
 <div class="grid">
   <div class="stat"><b>24</b><span>questions per run</span></div>
-  <div class="stat ok"><b>0.007s</b><span>time to first draft</span></div>
+  <div class="stat ok"><b>0.008s</b><span>time to first draft</span></div>
   <div class="stat ok"><b>0.02s</b><span>full run cycle</span></div>
   <div class="stat ok"><b>58%</b>
     <span>shipped with zero human edit</span></div>
@@ -151,6 +151,25 @@ self-service. Every one is an inbound request that never arrives.</td></tr>
   <div class="stat ok"><b>0</b><span>uncited releases</span></div>
 </div>
 <p class="stamp"><a href="/accuracy/">Method and every failure &rarr;</a></p>
+
+<h2>Swapping the model changes fluency, not safety posture</h2>
+<p class="lead">The same 24-question workbook, the same corpus, the same gates — once with the
+deterministic drafter and once with a live model. If the safety properties lived in the prompt,
+these columns would differ. They do not.</p>
+<div class="tablewrap"><table>
+<tr><th>Measure</th><th>Deterministic</th><th>Live model (Gemini)</th></tr><tr><td>Cited coverage</td><td class="qid">71%</td><td class="qid">71%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Refused, by design</td><td class="qid">29%</td><td class="qid">29%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Routed to humans</td><td class="qid">7</td><td class="qid">7</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Unsupported claims</td><td class="qid">0</td><td class="qid">0</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Audit chain</td><td class="qid">valid</td><td class="qid">valid</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Cycle time</td><td class="qid">0.02s</td><td class="qid">144.61s</td><td><span class="chip c-rev">DIFFERS</span></td></tr></table></div>
+<p class="lead">The one real difference is phrasing quality inside the gates: the live model
+produced 16 fully evidence-backed answers against
+14, converting
+2 partial answers into clean
+ones. It did not gain the ability to publish anything uncited, and cycle time went from
+0.02s to 144.61s because the free tier is rate limited to
+roughly ten requests a minute.</p>
+<p class="stamp">Live run live-run-gemini ·
+<a href="/artifacts/live-run-gemini/run_report.html">audit working paper</a> ·
+<a href="/artifacts/live-run-gemini/contracts.json">contracts</a> ·
+<a href="/artifacts/live-run-gemini/audit_log.jsonl">audit log</a> ·
+<a href="/artifacts/live-run-gemini/metrics.json">metrics</a></p>
 
 <h2>Not yet measured</h2>
 <p class="lead">These need a live pilot with a real sales cycle behind them. They are instrumented

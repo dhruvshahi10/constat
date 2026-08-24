@@ -324,6 +324,60 @@ boot();
 
 
 COMMITMENTS = ROOT / "data" / "commitments"
+LIVE_RUN = PUBLIC / "artifacts" / "live-run-gemini" / "metrics.json"
+
+
+def live_run_metrics() -> dict | None:
+    """A dated run against a real model, committed as an artifact.
+
+    Not re-executed at build time: it needs an API key and two and a half
+    minutes of rate-limited calls. It is published as a fixed, dated artifact
+    with its full report, contracts and audit log, so the comparison below is
+    checkable rather than asserted."""
+    return json.loads(LIVE_RUN.read_text(encoding="utf-8")) if LIVE_RUN.is_file() else None
+
+
+def drafter_comparison(mock: dict, live: dict) -> str:
+    pct = lambda x: f"{round(x * 100)}%"                     # noqa: E731
+    rows = [
+        ("Cited coverage", pct(mock["cited_draft_coverage"]), pct(live["cited_draft_coverage"])),
+        ("Refused, by design", pct(mock["abstention_rate"]), pct(live["abstention_rate"])),
+        ("Routed to humans", mock["exception_queue"], live["exception_queue"]),
+        ("Unsupported claims", mock["unsupported_material_claims"],
+         live["unsupported_material_claims"]),
+        ("Audit chain", "valid" if mock["audit_chain_valid"] else "BROKEN",
+         "valid" if live["audit_chain_valid"] else "BROKEN"),
+        ("Cycle time", f"{mock['cycle_seconds']}s", f"{live['cycle_seconds']}s"),
+    ]
+    body = """
+<h2>Swapping the model changes fluency, not safety posture</h2>
+<p class="lead">The same 24-question workbook, the same corpus, the same gates — once with the
+deterministic drafter and once with a live model. If the safety properties lived in the prompt,
+these columns would differ. They do not.</p>
+<div class="tablewrap"><table>
+<tr><th>Measure</th><th>Deterministic</th><th>Live model (Gemini)</th></tr>"""
+    for label, a, b in rows:
+        same = str(a) == str(b)
+        mark = ('<span class="chip c-ok">IDENTICAL</span>' if same
+                else '<span class="chip c-rev">DIFFERS</span>')
+        body += (f'<tr><td>{esc(label)}</td><td class="qid">{esc(a)}</td>'
+                 f'<td class="qid">{esc(b)}</td><td>{mark}</td></tr>')
+    body += "</table></div>"
+    body += f"""
+<p class="lead">The one real difference is phrasing quality inside the gates: the live model
+produced {live['status_counts']['evidence_backed']} fully evidence-backed answers against
+{mock['status_counts']['evidence_backed']}, converting
+{mock['status_counts']['partial'] - live['status_counts']['partial']} partial answers into clean
+ones. It did not gain the ability to publish anything uncited, and cycle time went from
+{mock['cycle_seconds']}s to {live['cycle_seconds']}s because the free tier is rate limited to
+roughly ten requests a minute.</p>
+<p class="stamp">Live run {esc(LIVE_RUN.parent.name)} ·
+<a href="/artifacts/live-run-gemini/run_report.html">audit working paper</a> ·
+<a href="/artifacts/live-run-gemini/contracts.json">contracts</a> ·
+<a href="/artifacts/live-run-gemini/audit_log.jsonl">audit log</a> ·
+<a href="/artifacts/live-run-gemini/metrics.json">metrics</a></p>
+"""
+    return body
 
 
 def build_commitments() -> tuple[str, dict] | tuple[None, None]:
@@ -502,7 +556,7 @@ ask what Globex's or Northwind's policy says. Then ask it to list every tenant o
 
 
 def build_metrics(metrics: dict, trust: dict, accuracy: dict | None,
-                  register: dict | None) -> str:
+                  register: dict | None, live: dict | None = None) -> str:
     body = hero("Outcome metrics, instrumented",
                 "The measures a buyer's security team actually feels. Some are computed from real "
                 "runs today. The ones that need a live pilot are listed as not yet measured, "
@@ -563,6 +617,8 @@ self-service. Every one is an inbound request that never arrives.</td></tr>
 </div>
 <p class="stamp"><a href="/accuracy/">Method and every failure &rarr;</a></p>
 """
+    if live:
+        body += drafter_comparison(metrics, live)
     body += """
 <h2>Not yet measured</h2>
 <p class="lead">These need a live pilot with a real sales cycle behind them. They are instrumented
@@ -623,6 +679,17 @@ this product exists to prevent.</div>
 
 CHANGELOG = [
     ("2026-08-24", "Public site, live demo, and real-client onboarding", [
+        "Published accuracy: 59 adversarial prompts, 95.5% correctly refused, 73.3% correctly "
+        "cited, 0 answers released without a citation. Every failure listed by name.",
+        "Scope gate: a question naming another workspace, or asking about the system's own "
+        "configuration, is refused before drafting. Isolation stopped another client's documents "
+        "being retrieved; nothing stopped one client's controls being attributed to another.",
+        "Commitment register: checks executed contracts, RFP responses and DPAs against the "
+        "evidence corpus — contradicted, unsupported, or supported by evidence that expires "
+        "before the commitment date.",
+        "Outcome metrics and an isolation page carrying the actual test output.",
+        "Dated live-model run published as an artifact: identical gate outcomes to the "
+        "deterministic drafter.",
         "Trust center generator: publishes only evidence-backed answers, everything else "
         "shows as open. Pramana's own trust center is its output.",
         "Certification gate matched a name allowlist and did not know ISO 42001, so a "
@@ -687,7 +754,8 @@ def main() -> int:
     routes = {"/": build_index, "/trust/": lambda: trust_html,
               "/demo/": build_demo, "/changelog/": build_changelog,
               "/isolation/": lambda: isolation_html,
-              "/metrics/": lambda: build_metrics(metrics, trust_data, accuracy, register)}
+              "/metrics/": lambda: build_metrics(metrics, trust_data, accuracy, register,
+                                                 live_run_metrics())}
     if accuracy_html:
         routes["/accuracy/"] = lambda: accuracy_html
     if commitments_html:
