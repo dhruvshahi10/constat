@@ -386,11 +386,8 @@ def build_commitments() -> tuple[str, dict] | tuple[None, None]:
         return None, None
     result = commitments.evaluate("acme", EVIDENCE, spec, date.today())
     commitments.write(result, ARTIFACTS / "commitments" / "acme")
-    body = hero("The gap nobody reconciles: what sales promised versus what GRC can evidence",
-                "Security commitments are made at the speed of a deal and evidenced at the speed "
-                "of a control. This checks executed contracts, RFP responses and DPAs against the "
-                "same evidence corpus, through the same gates.")
-    body += commitments.render_body(result)
+    # the register renders its own header; a hero above it would title the page twice
+    body = commitments.render_body(result)
     body += """
 <div class="note"><b>Read the contradicted one first.</b> A signed MSA commits to deleting
 customer data within 30 days. Two approved policies in the same corpus declare 90 days and 365

@@ -202,9 +202,11 @@ def render_body(result: RegisterResult) -> str:
 <div class="stat ok"><b>{result.count(SUPPORTED)}</b><span>supported and cited</span></div>
 </div>
 
-<div class="panel"><h3>Why this is a different question</h3><p>A questionnaire asks what you can
-say. This asks whether you can stand behind what you already said. The commitments come from
-executed contracts, RFP responses and DPAs; each is checked against the same evidence corpus,
+<div class="panel"><h3>Why this is a different question</h3><p>Security commitments are made at
+the speed of a deal and evidenced at the speed of a control, and nobody reconciles the two until
+an auditor, a customer or an incident does it for them. A questionnaire asks what you can say;
+this asks whether you can stand behind what you already said. Each commitment comes from an
+executed contract, an RFP response or a DPA, and is checked against the same evidence corpus
 through the same gates. A contradiction here is not a judgement call — a machine-checkable
 assertion in an approved policy disagrees with a signed number.</p></div>
 
