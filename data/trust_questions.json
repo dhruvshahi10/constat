@@ -1,0 +1,30 @@
+{
+  "name": "Standard buyer deflection set",
+  "version": "1.0",
+  "note": "The questions a security reviewer asks before they send a questionnaire. Each one answered here is one that never becomes an inbound request.",
+  "questions": [
+    {"id": "TC-GRC-01", "domain": "Security program", "text": "Do you maintain a formal, approved information security program and policy?"},
+    {"id": "TC-AA-01", "domain": "Audit and assurance", "text": "Do you hold a current SOC 2 Type II attestation?"},
+    {"id": "TC-AA-02", "domain": "Audit and assurance", "text": "Is your organization ISO/IEC 27001 certified?"},
+    {"id": "TC-AA-03", "domain": "Audit and assurance", "text": "Are you certified to ISO/IEC 42001 for AI management systems?"},
+    {"id": "TC-AA-04", "domain": "Audit and assurance", "text": "Has an independent penetration test been performed in the last 12 months?"},
+    {"id": "TC-IAM-01", "domain": "Identity and access", "text": "How is access to a customer workspace authenticated?"},
+    {"id": "TC-IAM-02", "domain": "Identity and access", "text": "How are access tokens stored, and can they be recovered from your database?"},
+    {"id": "TC-DSP-01", "domain": "Data handling", "text": "How long do you retain uploaded customer documents, and how are they deleted?"},
+    {"id": "TC-DSP-02", "domain": "Data handling", "text": "What customer data leaves our infrastructure when an answer is drafted?"},
+    {"id": "TC-DSP-03", "domain": "Data handling", "text": "Which subprocessors process customer data?"},
+    {"id": "TC-DSP-04", "domain": "Data handling", "text": "What personal data does the service store?"},
+    {"id": "TC-AI-01", "domain": "AI governance", "text": "Do you use customer data to train, fine-tune or improve any model?"},
+    {"id": "TC-AI-02", "domain": "AI governance", "text": "What data can your models access, and what are the boundaries on that access?"},
+    {"id": "TC-AI-03", "domain": "AI governance", "text": "How is a human kept in the loop over AI-generated output?"},
+    {"id": "TC-AI-04", "domain": "AI governance", "text": "How does the system resist prompt injection?"},
+    {"id": "TC-AI-05", "domain": "AI governance", "text": "Do you have an AI governance policy, and what does it require?"},
+    {"id": "TC-AI-06", "domain": "AI governance", "text": "How is data leakage between tenants prevented?"},
+    {"id": "TC-APP-01", "domain": "Product security", "text": "How is output encoded to prevent cross-site scripting?"},
+    {"id": "TC-APP-02", "domain": "Product security", "text": "How are file uploads bounded and validated?"},
+    {"id": "TC-APP-03", "domain": "Product security", "text": "What security headers does the application serve?"},
+    {"id": "TC-BCR-01", "domain": "Resilience", "text": "What is your availability posture and do you offer an uptime commitment?"},
+    {"id": "TC-LOG-01", "domain": "Logging", "text": "Are audit logs protected from tampering?"},
+    {"id": "TC-TVM-01", "domain": "Vulnerability management", "text": "Have you had an independent security assessment, and what are your known gaps?"}
+  ]
+}

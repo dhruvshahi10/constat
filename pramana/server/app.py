@@ -88,6 +88,11 @@ ROUTES: list[tuple[str, re.Pattern, str, bool]] = [  # (method, pattern, handler
     ("GET",    re.compile(rf"^/t/{SLUG}/runs/(run_[a-f0-9]+)/([A-Za-z0-9._-]+)$"), "run_file", True),
     ("GET",    re.compile(rf"^/t/{SLUG}/review$"), "review_queue", True),
     ("POST",   re.compile(rf"^/t/{SLUG}/api/review$"), "review_act", True),
+    # Generic static pages: /trust/, /pricing/, /how-it-works/ … each served from
+    # site/<name>/index.html. Last in the table so it can never shadow a real
+    # route, and the pattern forbids an inner slash so /site/… and /t/… cannot
+    # reach it.
+    ("GET",    re.compile(r"^/([a-z0-9][a-z0-9-]{1,40})/$"), "site_page", False),
 ]
 
 
@@ -304,6 +309,15 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._html("<title>Pramana AI</title><p>Pramana AI hosted. Landing ships in Wave 2. "
                        "<a href='/healthz'>healthz</a></p>")
+
+    def site_page(self, name: str) -> None:
+        """Serve a generated standalone page from site/<name>/index.html."""
+        base = (ROOT / "site").resolve()
+        target = (base / name / "index.html").resolve()
+        if not (target.is_file() and target.is_relative_to(base)):
+            self._json({"error": "not found"}, 404)
+            return
+        self._html(target.read_text(encoding="utf-8"))
 
     def site_asset(self, rel: str) -> None:
         target = (ROOT / "site" / rel).resolve()
