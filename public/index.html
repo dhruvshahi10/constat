@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pramana — Evidence-gated customer assurance</title>
-<meta name="description" content="Evidence-gated security questionnaire automation: every answer cited to an approved source, or refused.">
+<meta name="description" content="Evidence-gated customer assurance: questionnaires deflected, answered with citations, or refused by name.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
@@ -97,92 +97,109 @@ form.waitlist input:focus{outline:none;border-color:var(--ok)}
 footer.site{margin-top:56px;padding:22px 0 60px;border-top:2px solid var(--ink);
 font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
 footer.site a{color:var(--ok)}
+.steps{counter-reset:step;margin:22px 0}
+.step{position:relative;padding:0 0 22px 52px;border-left:2px solid var(--line);margin-left:16px}
+.step:last-child{border-left-color:transparent;padding-bottom:0}
+.step:before{counter-increment:step;content:counter(step);position:absolute;left:-17px;top:-2px;
+width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--card);
+font:700 13px/32px "IBM Plex Mono",monospace;text-align:center}
+.step h3{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;margin-bottom:6px}
+.step p{font-size:14px;line-height:1.65;color:var(--muted);max-width:64ch}
+.step .who{font:600 10px "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+color:var(--ok);margin-bottom:4px;display:block}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin:24px 0}
+.tier{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--line);padding:22px}
+.tier.feature{border-top-color:var(--ok);box-shadow:0 1px 0 var(--line)}
+.tier h3{font-family:"Space Grotesk",sans-serif;font-size:17px;font-weight:600}
+.tier .price{font-family:"Space Grotesk",sans-serif;font-size:27px;font-weight:600;margin:10px 0 2px}
+.tier .unit{font:11px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.tier ul{margin:14px 0 0 18px} .tier li{font-size:13.5px;line-height:1.6;margin-bottom:6px}
+.tier .who{font:12px/1.55 "IBM Plex Mono",monospace;color:var(--muted);margin-top:14px;
+padding-top:12px;border-top:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:16px 0;font-size:14px}
+.kv dt{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+color:var(--muted);padding-top:3px}
+.kv dd{line-height:1.6}
+.filelist{background:var(--card);border:1px solid var(--line);padding:4px 0;margin:16px 0}
+.filerow{display:flex;gap:14px;align-items:baseline;padding:11px 18px;border-bottom:1px solid var(--line)}
+.filerow:last-child{border-bottom:none}
+.filerow .fn{font:600 12px "IBM Plex Mono",monospace;color:var(--ok);white-space:nowrap;min-width:210px}
+.filerow .fd{font-size:13.5px;line-height:1.55;color:var(--muted)}
+@media(max-width:640px){.filerow{flex-direction:column;gap:4px}.filerow .fn{min-width:0}}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 </style></head><body>
-<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl on" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/metrics/">Outcomes</a><a class="nl" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl" href="/changelog/">Changelog</a></div></nav>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl on" href="/">Overview</a><a class="nl" href="/how-it-works/">How it works</a><a class="nl" href="/deliverables/">What you get</a><a class="nl" href="/pricing/">Pricing</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/demo/">Live demo</a></div></nav>
 <div class="wrap">
-<div class="hero"><h1>Most questionnaire tools answer everything. The useful one knows when to refuse.</h1><p class="lede">Pramana is an evidence-gated customer assurance engine. Every answer names the approved document, version and paragraph it came from — and when the evidence isn't there, it refuses, names the gap, and routes it to a human. The refusals are the product.</p><div class="cta"><a class="btn primary" href="/demo/">Try the live demo</a><a class="btn" href="/trust/">Our own trust center</a><a class="btn" href="/accuracy/">Published accuracy</a></div></div>
-<h2>Three jobs, in the order that matters</h2>
+<div class="hero"><h1>Security questionnaires are holding up your deals. Most of them should never have reached you.</h1><p class="lede">Pramana deflects the buyer questions your evidence already answers, answers the ones that still arrive — each cited to an approved document, version and paragraph — and refuses the rest by name instead of inventing something plausible. It is operated for you: nothing to deploy, no seat to buy.</p><div class="cta"><a class="btn primary" href="/how-it-works/">How it works</a><a class="btn" href="/pricing/">Pricing</a><a class="btn" href="/demo/">Try the engine</a></div></div>
+<h2>Three ways to start</h2>
 <div class="cols">
   <div class="card">
-    <h3>1 · Deflect</h3>
-    <p>Generate a self-service trust center from the same evidence corpus. Every question a
-    buyer can answer themselves is a question that never reaches your security team, and never
-    adds a day to the deal.</p>
+    <h3>Trust page</h3>
+    <p>Generated from your evidence. Every standard buyer question it answers publicly is one that
+    never becomes an inbound request. Needs only your publishable policies, so there is almost
+    nothing for a security team to review before you start.</p>
   </div>
   <div class="card rev">
-    <h3>2 · Answer</h3>
-    <p>What the trust page can't deflect gets drafted from approved, in-force sources — cited
-    to source id, version and paragraph, then written back into the buyer's own workbook with
-    its structure intact.</p>
+    <h3>Managed assurance</h3>
+    <p>Forward the questionnaire, get it back answered and cited in the buyer's own file, with a
+    named person on your side signing it off. Plus the gap worklist that makes the next one
+    cheaper.</p>
   </div>
   <div class="card warn">
-    <h3>3 · Refuse</h3>
-    <p>No evidence, stale evidence, contradictory evidence, or a contractual commitment
-    dressed as a question: the engine declines, names the specific gap, and routes it to a
-    named human. It never invents a plausible answer.</p>
+    <h3>Commitment register</h3>
+    <p>The check nobody runs: security promises already made in contracts and RFP responses, tested
+    against what your evidence can actually support today.</p>
   </div>
 </div>
+<p class="stamp"><a href="/pricing/">What each one costs &rarr;</a></p>
 
-<h2>What one real run looks like</h2>
-<p class="sub">A 24-question CAIQ-style workbook, run by the deterministic
-drafter during this site's build. These are not illustrative figures — rebuilding the site
-re-runs the engine and rewrites this block.</p>
-<div class="grid">
-  <div class="stat"><b>24</b><span>questions</span></div>
-  <div class="stat ok"><b>71%</b><span>cited coverage</span></div>
-  <div class="stat warn"><b>29%</b><span>refused, by design</span></div>
-  <div class="stat warn"><b>7</b><span>routed to humans</span></div>
-  <div class="stat ok">
-    <b>0</b><span>unsupported claims</span></div>
-  <div class="stat ok">
-    <b>VALID</b><span>audit chain</span></div>
-</div>
-<p class="stamp">Artifacts from this exact run:
-<a href="/artifacts/reference-run/run_report.html">audit working paper</a> ·
-<a href="/artifacts/reference-run/contracts.json">answer contracts (JSON)</a> ·
-<a href="/artifacts/reference-run/audit_log.jsonl">hash-chained audit log</a> ·
-<a href="/artifacts/reference-run/metrics.json">metrics</a></p>
-
-<h2>Every answer carries a status, not a confidence score</h2>
-<p class="lead">A confidence score invites you to ship a 0.72. A status tells you what is
-actually true about the evidence, and it is derived in code from citations that survived the
-gates — never from what the model thought of itself.</p>
+<h2>Why the refusals are the product</h2>
+<p class="lead">Every tool in this category can produce a fluent answer. The one that matters is
+what happens when the evidence is not there — because a questionnaire answer is a material
+security representation, and a plausible sentence with nothing behind it is a liability you signed
+without reading.</p>
 <div class="tablewrap"><table>
-<tr><th>Status</th><th>Means</th><th>What happens next</th></tr>
-<tr><td><span class="chip c-ok">EVIDENCE-BACKED</span></td>
-    <td>Every claim cited to an approved, in-force source.</td><td>Ships.</td></tr>
-<tr><td><span class="chip c-rev">PARTIAL</span></td>
-    <td>Citable, but with gaps recorded against it.</td><td>Human reviews before it ships.</td></tr>
-<tr><td><span class="chip c-warn">NO EVIDENCE</span></td>
-    <td>Nothing approved supports an answer.</td>
-    <td>Refused. Gap named, routed for collection.</td></tr>
-<tr><td><span class="chip c-warn">REQUIRES HUMAN</span></td>
-    <td>Certification claim, high risk, or a contradiction between sources.</td>
-    <td>Routed to the named owner.</td></tr>
+<tr><th>When your evidence is…</th><th>Pramana</th></tr>
+<tr><td>A roadmap, not a certificate</td>
+    <td>Refuses the certification question. Certification is never inferred from a plan — including
+    for ISO&nbsp;42001, which most tools have never heard of.</td></tr>
+<tr><td>Expired</td>
+    <td>Refuses. An expired pen test cannot support a present-tense claim, and the report is routed
+    to its owner.</td></tr>
+<tr><td>Contradicted by another approved document</td>
+    <td>Quarantines both and routes to the two owners. Two policies disagreeing on a retention
+    period is found before a buyer finds it.</td></tr>
+<tr><td>Actually a contractual commitment</td>
+    <td>Routes to counsel before drafting. Liability and uptime guarantees never reach the
+    engine as answerable questions.</td></tr>
+<tr><td>About another company entirely</td>
+    <td>Refuses. Answering it from your corpus would attribute someone else's controls to you.</td></tr>
+<tr><td>Simply absent</td>
+    <td>Refuses, names the missing document, and puts it on your evidence-gap worklist.</td></tr>
 </table></div>
 
-<h2>The gates do not trust the drafter</h2>
-<pre><code>questionnaire (any layout)
-      |  ingest — row identity preserved
-      v
-RECEIVED -&gt; CLASSIFIED -&gt; DRAFTED -&gt; [EXCEPTION | GRC_REVIEW] -&gt; DELIVERED
-      |          |            |             |                        |
-      |     pre-gates      drafter      post-gates            written back into
-      |     legal routing  (any model)  cite-or-abstain       the original file,
-      |     cert tagging                staleness            structure intact
-      |                                 contradiction
-      |                                 cert evidence class
-      +---------- hash-chained, append-only audit log --------------+</code></pre>
-<p class="lead">Tenant isolation, forbidden claims, staleness and approval are enforced in
-code, not in a prompt. Swapping the deterministic drafter for a live model changes fluency,
-not safety posture — which is the entire point of building it this way.</p>
+<h2>Measured, not asserted</h2>
+<p class="sub">Every figure here was produced by the engine during this site's build. Rebuilding
+the site re-runs it and rewrites them.</p>
+<div class="grid"><div class="stat ok"><b>95.5%</b><span>correctly refused</span></div><div class="stat ok"><b>80.0%</b><span>correctly cited</span></div><div class="stat ok"><b>0</b><span>answers with no citation</span></div><div class="stat"><b>34%</b><span>our own deflection</span></div><div class="stat"><b>24</b><span>questions per run</span></div><div class="stat ok"><b>0.03s</b><span>full run cycle</span></div></div>
+<p class="stamp">
+<a href="/accuracy/">Method and every failure by name &rarr;</a> ·
+<a href="/artifacts/reference-run/run_report.html">a real audit working paper &rarr;</a> ·
+<a href="/security/">our own security review &rarr;</a></p>
 
-<div class="note"><b>Honest scope.</b> Pramana is pre-pilot and runs as an operator-run
-control plane, not self-serve SaaS. Onboarding a client is a one-time evidence-corpus pass;
-after that, each questionnaire is minutes. Retrieval is lexical today, so it will miss some
-paraphrased questions — it fails closed and refuses rather than guessing. All data shown
-across this site is synthetic.</div>
+<h2>We answer our own questionnaire first</h2>
+<p class="lead">Your buyers now ask about AI governance, model and data access boundaries, prompt
+injection, agent permissions and MCP exposure — questions no SOC&nbsp;2 report contains evidence
+for, which is exactly where a generative tool starts inventing. Pramana's own trust center answers
+those questions from its own evidence, and refuses the ones it cannot support. Asked whether we
+hold ISO&nbsp;42001 certification, it says no, because the only document on file is a roadmap.
+<a href="/trust/">Read our trust center &rarr;</a></p>
+
+<div class="note"><b>Where this is, honestly.</b> Pramana is pre-pilot and delivered as an operated
+service — we run it, you never install anything. All data shown across this site is synthetic.
+Retrieval is lexical today, so it misses some paraphrased questions; it fails closed and refuses
+rather than guessing, and the four positive controls it currently misses are published on the
+accuracy page rather than hidden.</div>
 
 <h2>Early access</h2>
 <p class="sub">Pramana is pre-pilot. If you run security review at a B2B SaaS company and
@@ -200,7 +217,8 @@ store is unavailable — this form will never tell you it saved something it did
 <script src="/assets/waitlist.js" defer></script>
 
 <footer class="site">
-Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>
+<a href="/security/">Security posture</a> · <a href="/isolation/">Tenant isolation</a> · <a href="/metrics/">Outcome metrics</a> · <a href="/commitments/">Commitment register</a> · <a href="/changelog/">Changelog</a><br>
+Pramana · Evidence-gated customer assurance · page generated 2026-08-25<br>
 All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>
 </footer>
 </div></body></html>

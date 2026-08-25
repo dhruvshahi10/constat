@@ -193,8 +193,10 @@ class ReviewSession:
         if action not in ACTIONS:
             raise ReviewError(f"unknown action '{action}' (use {', '.join(ACTIONS)})")
         if not actor or "@" not in actor:
-            raise ReviewError('a review needs a named reviewer, e.g. '
-                              '--actor "Priya Nair <priya@company.com>"')
+            # interface-neutral: this message is surfaced verbatim by both the
+            # CLI and the console, so it must not name a flag that only one has
+            raise ReviewError('a review needs a named reviewer — give a name and work '
+                              'email, e.g. "Priya Nair <priya@company.com>"')
         if question_id not in self.drafts:
             raise ReviewError(f"no question '{question_id}' in this run")
         draft = self.drafts[question_id]

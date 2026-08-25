@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Changelog — Pramana</title>
-<meta name="description" content="What shipped, and when.">
+<title>What you get — Pramana</title>
+<meta name="description" content="The artifacts a Pramana engagement produces, with real samples.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
@@ -128,9 +128,86 @@ color:var(--muted);padding-top:3px}
 @media(max-width:640px){.filerow{flex-direction:column;gap:4px}.filerow .fn{min-width:0}}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 </style></head><body>
-<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/how-it-works/">How it works</a><a class="nl" href="/deliverables/">What you get</a><a class="nl" href="/pricing/">Pricing</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/demo/">Live demo</a></div></nav>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/how-it-works/">How it works</a><a class="nl on" href="/deliverables/">What you get</a><a class="nl" href="/pricing/">Pricing</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/demo/">Live demo</a></div></nav>
 <div class="wrap">
-<div class="hero"><h1>Changelog</h1><p class="lede">Dated, and honest about what each change did and did not include.</p></div><h2>2026-08-24 — Platform security self-review — four findings, all fixed</h2><ul class="tight"><li>Cross-tenant path traversal: a tenant name was used directly as a path component, so a crafted name loaded another tenant's corpus while the store believed the crafted string WAS its tenant — defeating the boundary assertion by making it compare a value to itself. Tenant names are now validated at the store and query boundary, the directory must resolve to a direct child of the evidence root, and symlinks out are refused.</li><li>Stored XSS through evidence content: answer, gap and provenance text was assigned to innerHTML, so markup planted in an ingested client PDF would execute in the analyst's browser with access to every workspace. All clients now render engine output as text nodes, all script is served as external files, and the CSP forbids inline script.</li><li>Information disclosure: unhandled exceptions returned their type and message, which could include filesystem paths. Errors now return an opaque message and a correlation reference; detail goes to the server log only.</li><li>Unbounded public endpoints: request bodies are capped before parsing, and a per-instance limit of 20 requests per minute per client applies.</li><li>Audit log property clarified: the hash chain proves nothing was edited, not that the log was not replaced wholesale. Optional HMAC signing added; the system now reports which property is in force instead of implying the stronger one.</li><li>Reviewer identity is corroborated, not authenticated — OS user and host recorded beside the self-asserted name, inside the signed event, and labelled as unauthenticated.</li><li>Open and stated: no authentication on the operator console, and no independent penetration test.</li></ul><h2>2026-08-24 — Public site, live demo, and real-client onboarding</h2><ul class="tight"><li>Published accuracy: 59 adversarial prompts, 95.5% correctly refused, 73.3% correctly cited, 0 answers released without a citation. Every failure listed by name.</li><li>Scope gate: a question naming another workspace, or asking about the system's own configuration, is refused before drafting. Isolation stopped another client's documents being retrieved; nothing stopped one client's controls being attributed to another.</li><li>Commitment register: checks executed contracts, RFP responses and DPAs against the evidence corpus — contradicted, unsupported, or supported by evidence that expires before the commitment date.</li><li>Outcome metrics and an isolation page carrying the actual test output.</li><li>Dated live-model run published as an artifact: identical gate outcomes to the deterministic drafter.</li><li>Trust center generator: publishes only evidence-backed answers, everything else shows as open. Pramana's own trust center is its output.</li><li>Certification gate matched a name allowlist and did not know ISO 42001, so a roadmap satisfied an ISO 42001 certification question on our own trust page. The pattern now matches any ISO/IEC number and a wider set of schemes.</li><li>Named-human review: decisions extend the run's own hash chain; approval is unavailable when the gates released nothing; human-written answers are labelled HUMAN_AUTHORED rather than evidence-backed.</li><li>Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.</li><li>Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.</li><li>Client workspaces and a tenant selector; second synthetic client onboarded end to end.</li><li>Certificate and attestation types are never auto-assigned during ingestion.</li><li>First public deployment.</li></ul><h2>2026-08-08 — v0 engine</h2><ul class="tight"><li>Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification evidence class, legal routing, structural tenant isolation.</li><li>Hash-chained tamper-evident audit log.</li><li>Structure-preserving XLSX round trip.</li><li>Adversarial eval suite; zero unsupported material claims as a release gate.</li><li>Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.</li></ul>
+<div class="hero"><h1>What actually lands in your inbox</h1><p class="lede">Every artifact below is produced by the engine from your own evidence. These are real samples, generated in this site's build from a synthetic client.</p></div>
+<h2>The package</h2>
+<div class="filelist">
+  <div class="filerow"><span class="fn">Completed workbook</span>
+    <span class="fd">The buyer's own file, answered. Merged cells, hidden rows and formulas
+    intact; question text, IDs and order untouched. Each answer carries its status and the
+    documents it cites, so the buyer can see the provenance without asking.</span></div>
+  <div class="filerow"><span class="fn">Trust page</span>
+    <span class="fd">A self-service page answering the standard buyer questions your evidence
+    supports, each with its source. Host it yourself or link it from your security page — every
+    question it answers is one that never reaches your team.</span></div>
+  <div class="filerow"><span class="fn">Audit working paper</span>
+    <span class="fd">How every answer was reached: what was retrieved, which gate decided, what
+    was refused and why. This is the document you hand an auditor or an internal reviewer who
+    asks how the answers were produced.</span></div>
+  <div class="filerow"><span class="fn">Evidence-gap worklist</span>
+    <span class="fd">Every refusal, grouped by cause, naming the document to produce, refresh or
+    reconcile and who owns it. This is the artifact that makes next quarter's questionnaire
+    cheaper than this one's.</span></div>
+  <div class="filerow"><span class="fn">Commitment register</span>
+    <span class="fd">Security promises already made in contracts, RFP responses and DPAs, checked
+    against what your evidence can actually support today — contradicted, unsupported, or backed
+    by a document that expires before the commitment does.</span></div>
+  <div class="filerow"><span class="fn">Answer contracts (JSON)</span>
+    <span class="fd">Every answer as structured data — citations, coverage, status, gaps, routing.
+    For loading into your own GRC system or diffing against the last questionnaire.</span></div>
+  <div class="filerow"><span class="fn">Audit log</span>
+    <span class="fd">Hash-chained and append-only: every state transition and every human
+    decision, naming the actor. Editing any historical entry breaks verification.</span></div>
+</div>
+
+<h2>A complete package, exactly as a client receives it</h2>
+<p class="lead">Not a screenshot and not a mock-up — this is a real package produced by the
+engine, published in full. Open the cover page and follow any link in it:</p>
+<div class="cta" style="margin:18px 0">
+  <a class="btn primary" href="/artifacts/sample-delivery/index.html">Open the sample package</a>
+  <a class="btn" href="/artifacts/sample-delivery/evidence_gaps.md">Read the gap worklist</a>
+</div>
+
+<h2>Individual artifacts</h2>
+<p class="lead">Each of these was generated during this site's build:</p>
+<div class="cols">
+  <div class="card"><h3>Audit working paper</h3>
+    <p>A full 24-question run, every answer with its provenance strip and every refusal with its
+    named gap.<br><a href="/artifacts/reference-run/run_report.html">Open the working paper &rarr;</a></p></div>
+  <div class="card"><h3>Client trust pages</h3>
+    <p>The same generator, pointed at two different client corpora.<br>
+    <a href="/artifacts/trust/acme/index.html">Acme &rarr;</a> ·
+    <a href="/artifacts/trust/northwind/index.html">Northwind Health &rarr;</a></p></div>
+  <div class="card"><h3>Commitment register</h3>
+    <p>Seven commitments checked; a signed 30-day deletion promise contradicted by the policies
+    on file.<br><a href="/commitments/">Open the register &rarr;</a></p></div>
+  <div class="card"><h3>Machine-readable output</h3>
+    <p><a href="/artifacts/reference-run/contracts.json">contracts.json</a> ·
+    <a href="/artifacts/reference-run/audit_log.jsonl">audit_log.jsonl</a> ·
+    <a href="/artifacts/reference-run/metrics.json">metrics.json</a></p></div>
+</div>
+
+<div class="note"><b>A note on the refusals.</b> A run of this size typically returns a real number
+of refusals, and that is the product working. Each one names the specific gap and the person who
+owns it. A tool that answered every question would be producing claims your evidence cannot
+support — which is the thing that turns a security questionnaire into a liability.</div>
+
+<h2>Early access</h2>
+<p class="sub">Pramana is pre-pilot. If you run security review at a B2B SaaS company and
+questionnaires are eating your sales cycle, tell me what your worst one looks like.</p>
+<div class="console">
+<form class="waitlist" id="wl" data-source="deliverables" data-contact="dhruv.shahi07@gmail.com">
+  <input type="email" id="wlemail" placeholder="you@company.com" required autocomplete="email">
+  <input type="text" id="wlnote" placeholder="optional: what's your worst questionnaire?" maxlength="400">
+  <button class="btn primary" type="submit">Request access</button>
+</form>
+<div class="formmsg" id="wlmsg"></div>
+<div class="stamp">No tracking, no newsletter. Falls back to a plain mail link if the
+store is unavailable — this form will never tell you it saved something it did not.</div>
+</div>
+<script src="/assets/waitlist.js" defer></script>
+
 <footer class="site">
 <a href="/security/">Security posture</a> · <a href="/isolation/">Tenant isolation</a> · <a href="/metrics/">Outcome metrics</a> · <a href="/commitments/">Commitment register</a> · <a href="/changelog/">Changelog</a><br>
 Pramana · Evidence-gated customer assurance · page generated 2026-08-25<br>

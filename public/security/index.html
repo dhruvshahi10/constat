@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Changelog — Pramana</title>
-<meta name="description" content="What shipped, and when.">
+<title>Security posture — Pramana</title>
+<meta name="description" content="What Pramana holds, what it never does, and what its own security review found.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
@@ -130,7 +130,78 @@ color:var(--muted);padding-top:3px}
 </style></head><body>
 <nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/how-it-works/">How it works</a><a class="nl" href="/deliverables/">What you get</a><a class="nl" href="/pricing/">Pricing</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/demo/">Live demo</a></div></nav>
 <div class="wrap">
-<div class="hero"><h1>Changelog</h1><p class="lede">Dated, and honest about what each change did and did not include.</p></div><h2>2026-08-24 — Platform security self-review — four findings, all fixed</h2><ul class="tight"><li>Cross-tenant path traversal: a tenant name was used directly as a path component, so a crafted name loaded another tenant's corpus while the store believed the crafted string WAS its tenant — defeating the boundary assertion by making it compare a value to itself. Tenant names are now validated at the store and query boundary, the directory must resolve to a direct child of the evidence root, and symlinks out are refused.</li><li>Stored XSS through evidence content: answer, gap and provenance text was assigned to innerHTML, so markup planted in an ingested client PDF would execute in the analyst's browser with access to every workspace. All clients now render engine output as text nodes, all script is served as external files, and the CSP forbids inline script.</li><li>Information disclosure: unhandled exceptions returned their type and message, which could include filesystem paths. Errors now return an opaque message and a correlation reference; detail goes to the server log only.</li><li>Unbounded public endpoints: request bodies are capped before parsing, and a per-instance limit of 20 requests per minute per client applies.</li><li>Audit log property clarified: the hash chain proves nothing was edited, not that the log was not replaced wholesale. Optional HMAC signing added; the system now reports which property is in force instead of implying the stronger one.</li><li>Reviewer identity is corroborated, not authenticated — OS user and host recorded beside the self-asserted name, inside the signed event, and labelled as unauthenticated.</li><li>Open and stated: no authentication on the operator console, and no independent penetration test.</li></ul><h2>2026-08-24 — Public site, live demo, and real-client onboarding</h2><ul class="tight"><li>Published accuracy: 59 adversarial prompts, 95.5% correctly refused, 73.3% correctly cited, 0 answers released without a citation. Every failure listed by name.</li><li>Scope gate: a question naming another workspace, or asking about the system's own configuration, is refused before drafting. Isolation stopped another client's documents being retrieved; nothing stopped one client's controls being attributed to another.</li><li>Commitment register: checks executed contracts, RFP responses and DPAs against the evidence corpus — contradicted, unsupported, or supported by evidence that expires before the commitment date.</li><li>Outcome metrics and an isolation page carrying the actual test output.</li><li>Dated live-model run published as an artifact: identical gate outcomes to the deterministic drafter.</li><li>Trust center generator: publishes only evidence-backed answers, everything else shows as open. Pramana's own trust center is its output.</li><li>Certification gate matched a name allowlist and did not know ISO 42001, so a roadmap satisfied an ISO 42001 certification question on our own trust page. The pattern now matches any ISO/IEC number and a wider set of schemes.</li><li>Named-human review: decisions extend the run's own hash chain; approval is unavailable when the gates released nothing; human-written answers are labelled HUMAN_AUTHORED rather than evidence-backed.</li><li>Document ingestion: PDF, DOCX, XLSX and markdown, staged for human approval.</li><li>Questionnaire layout detection — any CAIQ/SIG-shaped workbook or CSV, no code changes.</li><li>Client workspaces and a tenant selector; second synthetic client onboarded end to end.</li><li>Certificate and attestation types are never auto-assigned during ingestion.</li><li>First public deployment.</li></ul><h2>2026-08-08 — v0 engine</h2><ul class="tight"><li>Evidence-gated pipeline: cite-or-abstain, staleness, contradiction, certification evidence class, legal routing, structural tenant isolation.</li><li>Hash-chained tamper-evident audit log.</li><li>Structure-preserving XLSX round trip.</li><li>Adversarial eval suite; zero unsupported material claims as a release gate.</li><li>Live drafters (Gemini free tier, Anthropic Haiku) behind the same gates.</li></ul>
+<div class="hero"><h1>For your security team</h1><p class="lede">You review vendors for a living, so this page is written the way you would want it written: what we hold, what we never do, what we found when we reviewed ourselves, and what is still open.</p></div>
+<h2>Where your evidence lives</h2>
+<dl class="kv">
+  <dt>Held by</dt><dd>Your evidence corpus is processed in a dedicated store for your engagement.
+    There is no code path that loads two clients into one store — isolation is the directory
+    layout and is asserted by test, not a filter a query has to remember.
+    <a href="/isolation/">How that is proved &rarr;</a></dd>
+  <dt>Training</dt><dd>Never. There is no training pipeline. No model is trained, fine-tuned or
+    adapted on your evidence, your questionnaires or your answers.</dd>
+  <dt>Third parties</dt><dd>Client work runs on the deterministic engine or a paid model API tier
+    whose terms forbid training on submitted content. Free model tiers permit provider-side use of
+    inputs and are never used on client evidence.</dd>
+  <dt>This website</dt><dd>Runs the deterministic engine against synthetic corpora only. Nothing
+    typed into the public demo is sent to a model provider or persisted. The only personal data
+    the site stores is an email address you choose to submit.</dd>
+  <dt>Retention</dt><dd>Run artifacts, workbooks and audit logs are held for the engagement and
+    deleted on request. Audit logs are append-only by design, so they are retained or deleted
+    whole rather than edited.</dd>
+</dl>
+<p class="lead">Our own answer engine is measured against 59 adversarial prompts: <b>95.5%</b> correctly refused, <b>80.0%</b> correctly cited, and <b>0</b> answers released without a citation. Every failure is published by name on the <a href="/accuracy/">accuracy page</a>.</p>
+
+<h2>We reviewed ourselves, and published what we found</h2>
+<p class="lead">On 24 August 2026 the platform was security-reviewed against itself, separately
+from the evaluation of the answer gates. Four findings. All fixed, each with a regression test
+that failed before its fix. They are published here rather than left for you to find.</p>
+<div class="tablewrap"><table>
+<tr><th>Finding</th><th>What it was</th><th>Status</th></tr>
+<tr><td class="qid">Cross-tenant<br>path traversal</td>
+    <td class="ans">A tenant name was used directly as a filesystem path component, so a crafted
+    name loaded another client's documents while the store believed the crafted string
+    <i>was</i> its tenant — defeating the boundary check by making it compare a value to itself.
+    Isolation depended on every caller validating the name.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Stored XSS via<br>evidence content</td>
+    <td class="ans">Answer text is a paragraph lifted verbatim from a client document, and it was
+    being rendered as HTML. Markup planted in an ingested PDF would have executed in the
+    operator's browser, with access to every workspace on that console.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Information<br>disclosure</td>
+    <td class="ans">Unhandled exceptions returned their type and message to anonymous callers,
+    which could include filesystem paths and internal names.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Unbounded<br>public endpoints</td>
+    <td class="ans">Request bodies were read without a size cap and no rate limiting existed.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+</table></div>
+
+<h2>Two things we corrected the description of, rather than the code</h2>
+<ul class="tight">
+  <li><b>The audit log is tamper-evident, not tamper-resistant, unless it is signed.</b> A hash
+      chain proves no entry was <i>edited</i>. It does not prove the log was not <i>replaced</i> —
+      anyone who can write the file can recompute a consistent chain. Optional HMAC signing makes a
+      signed deployment reject a regenerated log, and the system reports which property is in force
+      instead of implying the stronger one.</li>
+  <li><b>Reviewer identity is corroborated, not authenticated.</b> A reviewer name is supplied by
+      the operator. The operating system user and host are recorded beside it inside the signed
+      event, and the event explicitly records that the actor was not authenticated.</li>
+</ul>
+
+<h2>Open items</h2>
+<div class="note"><b>Stated rather than discovered.</b> There is no authentication and no role
+separation on the operator console — it binds to loopback and is a single-operator tool. No
+independent penetration test has been performed, and we hold no certification of any kind: asked
+whether we are ISO 42001 certified, our own trust page <a href="/trust/">refuses to claim it</a>,
+because the only supporting document is a roadmap. These are the reasons Pramana is delivered as
+an operated service today rather than as software you run.</div>
+
+<h2>Everything above, generated</h2>
+<p class="lead">The claims on this page are also in our evidence corpus, which means our own trust
+page answers them the same way it would answer yours — cited, or refused.
+<a href="/trust/">Open our trust center &rarr;</a></p>
+
 <footer class="site">
 <a href="/security/">Security posture</a> · <a href="/isolation/">Tenant isolation</a> · <a href="/metrics/">Outcome metrics</a> · <a href="/commitments/">Commitment register</a> · <a href="/changelog/">Changelog</a><br>
 Pramana · Evidence-gated customer assurance · page generated 2026-08-25<br>

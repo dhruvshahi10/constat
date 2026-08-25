@@ -2,7 +2,19 @@
 
 [![evals](https://github.com/dhruvshahi10/pramana/actions/workflows/ci.yml/badge.svg)](https://github.com/dhruvshahi10/pramana/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-1E6B47.svg)](LICENSE)
 
-**Live: [pramana-red.vercel.app](https://pramana-red.vercel.app)** · [Our own trust center](https://pramana-red.vercel.app/trust/) · [Published accuracy](https://pramana-red.vercel.app/accuracy/) · [Try it](https://pramana-red.vercel.app/demo/)
+**Live: [pramana-red.vercel.app](https://pramana-red.vercel.app)**
+[How it works](https://pramana-red.vercel.app/how-it-works/) ·
+[What you get](https://pramana-red.vercel.app/deliverables/) ·
+[Pricing](https://pramana-red.vercel.app/pricing/) ·
+[Security posture](https://pramana-red.vercel.app/security/) ·
+[Our own trust center](https://pramana-red.vercel.app/trust/) ·
+[Published accuracy](https://pramana-red.vercel.app/accuracy/) ·
+[Try the engine](https://pramana-red.vercel.app/demo/) ·
+[A real client package](https://pramana-red.vercel.app/artifacts/sample-delivery/index.html)
+
+Delivered as an **operated service**, not software you install: you forward the questionnaire, a
+named person on your side signs off, and you get the completed workbook, a trust page, an audit
+working paper and an evidence-gap worklist back.
 
 Every answer cited to a versioned, approved source — or refused. Pramana deflects the buyer
 questions it can answer from evidence, answers the ones that reach a questionnaire, and refuses
@@ -140,10 +152,13 @@ page answering 33 of 33 would be evidence of the failure mode this product exist
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
-.venv/bin/python -m pytest tests/ -q          # 51 tests: constitution, review, adversarial, platform security
+.venv/bin/python -m pytest tests/ -q          # 71 tests: constitution, review, adversarial, platform security, deliverable
 .venv/bin/python evals/run_accuracy.py        # score the adversarial suite, publish the number
 .venv/bin/python run_demo.py                  # offline deterministic run
 .venv/bin/python ui/app.py                    # operator console → http://localhost:8787
+                                              #   /        ask + run a questionnaire
+                                              #   /review  named human sign-off
+.venv/bin/python package_delivery.py --run runs/<stamp>   # build the client package
 .venv/bin/python build_site.py                # regenerate the public site from the engine
 
 export GEMINI_API_KEY=...                     # free key: aistudio.google.com
@@ -210,6 +225,7 @@ independent penetration test has been performed.
 | [`trustops/review.py`](trustops/review.py) | named-human sign-off on the run's own hash chain |
 | [`trustops/trustpage.py`](trustops/trustpage.py) | trust center generator |
 | [`trustops/commitments.py`](trustops/commitments.py) | sales-to-GRC commitment register |
+| [`trustops/deliverable.py`](trustops/deliverable.py) | assembles the client package a run produces |
 | [`tests/test_gates.py`](tests/test_gates.py) | the constitution — never modified by feature work |
 | [`tests/test_platform_security.py`](tests/test_platform_security.py) | one test per self-review finding |
 | [`evals/`](evals/) | the adversarial prompt set, harness and published results |

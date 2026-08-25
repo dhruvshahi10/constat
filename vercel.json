@@ -28,6 +28,13 @@
       "continue": true
     },
     {
+      "src": "/(.*)\\.md$",
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8"
+      },
+      "continue": true
+    },
+    {
       "src": "/api/ask",
       "dest": "/api/ask.py"
     },

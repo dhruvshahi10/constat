@@ -4,7 +4,7 @@
   "evidence_root": "/Users/dhruvshahi_07/Downloads/TrustOps Tool/data/evidence",
   "drafter": "mock",
   "reviewer_mode": "simulated",
-  "run_date": "2026-08-24",
+  "run_date": "2026-08-25",
   "questions": [
     {
       "question_id": "GRC-01.1",

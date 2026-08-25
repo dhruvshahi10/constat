@@ -97,16 +97,45 @@ form.waitlist input:focus{outline:none;border-color:var(--ok)}
 footer.site{margin-top:56px;padding:22px 0 60px;border-top:2px solid var(--ink);
 font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
 footer.site a{color:var(--ok)}
+.steps{counter-reset:step;margin:22px 0}
+.step{position:relative;padding:0 0 22px 52px;border-left:2px solid var(--line);margin-left:16px}
+.step:last-child{border-left-color:transparent;padding-bottom:0}
+.step:before{counter-increment:step;content:counter(step);position:absolute;left:-17px;top:-2px;
+width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--card);
+font:700 13px/32px "IBM Plex Mono",monospace;text-align:center}
+.step h3{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;margin-bottom:6px}
+.step p{font-size:14px;line-height:1.65;color:var(--muted);max-width:64ch}
+.step .who{font:600 10px "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+color:var(--ok);margin-bottom:4px;display:block}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin:24px 0}
+.tier{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--line);padding:22px}
+.tier.feature{border-top-color:var(--ok);box-shadow:0 1px 0 var(--line)}
+.tier h3{font-family:"Space Grotesk",sans-serif;font-size:17px;font-weight:600}
+.tier .price{font-family:"Space Grotesk",sans-serif;font-size:27px;font-weight:600;margin:10px 0 2px}
+.tier .unit{font:11px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.tier ul{margin:14px 0 0 18px} .tier li{font-size:13.5px;line-height:1.6;margin-bottom:6px}
+.tier .who{font:12px/1.55 "IBM Plex Mono",monospace;color:var(--muted);margin-top:14px;
+padding-top:12px;border-top:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:16px 0;font-size:14px}
+.kv dt{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+color:var(--muted);padding-top:3px}
+.kv dd{line-height:1.6}
+.filelist{background:var(--card);border:1px solid var(--line);padding:4px 0;margin:16px 0}
+.filerow{display:flex;gap:14px;align-items:baseline;padding:11px 18px;border-bottom:1px solid var(--line)}
+.filerow:last-child{border-bottom:none}
+.filerow .fn{font:600 12px "IBM Plex Mono",monospace;color:var(--ok);white-space:nowrap;min-width:210px}
+.filerow .fd{font-size:13.5px;line-height:1.55;color:var(--muted)}
+@media(max-width:640px){.filerow{flex-direction:column;gap:4px}.filerow .fn{min-width:0}}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 </style></head><body>
-<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl on" href="/metrics/">Outcomes</a><a class="nl" href="/isolation/">Isolation</a><a class="nl" href="/commitments/">Commitments</a><a class="nl" href="/demo/">Live demo</a><a class="nl" href="/changelog/">Changelog</a></div></nav>
+<nav class="top"><div class="inner"><a class="brand" href="/">Pramana<span>.</span></a><a class="nl" href="/">Overview</a><a class="nl" href="/how-it-works/">How it works</a><a class="nl" href="/deliverables/">What you get</a><a class="nl" href="/pricing/">Pricing</a><a class="nl" href="/trust/">Trust center</a><a class="nl" href="/accuracy/">Accuracy</a><a class="nl" href="/demo/">Live demo</a></div></nav>
 <div class="wrap">
 <div class="hero"><h1>Outcome metrics, instrumented</h1><p class="lede">The measures a buyer's security team actually feels. Some are computed from real runs today. The ones that need a live pilot are listed as not yet measured, rather than filled in with something plausible.</p></div>
 <h2>Measured today</h2>
 <div class="grid">
   <div class="stat"><b>24</b><span>questions per run</span></div>
-  <div class="stat ok"><b>0.007s</b><span>time to first draft</span></div>
-  <div class="stat ok"><b>0.02s</b><span>full run cycle</span></div>
+  <div class="stat ok"><b>0.014s</b><span>time to first draft</span></div>
+  <div class="stat ok"><b>0.03s</b><span>full run cycle</span></div>
   <div class="stat ok"><b>58%</b>
     <span>shipped with zero human edit</span></div>
   <div class="stat warn"><b>29%</b>
@@ -157,13 +186,13 @@ self-service. Every one is an inbound request that never arrives.</td></tr>
 deterministic drafter and once with a live model. If the safety properties lived in the prompt,
 these columns would differ. They do not.</p>
 <div class="tablewrap"><table>
-<tr><th>Measure</th><th>Deterministic</th><th>Live model (Gemini)</th></tr><tr><td>Cited coverage</td><td class="qid">71%</td><td class="qid">71%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Refused, by design</td><td class="qid">29%</td><td class="qid">29%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Routed to humans</td><td class="qid">7</td><td class="qid">7</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Unsupported claims</td><td class="qid">0</td><td class="qid">0</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Audit chain</td><td class="qid">valid</td><td class="qid">valid</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Cycle time</td><td class="qid">0.02s</td><td class="qid">144.61s</td><td><span class="chip c-rev">DIFFERS</span></td></tr></table></div>
+<tr><th>Measure</th><th>Deterministic</th><th>Live model (Gemini)</th></tr><tr><td>Cited coverage</td><td class="qid">71%</td><td class="qid">71%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Refused, by design</td><td class="qid">29%</td><td class="qid">29%</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Routed to humans</td><td class="qid">7</td><td class="qid">7</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Unsupported claims</td><td class="qid">0</td><td class="qid">0</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Audit chain</td><td class="qid">valid</td><td class="qid">valid</td><td><span class="chip c-ok">IDENTICAL</span></td></tr><tr><td>Cycle time</td><td class="qid">0.03s</td><td class="qid">144.61s</td><td><span class="chip c-rev">DIFFERS</span></td></tr></table></div>
 <p class="lead">The one real difference is phrasing quality inside the gates: the live model
 produced 16 fully evidence-backed answers against
 14, converting
 2 partial answers into clean
 ones. It did not gain the ability to publish anything uncited, and cycle time went from
-0.02s to 144.61s because the free tier is rate limited to
+0.03s to 144.61s because the free tier is rate limited to
 roughly ten requests a minute.</p>
 <p class="stamp">Live run live-run-gemini ·
 <a href="/artifacts/live-run-gemini/run_report.html">audit working paper</a> ·
@@ -188,7 +217,8 @@ reviewer the number will be lower, and that is the number worth quoting once a p
 one.</div>
 
 <footer class="site">
-Pramana · Evidence-gated customer assurance · page generated 2026-08-24<br>
+<a href="/security/">Security posture</a> · <a href="/isolation/">Tenant isolation</a> · <a href="/metrics/">Outcome metrics</a> · <a href="/commitments/">Commitment register</a> · <a href="/changelog/">Changelog</a><br>
+Pramana · Evidence-gated customer assurance · page generated 2026-08-25<br>
 All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>
 </footer>
 </div></body></html>

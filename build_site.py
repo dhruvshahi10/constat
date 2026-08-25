@@ -128,104 +128,431 @@ WAITLIST_JS = """// Early-access form. Never reports a signup it did not store.
 
 
 # --- pages ---# --- pages -------------------------------------------------------------------
-def build_index(metrics: dict) -> str:
+def build_index(metrics: dict, trust: dict | None = None,
+                accuracy: dict | None = None) -> str:
     pct = lambda x: f"{round(x * 100)}%"                       # noqa: E731
     body = hero(
-        "Most questionnaire tools answer everything. The useful one knows when to refuse.",
-        "Pramana is an evidence-gated customer assurance engine. Every answer names the "
-        "approved document, version and paragraph it came from — and when the evidence "
-        "isn't there, it refuses, names the gap, and routes it to a human. "
-        "The refusals are the product.",
-        cta_buttons([("/demo/", "Try the live demo", True),
-                     ("/trust/", "Our own trust center", False),
-                     ("/accuracy/", "Published accuracy", False)]))
+        "Security questionnaires are holding up your deals. Most of them should never have "
+        "reached you.",
+        "Pramana deflects the buyer questions your evidence already answers, answers the ones "
+        "that still arrive — each cited to an approved document, version and paragraph — and "
+        "refuses the rest by name instead of inventing something plausible. "
+        "It is operated for you: nothing to deploy, no seat to buy.",
+        cta_buttons([("/how-it-works/", "How it works", True),
+                     ("/pricing/", "Pricing", False),
+                     ("/demo/", "Try the engine", False)]))
 
-    body += f"""
-<h2>Three jobs, in the order that matters</h2>
+    body += """
+<h2>Three ways to start</h2>
 <div class="cols">
   <div class="card">
-    <h3>1 · Deflect</h3>
-    <p>Generate a self-service trust center from the same evidence corpus. Every question a
-    buyer can answer themselves is a question that never reaches your security team, and never
-    adds a day to the deal.</p>
+    <h3>Trust page</h3>
+    <p>Generated from your evidence. Every standard buyer question it answers publicly is one that
+    never becomes an inbound request. Needs only your publishable policies, so there is almost
+    nothing for a security team to review before you start.</p>
   </div>
   <div class="card rev">
-    <h3>2 · Answer</h3>
-    <p>What the trust page can't deflect gets drafted from approved, in-force sources — cited
-    to source id, version and paragraph, then written back into the buyer's own workbook with
-    its structure intact.</p>
+    <h3>Managed assurance</h3>
+    <p>Forward the questionnaire, get it back answered and cited in the buyer's own file, with a
+    named person on your side signing it off. Plus the gap worklist that makes the next one
+    cheaper.</p>
   </div>
   <div class="card warn">
-    <h3>3 · Refuse</h3>
-    <p>No evidence, stale evidence, contradictory evidence, or a contractual commitment
-    dressed as a question: the engine declines, names the specific gap, and routes it to a
-    named human. It never invents a plausible answer.</p>
+    <h3>Commitment register</h3>
+    <p>The check nobody runs: security promises already made in contracts and RFP responses, tested
+    against what your evidence can actually support today.</p>
+  </div>
+</div>
+<p class="stamp"><a href="/pricing/">What each one costs &rarr;</a></p>
+
+<h2>Why the refusals are the product</h2>
+<p class="lead">Every tool in this category can produce a fluent answer. The one that matters is
+what happens when the evidence is not there — because a questionnaire answer is a material
+security representation, and a plausible sentence with nothing behind it is a liability you signed
+without reading.</p>
+<div class="tablewrap"><table>
+<tr><th>When your evidence is…</th><th>Pramana</th></tr>
+<tr><td>A roadmap, not a certificate</td>
+    <td>Refuses the certification question. Certification is never inferred from a plan — including
+    for ISO&nbsp;42001, which most tools have never heard of.</td></tr>
+<tr><td>Expired</td>
+    <td>Refuses. An expired pen test cannot support a present-tense claim, and the report is routed
+    to its owner.</td></tr>
+<tr><td>Contradicted by another approved document</td>
+    <td>Quarantines both and routes to the two owners. Two policies disagreeing on a retention
+    period is found before a buyer finds it.</td></tr>
+<tr><td>Actually a contractual commitment</td>
+    <td>Routes to counsel before drafting. Liability and uptime guarantees never reach the
+    engine as answerable questions.</td></tr>
+<tr><td>About another company entirely</td>
+    <td>Refuses. Answering it from your corpus would attribute someone else's controls to you.</td></tr>
+<tr><td>Simply absent</td>
+    <td>Refuses, names the missing document, and puts it on your evidence-gap worklist.</td></tr>
+</table></div>
+"""
+
+    proof = []
+    if accuracy:
+        proof.append(
+            f'<div class="stat ok"><b>{accuracy["correctly_refused_pct"]}%</b>'
+            f'<span>correctly refused</span></div>'
+            f'<div class="stat ok"><b>{accuracy["correctly_cited_pct"]}%</b>'
+            f'<span>correctly cited</span></div>'
+            f'<div class="stat ok"><b>{accuracy["released_without_citation"]}</b>'
+            f'<span>answers with no citation</span></div>')
+    if trust:
+        proof.append(f'<div class="stat"><b>{round(trust["deflection_rate"] * 100)}%</b>'
+                     f'<span>our own deflection</span></div>')
+    proof.append(f'<div class="stat"><b>{metrics["questions"]}</b><span>questions per run</span></div>'
+                 f'<div class="stat ok"><b>{metrics["cycle_seconds"]}s</b><span>full run cycle</span></div>')
+
+    body += f"""
+<h2>Measured, not asserted</h2>
+<p class="sub">Every figure here was produced by the engine during this site's build. Rebuilding
+the site re-runs it and rewrites them.</p>
+<div class="grid">{''.join(proof)}</div>
+<p class="stamp">
+<a href="/accuracy/">Method and every failure by name &rarr;</a> ·
+<a href="/artifacts/reference-run/run_report.html">a real audit working paper &rarr;</a> ·
+<a href="/security/">our own security review &rarr;</a></p>
+
+<h2>We answer our own questionnaire first</h2>
+<p class="lead">Your buyers now ask about AI governance, model and data access boundaries, prompt
+injection, agent permissions and MCP exposure — questions no SOC&nbsp;2 report contains evidence
+for, which is exactly where a generative tool starts inventing. Pramana's own trust center answers
+those questions from its own evidence, and refuses the ones it cannot support. Asked whether we
+hold ISO&nbsp;42001 certification, it says no, because the only document on file is a roadmap.
+<a href="/trust/">Read our trust center &rarr;</a></p>
+
+<div class="note"><b>Where this is, honestly.</b> Pramana is pre-pilot and delivered as an operated
+service — we run it, you never install anything. All data shown across this site is synthetic.
+Retrieval is lexical today, so it misses some paraphrased questions; it fails closed and refuses
+rather than guessing, and the four positive controls it currently misses are published on the
+accuracy page rather than hidden.</div>
+"""
+    body += waitlist_block("landing")
+    return page(f"{site.BRAND} — {site.TAGLINE}", body, active="/",
+                description="Evidence-gated customer assurance: questionnaires deflected, "
+                            "answered with citations, or refused by name.")
+
+
+# --- the buyer's path --------------------------------------------------------
+def build_how_it_works() -> str:
+    body = hero(
+        "You forward the questionnaire. You get it back answered, cited, and signed.",
+        "Pramana is operated, not installed. There is nothing to deploy, no seat to buy, and no "
+        "vendor security review to clear before you can start — because your evidence never "
+        "enters a shared system.")
+    body += """
+<h2>The engagement</h2>
+<div class="steps">
+  <div class="step"><span class="who">You · once, about an hour</span>
+    <h3>Send your evidence as it already exists</h3>
+    <p>Policies, standards, plans, your SOC&nbsp;2 report, pen test summaries, subprocessor list.
+    PDF, Word, spreadsheets, exports from Confluence or Drive. No template, no rewriting, no
+    portal to fill in.</p></div>
+
+  <div class="step"><span class="who">Us · half a day</span>
+    <h3>The corpus is built and governed</h3>
+    <p>Every document is read, and each one gets what the engine needs to reason about it: type,
+    version, owner, the dates it is in force between, and any machine-checkable commitment it
+    makes. Nothing becomes citable automatically — a named person approves each source, and that
+    approval is logged.</p></div>
+
+  <div class="step"><span class="who">You · one review</span>
+    <h3>Your trust page goes live</h3>
+    <p>Generated from the same corpus. Every standard buyer question your evidence genuinely
+    supports is answered publicly with its source; everything else is listed as available under
+    security review. That page starts deflecting questions before you answer another
+    questionnaire.</p></div>
+
+  <div class="step"><span class="who">You · forward an email</span>
+    <h3>A questionnaire arrives</h3>
+    <p>Send us the file the buyer sent you. CAIQ, SIG, a bespoke spreadsheet, a CSV — the layout
+    is detected, so there is nothing to reformat and the buyer's own workbook comes back
+    intact.</p></div>
+
+  <div class="step"><span class="who">Us · minutes</span>
+    <h3>Every answer is cited, or refused</h3>
+    <p>Each answer names the document, version and paragraph it came from. Where the evidence is
+    missing, expired, contradicted by another approved document, or the question is really a
+    contractual commitment, the engine declines and says exactly which gap caused it and who owns
+    it. It does not produce a plausible sentence to fill the cell.</p></div>
+
+  <div class="step"><span class="who">You · the part only you can do</span>
+    <h3>A named person signs it off</h3>
+    <p>These are material security representations, so a person takes responsibility for them —
+    not the engine. Approve what the evidence supports; where you want to answer something the
+    evidence does not support, you write it and it is labelled as authored by you, visibly not
+    evidence-backed. Every decision is written into a tamper-evident log.</p></div>
+
+  <div class="step"><span class="who">You · the same day</span>
+    <h3>You get the package</h3>
+    <p>The buyer's workbook completed, the trust page, an audit working paper showing how every
+    answer was reached, and the evidence-gap worklist — the specific documents to produce or
+    refresh so that next quarter fewer questions come back refused.</p></div>
+</div>
+
+<h2>What we never do</h2>
+<ul class="tight">
+  <li><b>Never train anything on your content.</b> There is no training pipeline, and no model is
+      adapted on your evidence, your questionnaires or your answers.</li>
+  <li><b>Never send your evidence to a free-tier model.</b> Free tiers permit the provider to use
+      submitted content for product improvement. Client work runs on the deterministic engine or a
+      paid API tier where the terms forbid it.</li>
+  <li><b>Never mix clients.</b> Each engagement is a separate evidence store; there is no code path
+      that loads two clients together, and that is asserted by test on every change.</li>
+  <li><b>Never publish an answer nobody signed.</b> A person approves every released answer.</li>
+</ul>
+
+<div class="note"><b>What this means for your security team.</b> You are engaging a service under an
+NDA and DPA, not adopting a SaaS platform that needs its own review. If your team wants to review
+us anyway, the answers are already written: see the <a href="/security/">security posture</a> and
+our own <a href="/trust/">trust center</a>, which was generated by this engine from our own
+evidence.</div>
+"""
+    body += waitlist_block("how-it-works")
+    return page(f"How it works — {site.BRAND}", body, active="/how-it-works/",
+                description="Operated, not installed: how a Pramana engagement runs end to end.")
+
+
+def build_deliverables() -> str:
+    body = hero("What actually lands in your inbox",
+                "Every artifact below is produced by the engine from your own evidence. These are "
+                "real samples, generated in this site's build from a synthetic client.")
+    body += """
+<h2>The package</h2>
+<div class="filelist">
+  <div class="filerow"><span class="fn">Completed workbook</span>
+    <span class="fd">The buyer's own file, answered. Merged cells, hidden rows and formulas
+    intact; question text, IDs and order untouched. Each answer carries its status and the
+    documents it cites, so the buyer can see the provenance without asking.</span></div>
+  <div class="filerow"><span class="fn">Trust page</span>
+    <span class="fd">A self-service page answering the standard buyer questions your evidence
+    supports, each with its source. Host it yourself or link it from your security page — every
+    question it answers is one that never reaches your team.</span></div>
+  <div class="filerow"><span class="fn">Audit working paper</span>
+    <span class="fd">How every answer was reached: what was retrieved, which gate decided, what
+    was refused and why. This is the document you hand an auditor or an internal reviewer who
+    asks how the answers were produced.</span></div>
+  <div class="filerow"><span class="fn">Evidence-gap worklist</span>
+    <span class="fd">Every refusal, grouped by cause, naming the document to produce, refresh or
+    reconcile and who owns it. This is the artifact that makes next quarter's questionnaire
+    cheaper than this one's.</span></div>
+  <div class="filerow"><span class="fn">Commitment register</span>
+    <span class="fd">Security promises already made in contracts, RFP responses and DPAs, checked
+    against what your evidence can actually support today — contradicted, unsupported, or backed
+    by a document that expires before the commitment does.</span></div>
+  <div class="filerow"><span class="fn">Answer contracts (JSON)</span>
+    <span class="fd">Every answer as structured data — citations, coverage, status, gaps, routing.
+    For loading into your own GRC system or diffing against the last questionnaire.</span></div>
+  <div class="filerow"><span class="fn">Audit log</span>
+    <span class="fd">Hash-chained and append-only: every state transition and every human
+    decision, naming the actor. Editing any historical entry breaks verification.</span></div>
+</div>
+
+<h2>A complete package, exactly as a client receives it</h2>
+<p class="lead">Not a screenshot and not a mock-up — this is a real package produced by the
+engine, published in full. Open the cover page and follow any link in it:</p>
+<div class="cta" style="margin:18px 0">
+  <a class="btn primary" href="/artifacts/sample-delivery/index.html">Open the sample package</a>
+  <a class="btn" href="/artifacts/sample-delivery/evidence_gaps.md">Read the gap worklist</a>
+</div>
+
+<h2>Individual artifacts</h2>
+<p class="lead">Each of these was generated during this site's build:</p>
+<div class="cols">
+  <div class="card"><h3>Audit working paper</h3>
+    <p>A full 24-question run, every answer with its provenance strip and every refusal with its
+    named gap.<br><a href="/artifacts/reference-run/run_report.html">Open the working paper &rarr;</a></p></div>
+  <div class="card"><h3>Client trust pages</h3>
+    <p>The same generator, pointed at two different client corpora.<br>
+    <a href="/artifacts/trust/acme/index.html">Acme &rarr;</a> ·
+    <a href="/artifacts/trust/northwind/index.html">Northwind Health &rarr;</a></p></div>
+  <div class="card"><h3>Commitment register</h3>
+    <p>Seven commitments checked; a signed 30-day deletion promise contradicted by the policies
+    on file.<br><a href="/commitments/">Open the register &rarr;</a></p></div>
+  <div class="card"><h3>Machine-readable output</h3>
+    <p><a href="/artifacts/reference-run/contracts.json">contracts.json</a> ·
+    <a href="/artifacts/reference-run/audit_log.jsonl">audit_log.jsonl</a> ·
+    <a href="/artifacts/reference-run/metrics.json">metrics.json</a></p></div>
+</div>
+
+<div class="note"><b>A note on the refusals.</b> A run of this size typically returns a real number
+of refusals, and that is the product working. Each one names the specific gap and the person who
+owns it. A tool that answered every question would be producing claims your evidence cannot
+support — which is the thing that turns a security questionnaire into a liability.</div>
+"""
+    body += waitlist_block("deliverables")
+    return page(f"What you get — {site.BRAND}", body, active="/deliverables/",
+                description="The artifacts a Pramana engagement produces, with real samples.")
+
+
+def build_pricing() -> str:
+    body = hero("Priced per outcome, not per seat",
+                "You are buying completed questionnaires and a trust page that stops them "
+                "arriving — not a licence to operate software. Figures below are starting points "
+                "for a first engagement and are set per client.")
+    body += """
+<div class="tiers">
+  <div class="tier">
+    <h3>Trust page</h3>
+    <div class="price">$3,000&ndash;5,000</div>
+    <div class="unit">one-time setup</div>
+    <ul>
+      <li>Evidence corpus onboarded and governed</li>
+      <li>Self-service trust page generated and published</li>
+      <li>Measured deflection rate across the standard buyer question set</li>
+      <li>Evidence-gap worklist for what would raise it</li>
+      <li>Refresh from $500/month as your evidence changes</li>
+    </ul>
+    <div class="who">Start here. It needs only your publishable policies, so there is almost
+    nothing for your security team to review, and it is the fastest thing to put in front of a
+    buyer.</div>
+  </div>
+
+  <div class="tier feature">
+    <h3>Managed assurance</h3>
+    <div class="price">$4,000&ndash;8,000</div>
+    <div class="unit">per month</div>
+    <ul>
+      <li>Unlimited questionnaires answered and returned</li>
+      <li>Trust page maintained as evidence changes</li>
+      <li>Commitment register kept current against contracts and RFP responses</li>
+      <li>Evidence-gap worklist refreshed every cycle</li>
+      <li>Named human sign-off workflow with a tamper-evident record</li>
+    </ul>
+    <div class="who">For a team seeing several questionnaires a month where security review is
+    holding up deals. This is the engagement that pays for itself in cycle time.</div>
+  </div>
+
+  <div class="tier">
+    <h3>Per questionnaire</h3>
+    <div class="price">$1,500&ndash;2,500</div>
+    <div class="unit">per completed questionnaire</div>
+    <ul>
+      <li>One buyer questionnaire, answered and cited</li>
+      <li>Returned in the buyer's own file, structure intact</li>
+      <li>Audit working paper and evidence-gap list included</li>
+      <li>Requires the corpus to be onboarded once</li>
+    </ul>
+    <div class="who">For occasional enterprise deals, or to try the workflow on one real
+    questionnaire before committing to a retainer.</div>
   </div>
 </div>
 
-<h2>What one real run looks like</h2>
-<p class="sub">A {metrics['questions']}-question CAIQ-style workbook, run by the deterministic
-drafter during this site's build. These are not illustrative figures — rebuilding the site
-re-runs the engine and rewrites this block.</p>
-<div class="grid">
-  <div class="stat"><b>{metrics['questions']}</b><span>questions</span></div>
-  <div class="stat ok"><b>{pct(metrics['cited_draft_coverage'])}</b><span>cited coverage</span></div>
-  <div class="stat warn"><b>{pct(metrics['abstention_rate'])}</b><span>refused, by design</span></div>
-  <div class="stat warn"><b>{metrics['exception_queue']}</b><span>routed to humans</span></div>
-  <div class="stat {'ok' if metrics['unsupported_material_claims'] == 0 else 'bad'}">
-    <b>{metrics['unsupported_material_claims']}</b><span>unsupported claims</span></div>
-  <div class="stat {'ok' if metrics['audit_chain_valid'] else 'bad'}">
-    <b>{'VALID' if metrics['audit_chain_valid'] else 'BROKEN'}</b><span>audit chain</span></div>
-</div>
-<p class="stamp">Artifacts from this exact run:
-<a href="/artifacts/reference-run/run_report.html">audit working paper</a> ·
-<a href="/artifacts/reference-run/contracts.json">answer contracts (JSON)</a> ·
-<a href="/artifacts/reference-run/audit_log.jsonl">hash-chained audit log</a> ·
-<a href="/artifacts/reference-run/metrics.json">metrics</a></p>
+<h2>What that replaces</h2>
+<p class="lead">An enterprise security questionnaire costs a security analyst somewhere between
+eight and twenty hours. At a loaded rate that is most of the cost above, for one questionnaire,
+every time — and it produces no trust page, no gap worklist, and no record of how the answers were
+reached.</p>
 
-<h2>Every answer carries a status, not a confidence score</h2>
-<p class="lead">A confidence score invites you to ship a 0.72. A status tells you what is
-actually true about the evidence, and it is derived in code from citations that survived the
-gates — never from what the model thought of itself.</p>
+<h2>What is not included, stated plainly</h2>
+<ul class="tight">
+  <li><b>We do not produce evidence you do not have.</b> If there is no pen test, the engine will
+      refuse the pen test question and tell you so. Buying this does not create controls.</li>
+  <li><b>We do not sign your representations.</b> A named person on your side approves every
+      answer that goes out. That is the design, not a limitation.</li>
+  <li><b>We do not answer contractual commitments.</b> Liability, indemnities, uptime guarantees
+      and penalties route to your counsel before anything is drafted.</li>
+  <li><b>No software licence.</b> Pramana is operated by us. Self-hosted and single-tenant
+      deployments are available once an engagement justifies them.</li>
+</ul>
+"""
+    body += waitlist_block("pricing")
+    return page(f"Pricing — {site.BRAND}", body, active="/pricing/",
+                description="Trust page setup, managed assurance retainer, or per questionnaire.")
+
+
+def build_security(accuracy: dict | None) -> str:
+    acc = ""
+    if accuracy:
+        acc = (f"<p class=\"lead\">Our own answer engine is measured against "
+               f"{accuracy['total_prompts']} adversarial prompts: "
+               f"<b>{accuracy['correctly_refused_pct']}%</b> correctly refused, "
+               f"<b>{accuracy['correctly_cited_pct']}%</b> correctly cited, and "
+               f"<b>{accuracy['released_without_citation']}</b> answers released without a "
+               f"citation. Every failure is published by name on the "
+               f"<a href=\"/accuracy/\">accuracy page</a>.</p>")
+    body = hero("For your security team",
+                "You review vendors for a living, so this page is written the way you would want "
+                "it written: what we hold, what we never do, what we found when we reviewed "
+                "ourselves, and what is still open.")
+    body += f"""
+<h2>Where your evidence lives</h2>
+<dl class="kv">
+  <dt>Held by</dt><dd>Your evidence corpus is processed in a dedicated store for your engagement.
+    There is no code path that loads two clients into one store — isolation is the directory
+    layout and is asserted by test, not a filter a query has to remember.
+    <a href="/isolation/">How that is proved &rarr;</a></dd>
+  <dt>Training</dt><dd>Never. There is no training pipeline. No model is trained, fine-tuned or
+    adapted on your evidence, your questionnaires or your answers.</dd>
+  <dt>Third parties</dt><dd>Client work runs on the deterministic engine or a paid model API tier
+    whose terms forbid training on submitted content. Free model tiers permit provider-side use of
+    inputs and are never used on client evidence.</dd>
+  <dt>This website</dt><dd>Runs the deterministic engine against synthetic corpora only. Nothing
+    typed into the public demo is sent to a model provider or persisted. The only personal data
+    the site stores is an email address you choose to submit.</dd>
+  <dt>Retention</dt><dd>Run artifacts, workbooks and audit logs are held for the engagement and
+    deleted on request. Audit logs are append-only by design, so they are retained or deleted
+    whole rather than edited.</dd>
+</dl>
+{acc}
+
+<h2>We reviewed ourselves, and published what we found</h2>
+<p class="lead">On 24 August 2026 the platform was security-reviewed against itself, separately
+from the evaluation of the answer gates. Four findings. All fixed, each with a regression test
+that failed before its fix. They are published here rather than left for you to find.</p>
 <div class="tablewrap"><table>
-<tr><th>Status</th><th>Means</th><th>What happens next</th></tr>
-<tr><td><span class="chip c-ok">EVIDENCE-BACKED</span></td>
-    <td>Every claim cited to an approved, in-force source.</td><td>Ships.</td></tr>
-<tr><td><span class="chip c-rev">PARTIAL</span></td>
-    <td>Citable, but with gaps recorded against it.</td><td>Human reviews before it ships.</td></tr>
-<tr><td><span class="chip c-warn">NO EVIDENCE</span></td>
-    <td>Nothing approved supports an answer.</td>
-    <td>Refused. Gap named, routed for collection.</td></tr>
-<tr><td><span class="chip c-warn">REQUIRES HUMAN</span></td>
-    <td>Certification claim, high risk, or a contradiction between sources.</td>
-    <td>Routed to the named owner.</td></tr>
+<tr><th>Finding</th><th>What it was</th><th>Status</th></tr>
+<tr><td class="qid">Cross-tenant<br>path traversal</td>
+    <td class="ans">A tenant name was used directly as a filesystem path component, so a crafted
+    name loaded another client's documents while the store believed the crafted string
+    <i>was</i> its tenant — defeating the boundary check by making it compare a value to itself.
+    Isolation depended on every caller validating the name.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Stored XSS via<br>evidence content</td>
+    <td class="ans">Answer text is a paragraph lifted verbatim from a client document, and it was
+    being rendered as HTML. Markup planted in an ingested PDF would have executed in the
+    operator's browser, with access to every workspace on that console.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Information<br>disclosure</td>
+    <td class="ans">Unhandled exceptions returned their type and message to anonymous callers,
+    which could include filesystem paths and internal names.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
+<tr><td class="qid">Unbounded<br>public endpoints</td>
+    <td class="ans">Request bodies were read without a size cap and no rate limiting existed.</td>
+    <td><span class="chip c-ok">FIXED</span></td></tr>
 </table></div>
 
-<h2>The gates do not trust the drafter</h2>
-<pre><code>questionnaire (any layout)
-      |  ingest — row identity preserved
-      v
-RECEIVED -&gt; CLASSIFIED -&gt; DRAFTED -&gt; [EXCEPTION | GRC_REVIEW] -&gt; DELIVERED
-      |          |            |             |                        |
-      |     pre-gates      drafter      post-gates            written back into
-      |     legal routing  (any model)  cite-or-abstain       the original file,
-      |     cert tagging                staleness            structure intact
-      |                                 contradiction
-      |                                 cert evidence class
-      +---------- hash-chained, append-only audit log --------------+</code></pre>
-<p class="lead">Tenant isolation, forbidden claims, staleness and approval are enforced in
-code, not in a prompt. Swapping the deterministic drafter for a live model changes fluency,
-not safety posture — which is the entire point of building it this way.</p>
+<h2>Two things we corrected the description of, rather than the code</h2>
+<ul class="tight">
+  <li><b>The audit log is tamper-evident, not tamper-resistant, unless it is signed.</b> A hash
+      chain proves no entry was <i>edited</i>. It does not prove the log was not <i>replaced</i> —
+      anyone who can write the file can recompute a consistent chain. Optional HMAC signing makes a
+      signed deployment reject a regenerated log, and the system reports which property is in force
+      instead of implying the stronger one.</li>
+  <li><b>Reviewer identity is corroborated, not authenticated.</b> A reviewer name is supplied by
+      the operator. The operating system user and host are recorded beside it inside the signed
+      event, and the event explicitly records that the actor was not authenticated.</li>
+</ul>
 
-<div class="note"><b>Honest scope.</b> Pramana is pre-pilot and runs as an operator-run
-control plane, not self-serve SaaS. Onboarding a client is a one-time evidence-corpus pass;
-after that, each questionnaire is minutes. Retrieval is lexical today, so it will miss some
-paraphrased questions — it fails closed and refuses rather than guessing. All data shown
-across this site is synthetic.</div>
-""" + waitlist_block("landing")
-    return page(f"{site.BRAND} — {site.TAGLINE}", body, active="/",
-                description="Evidence-gated security questionnaire automation: every answer "
-                            "cited to an approved source, or refused.")
+<h2>Open items</h2>
+<div class="note"><b>Stated rather than discovered.</b> There is no authentication and no role
+separation on the operator console — it binds to loopback and is a single-operator tool. No
+independent penetration test has been performed, and we hold no certification of any kind: asked
+whether we are ISO 42001 certified, our own trust page <a href="/trust/">refuses to claim it</a>,
+because the only supporting document is a roadmap. These are the reasons Pramana is delivered as
+an operated service today rather than as software you run.</div>
+
+<h2>Everything above, generated</h2>
+<p class="lead">The claims on this page are also in our evidence corpus, which means our own trust
+page answers them the same way it would answer yours — cited, or refused.
+<a href="/trust/">Open our trust center &rarr;</a></p>
+"""
+    return page(f"Security posture — {site.BRAND}", body, active="/security/",
+                description="What Pramana holds, what it never does, and what its own security "
+                            "review found.")
 
 
 def build_demo() -> str:
@@ -883,18 +1210,26 @@ def main() -> int:
     print("proving isolation…")
     isolation_html = build_isolation()
 
-    routes = {"/": build_index, "/trust/": lambda: trust_html,
-              "/demo/": build_demo, "/changelog/": build_changelog,
-              "/isolation/": lambda: isolation_html,
-              "/metrics/": lambda: build_metrics(metrics, trust_data, accuracy, register,
-                                                 live_run_metrics())}
+    routes = {
+        "/": lambda: build_index(metrics, trust_data, accuracy),
+        "/how-it-works/": build_how_it_works,
+        "/deliverables/": build_deliverables,
+        "/pricing/": build_pricing,
+        "/security/": lambda: build_security(accuracy),
+        "/trust/": lambda: trust_html,
+        "/demo/": build_demo,
+        "/changelog/": build_changelog,
+        "/isolation/": lambda: isolation_html,
+        "/metrics/": lambda: build_metrics(metrics, trust_data, accuracy, register,
+                                           live_run_metrics()),
+    }
     if accuracy_html:
         routes["/accuracy/"] = lambda: accuracy_html
     if commitments_html:
         routes["/commitments/"] = lambda: commitments_html
     site.set_available(set(routes))
     for route, builder in routes.items():
-        write(route, builder(metrics) if route == "/" else builder())
+        write(route, builder())
         print(f"  wrote {route}")
     (PUBLIC / "build.json").write_text(json.dumps({
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),

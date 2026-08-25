@@ -20,14 +20,24 @@ from .report import CSS as REPORT_CSS
 BRAND = "Pramana"
 TAGLINE = "Evidence-gated customer assurance"
 
+# Primary navigation is the buyer's path: what it is, how we work, what you get,
+# what it costs, and the proof. Everything else is real but secondary, and lives
+# in the footer rather than competing for attention in the header.
 NAV = [
     ("/", "Overview"),
+    ("/how-it-works/", "How it works"),
+    ("/deliverables/", "What you get"),
+    ("/pricing/", "Pricing"),
     ("/trust/", "Trust center"),
     ("/accuracy/", "Accuracy"),
-    ("/metrics/", "Outcomes"),
-    ("/isolation/", "Isolation"),
-    ("/commitments/", "Commitments"),
     ("/demo/", "Live demo"),
+]
+
+SECONDARY_NAV = [
+    ("/security/", "Security posture"),
+    ("/isolation/", "Tenant isolation"),
+    ("/metrics/", "Outcome metrics"),
+    ("/commitments/", "Commitment register"),
     ("/changelog/", "Changelog"),
 ]
 
@@ -79,6 +89,35 @@ form.waitlist input:focus{outline:none;border-color:var(--ok)}
 footer.site{margin-top:56px;padding:22px 0 60px;border-top:2px solid var(--ink);
 font:11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
 footer.site a{color:var(--ok)}
+.steps{counter-reset:step;margin:22px 0}
+.step{position:relative;padding:0 0 22px 52px;border-left:2px solid var(--line);margin-left:16px}
+.step:last-child{border-left-color:transparent;padding-bottom:0}
+.step:before{counter-increment:step;content:counter(step);position:absolute;left:-17px;top:-2px;
+width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--card);
+font:700 13px/32px "IBM Plex Mono",monospace;text-align:center}
+.step h3{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;margin-bottom:6px}
+.step p{font-size:14px;line-height:1.65;color:var(--muted);max-width:64ch}
+.step .who{font:600 10px "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+color:var(--ok);margin-bottom:4px;display:block}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin:24px 0}
+.tier{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--line);padding:22px}
+.tier.feature{border-top-color:var(--ok);box-shadow:0 1px 0 var(--line)}
+.tier h3{font-family:"Space Grotesk",sans-serif;font-size:17px;font-weight:600}
+.tier .price{font-family:"Space Grotesk",sans-serif;font-size:27px;font-weight:600;margin:10px 0 2px}
+.tier .unit{font:11px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.tier ul{margin:14px 0 0 18px} .tier li{font-size:13.5px;line-height:1.6;margin-bottom:6px}
+.tier .who{font:12px/1.55 "IBM Plex Mono",monospace;color:var(--muted);margin-top:14px;
+padding-top:12px;border-top:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:16px 0;font-size:14px}
+.kv dt{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+color:var(--muted);padding-top:3px}
+.kv dd{line-height:1.6}
+.filelist{background:var(--card);border:1px solid var(--line);padding:4px 0;margin:16px 0}
+.filerow{display:flex;gap:14px;align-items:baseline;padding:11px 18px;border-bottom:1px solid var(--line)}
+.filerow:last-child{border-bottom:none}
+.filerow .fn{font:600 12px "IBM Plex Mono",monospace;color:var(--ok);white-space:nowrap;min-width:210px}
+.filerow .fd{font-size:13.5px;line-height:1.55;color:var(--muted)}
+@media(max-width:640px){.filerow{flex-direction:column;gap:4px}.filerow .fn{min-width:0}}
 @media(max-width:640px){nav.top .inner{gap:14px;padding:10px 18px}.wrap{padding:0 18px}}
 """
 
@@ -94,7 +133,7 @@ def esc(text: str) -> str:
 # Only routes the build actually produced appear in the navigation. A link to a
 # page that does not exist yet is a small lie, and this site's entire argument is
 # that the product does not make those.
-_AVAILABLE: set[str] = {href for href, _ in NAV}
+_AVAILABLE: set[str] = {href for href, _ in NAV} | {href for href, _ in SECONDARY_NAV}
 
 
 def set_available(routes: set[str]) -> None:
@@ -110,9 +149,17 @@ def nav_html(active: str) -> str:
             f'<a class="brand" href="/">Pramana<span>.</span></a>{links}</div></nav>')
 
 
+def footer_nav() -> str:
+    live = [(href, label) for href, label in SECONDARY_NAV if href in _AVAILABLE]
+    if not live:
+        return ""
+    return " · ".join(f'<a href="{href}">{esc(label)}</a>' for href, label in live)
+
+
 def page(title: str, body: str, active: str = "/", description: str = "",
          generated: date | None = None) -> str:
     stamp = (generated or date.today()).isoformat()
+    secondary = footer_nav()
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title>
@@ -123,6 +170,7 @@ def page(title: str, body: str, active: str = "/", description: str = "",
 <div class="wrap">
 {body}
 <footer class="site">
+{secondary}{"<br>" if secondary else ""}
 {esc(BRAND)} · {esc(TAGLINE)} · page generated {stamp}<br>
 All client data shown is synthetic. Source: <a href="https://github.com/dhruvshahi10/pramana">github.com/dhruvshahi10/pramana</a>
 </footer>
