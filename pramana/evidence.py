@@ -20,6 +20,28 @@ from .models import Chunk, Source
 
 FM_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
 
+# A tenant name is a directory name and a retrieval boundary. Before this was
+# enforced here, EvidenceStore("../evidence/globex", root) loaded another
+# tenant's documents while believing that string WAS its tenant — so the
+# retriever's boundary assertion compared the crafted name to itself and
+# passed. Isolation silently depended on every caller validating the name,
+# which is the "remember the WHERE clause" failure this design exists to avoid.
+#
+# The shape deliberately matches the workspace slug the server mints
+# (pramana/server/auth.py SLUG_RE) and the slug the router will accept in a
+# path, so the same string is legal at every layer or at none of them.
+TENANT_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,48}$")
+
+MAX_SOURCE_BYTES = 8 * 1024 * 1024      # a governed policy document, not an archive
+
+
+def validate_tenant(tenant: str) -> str:
+    if not isinstance(tenant, str) or not TENANT_RE.match(tenant):
+        raise PermissionError(
+            f"invalid tenant name {tenant!r}: lowercase letters, digits and hyphens only. "
+            f"The tenant name is a filesystem boundary and is never used unvalidated.")
+    return tenant
+
 
 def _parse_date(s: str) -> date:
     return datetime.strptime(s.strip(), "%Y-%m-%d").date()
@@ -61,13 +83,30 @@ def parse_source(path: Path, tenant: str) -> Source:
 
 class EvidenceStore:
     def __init__(self, tenant: str, root: Path):
-        self.tenant = tenant
-        tenant_dir = root / tenant
+        self.tenant = validate_tenant(tenant)
+        root = Path(root).resolve()
+        tenant_dir = (root / self.tenant).resolve()
+        # belt and braces: even a name that passed the pattern must resolve to a
+        # direct child of the evidence root
+        if tenant_dir.parent != root:
+            raise PermissionError(
+                f"tenant directory for '{tenant}' resolves outside the evidence root")
         if not tenant_dir.is_dir():
             raise FileNotFoundError(f"no evidence directory for tenant '{tenant}'")
+        self.root = root
+        self.tenant_dir = tenant_dir
         self.sources: dict[str, Source] = {}
         for p in sorted(tenant_dir.glob("*.md")):
-            s = parse_source(p, tenant)
+            # a symlink out of the tenant directory is another way across the
+            # boundary, and is refused rather than followed
+            if p.resolve().parent != tenant_dir:
+                raise PermissionError(
+                    f"{p.name} in tenant '{tenant}' resolves outside its own directory")
+            if p.stat().st_size > MAX_SOURCE_BYTES:
+                raise ValueError(
+                    f"{p.name} is {p.stat().st_size} bytes, above the "
+                    f"{MAX_SOURCE_BYTES}-byte source limit")
+            s = parse_source(p, self.tenant)
             self.sources[s.source_id] = s
 
     # ---- chunks -----------------------------------------------------------

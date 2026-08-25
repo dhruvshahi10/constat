@@ -5,9 +5,14 @@ step, brand.stylesheet() inlined so pages make no external requests.
 
 Two rules this file has to keep, because it renders attacker-controlled text:
 
-  * every value interpolated into innerHTML goes through the client-side
-    esc() helper. Filenames, document titles and extracted document text are
-    all uploader-controlled, and a workspace link is shareable.
+  * uploader- and engine-derived values are never assembled into markup. They
+    are written as text nodes (el()/textContent/replaceChildren), so there is
+    no parse step for a payload to survive. Filenames, document titles, answers
+    and gap messages are all lifted from uploaded documents, and a workspace
+    link is shareable — an escaping helper is one forgotten call away from
+    executing an uploaded document inside a reviewer's browser, while a text
+    node has no such failure mode. innerHTML survives only where the entire
+    string is a literal authored in this file.
   * JSON inlined into a <script> has "<" escaped to \\u003c, because
     json.dumps does not escape "</script>".
 """
@@ -158,10 +163,8 @@ def _page(title: str, body: str) -> str:
             f'<body><div class="wrap">{body}</div></body></html>')
 
 
-TYPE_OPTIONS = "".join(
-    f'<option value="{t}">{t}</option>'
-    for t in ("policy", "standard", "plan", "report", "attestation",
-              "certificate", "roadmap", "register"))
+DOC_TYPES = ("policy", "standard", "plan", "report", "attestation",
+             "certificate", "roadmap", "register")
 
 QUESTION_LIST = "".join(
     f'<div class="doc"><span class="sid">{qid}</span>'
@@ -174,11 +177,27 @@ def _inline_json(obj) -> str:
     return json.dumps(obj, ensure_ascii=False).replace("<", "\\u003c")
 
 
-# Shared by workspace and landing: a client-side HTML escaper. Everything that
-# reaches innerHTML in these pages passes through it.
+# Shared by the workspace and the review queue: DOM constructors, so that
+# uploader- and engine-derived text is inserted as a text node rather than
+# parsed as markup. esc() remains for the one place that still assembles a
+# string, and that place interpolates only literals defined in this file.
 ESC_JS = """
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* el(tag, className, text) -> element whose text is a text node, never markup */
+const el=(tag,cls,text)=>{const n=document.createElement(tag);
+  if(cls)n.className=cls;
+  if(text!=null)n.textContent=String(text);
+  return n};
+const inputEl=(id,props)=>{const n=document.createElement('input');
+  n.type='text';n.id=id;Object.assign(n,props||{});return n};
+const field=(id,labelText,control)=>{const d=document.createElement('div');
+  const l=el('label',null,labelText);l.htmlFor=id;
+  d.append(l,control);return d};
+/* a text line with the same leading marker the CSS expects */
+const gapRow=(cls,text)=>{const d=el('div',cls);
+  d.append(document.createTextNode('\\u25B8 '),document.createTextNode(String(text)));
+  return d};
 """
 
 
@@ -331,26 +350,34 @@ function iso(d){return d.toISOString().slice(0,10)}
 let picked=[];
 const edits={};   /* per-file user edits, keyed by file name */   /* the batch, source of truth for the rows below */
 
-function rowsHTML(){
-  return picked.map((f,i)=>`<div class="frow" id="frow-${i}">
-    <div class="fn"><b>${esc(f.name)}</b><span class="st" id="fst-${i}"></span>
-      <button type="button" class="fdrop" data-drop="${i}"
-        aria-label="Remove ${esc(f.name)} from this batch">Remove</button></div>
-    <div class="grid2">
-      <div><label for="ftitle-${i}">Title</label>
-        <input type="text" id="ftitle-${i}" maxlength="120" required value="${esc(guessTitle(f.name))}"></div>
-      <div><label for="ftype-${i}">Type</label>
-        <select id="ftype-${i}">__TYPES__</select></div>
-    </div>
-    <details class="more"><summary>Details (optional)</summary>
-      <div class="grid2">
-        <div><label for="fver-${i}">Version</label>
-          <input type="text" id="fver-${i}" value="${esc(guessVersion(f.name))}"></div>
-        <div><label for="ftop-${i}">Topics (comma separated, improves retrieval)</label>
-          <input type="text" id="ftop-${i}" placeholder="encryption, key management"></div>
-      </div>
-    </details>
-  </div>`).join('');
+/* A row is DOM, not markup: f.name is whatever the uploader named the file,
+   and it lands in a text node and two attributes set as properties. */
+const DOC_TYPES=__TYPES__;
+function buildRow(f,i){
+  const row=el('div','frow');row.id='frow-'+i;
+
+  const st=el('span','st');st.id='fst-'+i;
+  const drop=el('button','fdrop','Remove');
+  drop.type='button';drop.dataset.drop=String(i);
+  drop.setAttribute('aria-label','Remove '+f.name+' from this batch');
+  const fn=el('div','fn');fn.append(el('b',null,f.name),st,drop);
+
+  const sel=document.createElement('select');sel.id='ftype-'+i;
+  DOC_TYPES.forEach(v=>sel.append(el('option',null,v)));
+  const g1=el('div','grid2');
+  g1.append(field('ftitle-'+i,'Title',
+              inputEl('ftitle-'+i,{maxLength:120,required:true,value:guessTitle(f.name)})),
+            field('ftype-'+i,'Type',sel));
+
+  const g2=el('div','grid2');
+  g2.append(field('fver-'+i,'Version',inputEl('fver-'+i,{value:guessVersion(f.name)})),
+            field('ftop-'+i,'Topics (comma separated, improves retrieval)',
+              inputEl('ftop-'+i,{placeholder:'encryption, key management'})));
+  const det=document.createElement('details');det.className='more';
+  det.append(el('summary',null,'Details (optional)'),g2);
+
+  row.append(fn,g1,det);
+  return row;
 }
 function readRows(){
   /* capture what the user typed before any re-render, keyed by file name so an
@@ -364,7 +391,7 @@ function readRows(){
   });
 }
 function renderRows(){
-  $('filerows').innerHTML=rowsHTML();
+  $('filerows').replaceChildren(...picked.map(buildRow));
   picked.forEach((f,i)=>{
     const e=edits[f.name]||{};
     const ty=$('ftype-'+i); if(ty) ty.value=e.type||guessType(f.name);
@@ -480,25 +507,34 @@ async function refresh(){
      send it, so this is opportunistic, never required */
   const seedOwner=s.email||s.signup_email||'';
   if(seedOwner&&!$('owner').value)$('owner').value=seedOwner;
-  $('docs').innerHTML=s.uploads.map(u=>
-    `<div class="doc"><span class="sid">${esc(u.source_id)}</span>`+
-    `<span class="fname">${esc(u.filename)}</span>`+
-    (u.approved?`<span class="chip c-ok">ATTESTED APPROVED</span>`
-               :`<span class="chip c-warn">DRAFT, NOT CITABLE</span>`)+
-    `</div>`).join('')
-    ||'<div class="quota">No documents yet. Upload public evidence or seed the sample pack.</div>';
-  $('runs').innerHTML=s.runs.map(r=>{
-    let links='';
+  $('docs').replaceChildren(...(s.uploads.length?s.uploads.map(u=>{
+    const d=el('div','doc');
+    d.append(el('span','sid',u.source_id),
+             el('span','fname',u.filename),
+             u.approved?el('span','chip c-ok','ATTESTED APPROVED')
+                       :el('span','chip c-warn','DRAFT, NOT CITABLE'));
+    return d;
+  }):[el('div','quota',
+        'No documents yet. Upload public evidence or seed the sample pack.')]));
+  $('runs').replaceChildren(...s.runs.map(r=>{
+    const row=el('div','runrow');
+    row.append(el('span',null,r.id),
+      el('span','chip '+(r.status==='done'?'c-ok'
+        :r.status==='error'?'c-warn':'c-sig'),r.status));
     if(r.status==='done'){
       const id=encodeURIComponent(r.id);
-      links=`<a class="filelink" target="_blank" rel="noopener" href="/t/${slug}/runs/${id}/run_report.html">report</a>
-      <a class="filelink" href="/t/${slug}/runs/${id}/${id}__DELIVERED.xlsx">DELIVERED.xlsx</a>
-      <a class="filelink" target="_blank" rel="noopener" href="/t/${slug}/runs/${id}/audit_log.jsonl">audit chain</a>`;
+      [['report',`/t/${slug}/runs/${id}/run_report.html`,true],
+       ['DELIVERED.xlsx',`/t/${slug}/runs/${id}/${id}__DELIVERED.xlsx`,false],
+       ['audit chain',`/t/${slug}/runs/${id}/audit_log.jsonl`,true]
+      ].forEach(([label,href,newTab])=>{
+        const a=el('a','filelink',label);a.href=href;
+        if(newTab){a.target='_blank';a.rel='noopener'}
+        row.append(a);
+      });
     }
-    return `<div class="runrow"><span>${esc(r.id)}</span><span class="chip ${
-      r.status==='done'?'c-ok':r.status==='error'?'c-warn':'c-sig'}">${esc(r.status)}</span>${links}
-      ${r.error?`<span class="err" style="margin:0">${esc(r.error)}</span>`:''}</div>`;
-  }).join('');
+    if(r.error){const e=el('span','err',r.error);e.style.margin='0';row.append(e)}
+    return row;
+  }));
   /* a reload mid-run used to leave a frozen page: no timer existed outside the
      click handler. Resume from whatever the server says is in flight. */
   const live=s.runs.find(r=>r.status==='queued'||r.status==='running');
@@ -593,7 +629,7 @@ renderRows();
 refresh();
 </script>"""
     js = (js.replace("__ESC__", ESC_JS)
-            .replace("__TYPES__", TYPE_OPTIONS)
+            .replace("__TYPES__", _inline_json(list(DOC_TYPES)))
             .replace("__QLIST__", _inline_json([t for _q, _d, t in DEMO_QUESTIONS])))
     return _page(f"Pramana AI, {org}", body + js)
 
@@ -620,35 +656,69 @@ const slug=location.pathname.split('/')[2];
 const RUNS=__RUNS__;
 const $=id=>document.getElementById(id);
 __ESC__
+/* An item's text, answer, citations and gaps are paragraphs lifted verbatim
+   from an uploaded document. They are built as DOM here — no markup is
+   assembled around them, so a payload planted in a PDF is displayed rather
+   than executed. The element ids are also built from the raw run and question
+   ids (not escaped copies), so act() below finds the fields it created. */
+function card(rid,it){
+  const cited=it.state==='GRC_REVIEW';
+  const qid=it.question_id;
+  const c=el('div','qcard');c.id=`card-${rid}-${qid}`;
+
+  const top=el('div','row');
+  top.style.margin='0';top.style.justifyContent='space-between';
+  top.append(el('span','chip '+(cited?'c-rev':'c-warn'),
+                cited?'CITED, AWAITING REVIEW':'EXCEPTION, '+(it.route||'SME')),
+             el('span','quota',`${qid} / ${it.domain}`));
+  c.append(top,el('h3',null,it.text));
+
+  if(it.answer){c.append(el('div','body',it.answer))}
+  else{const b=el('div','body');b.append(el('em',null,'No answer released.'));c.append(b)}
+
+  if(it.citations.length){
+    const p=el('div','prov');
+    it.citations.forEach((x,i)=>{
+      if(i)p.append(document.createElement('br'));
+      p.append(document.createTextNode(String(x)));
+    });
+    c.append(p);
+  }
+  it.gaps.forEach(g=>c.append(gapRow('gap',g)));
+
+  const g=el('div','grid2');g.style.marginTop='12px';
+  g.append(field(`rev-${rid}-${qid}`,'Your name',
+             inputEl(`rev-${rid}-${qid}`,{placeholder:'Full name'})),
+           field(`note-${rid}-${qid}`,'Note (required)',
+             inputEl(`note-${rid}-${qid}`,{placeholder:'Why this decision'})));
+  c.append(g);
+
+  const mk=(cls,act,label)=>{const b=el('button',cls,label);
+    b.dataset.run=rid;b.dataset.q=qid;b.dataset.act=act;return b};
+  const acts=el('div','row');
+  if(cited)acts.append(mk('primary','approve','Approve and release'),
+                       mk(null,'reject','Reject'));
+  else acts.append(mk(null,'route','Add routing note'));
+  c.append(acts);
+
+  const err=el('div','err');err.id=`err-${rid}-${qid}`;
+  c.append(err);
+  return c;
+}
 function render(){
-  $('queue').innerHTML=RUNS.map(run=>{
-    const rid=esc(run.id);
-    const items=run.items.map(it=>{
-      const cited=it.state==='GRC_REVIEW';
-      const qid=esc(it.question_id);
-      return `<div class="qcard" id="card-${rid}-${qid}">
-      <div class="row" style="margin:0;justify-content:space-between">
-        <span class="chip ${cited?'c-rev':'c-warn'}">${cited?'CITED, AWAITING REVIEW':'EXCEPTION, '+esc(it.route||'SME')}</span>
-        <span class="quota">${qid} / ${esc(it.domain)}</span></div>
-      <h3>${esc(it.text)}</h3>
-      ${it.answer?`<div class="body">${esc(it.answer)}</div>`:'<div class="body"><em>No answer released.</em></div>'}
-      ${it.citations.length?`<div class="prov">${it.citations.map(esc).join('<br>')}</div>`:''}
-      ${it.gaps.map(g=>`<div class="gap">&#9656; ${esc(g)}</div>`).join('')}
-      <div class="grid2" style="margin-top:12px">
-        <div><label for="rev-${rid}-${qid}">Your name</label>
-          <input type="text" id="rev-${rid}-${qid}" placeholder="Full name"></div>
-        <div><label for="note-${rid}-${qid}">Note (required)</label>
-          <input type="text" id="note-${rid}-${qid}" placeholder="Why this decision"></div>
-      </div>
-      <div class="row">
-        ${cited?`<button class="primary" data-run="${rid}" data-q="${qid}" data-act="approve">Approve and release</button>
-        <button data-run="${rid}" data-q="${qid}" data-act="reject">Reject</button>`
-        :`<button data-run="${rid}" data-q="${qid}" data-act="route">Add routing note</button>`}
-      </div>
-      <div class="err" id="err-${rid}-${qid}"></div></div>`;
-    }).join('');
-    return `<div class="seclabel"><span class="idx">${rid}</span><span class="label">${run.items.length} awaiting</span><span class="rule"></span></div>${items||'<p class="sub">Nothing awaiting review in this run.</p>'}`;
-  }).join('')||'<p class="sub">No completed runs yet. Run the questionnaire from the workspace first.</p>';
+  const out=[];
+  RUNS.forEach(run=>{
+    const head=el('div','seclabel');
+    head.append(el('span','idx',run.id),
+                el('span','label',`${run.items.length} awaiting`),
+                el('span','rule'));
+    out.push(head);
+    if(!run.items.length){out.push(el('p','sub','Nothing awaiting review in this run.'));return}
+    run.items.forEach(it=>out.push(card(run.id,it)));
+  });
+  if(!RUNS.length)out.push(el('p','sub',
+    'No completed runs yet. Run the questionnaire from the workspace first.'));
+  $('queue').replaceChildren(...out);
 }
 /* delegation, not inline onclick: question ids come from an uploaded workbook
    and have no business being spliced into an attribute */

@@ -325,8 +325,8 @@
     },
     {
       "question": "Can you provide your most recent SOC 2 report under NDA?",
-      "verdict": "CITED, GATE CLEAN",
-      "tone": "ok",
+      "verdict": "CITED, HELD FOR HUMAN REVIEW",
+      "tone": "rev",
       "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.",
       "citations": [
         "CRT-SOC2-2025 v1.0 para:2"
@@ -933,7 +933,7 @@
     "genesis": "0000000000000000000000000000000000000000000000000000000000000000",
     "events": [
       {
-        "ts": "2026-08-18T08:14:53.298624+00:00",
+        "ts": "2026-08-25T15:02:08.878655+00:00",
         "actor": "system",
         "action": "RECEIVED",
         "subject": "acme_security_questionnaire.xlsx",
@@ -942,21 +942,21 @@
           "tenant": "acme"
         },
         "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-        "hash": "651d84a5d5f254ce2a9c02fea52287203668d48b950dcf60515d319784a0d395"
+        "hash": "5c99b7a08ac25c4e98f9b95a204b6e520da0e6483dbabae6eeb2193dfaeeb71b"
       },
       {
-        "ts": "2026-08-18T08:14:53.308625+00:00",
+        "ts": "2026-08-25T15:02:08.882059+00:00",
         "actor": "system",
         "action": "CLASSIFIED",
         "subject": "acme_security_questionnaire.xlsx",
         "detail": {
           "question_count": 24
         },
-        "prev_hash": "651d84a5d5f254ce2a9c02fea52287203668d48b950dcf60515d319784a0d395",
-        "hash": "26b9cd06ec5ec3d9140a318064f23222a11e6f8a7e7f3f5ecbbc186c6ddbb81b"
+        "prev_hash": "5c99b7a08ac25c4e98f9b95a204b6e520da0e6483dbabae6eeb2193dfaeeb71b",
+        "hash": "8fc3318c73ec1f8723bac9fea77badea4cfdf3d834667c9eb047caa4bd5bb323"
       },
       {
-        "ts": "2026-08-18T08:14:53.309478+00:00",
+        "ts": "2026-08-25T15:02:08.882152+00:00",
         "actor": "system",
         "action": "EVIDENCE_INTEGRITY_SCAN",
         "subject": "acme",
@@ -972,11 +972,11 @@
             ]
           }
         },
-        "prev_hash": "26b9cd06ec5ec3d9140a318064f23222a11e6f8a7e7f3f5ecbbc186c6ddbb81b",
-        "hash": "14a42ebc2754a71b0a8dfd3d1ee488a236c84f0f0f0280b13b1ef63ebb58ff72"
+        "prev_hash": "8fc3318c73ec1f8723bac9fea77badea4cfdf3d834667c9eb047caa4bd5bb323",
+        "hash": "5ae6cb6c4d324228c255413e59cb8c0caefdeb2143ca09e6de51081c6e50e257"
       },
       {
-        "ts": "2026-08-18T08:14:53.310478+00:00",
+        "ts": "2026-08-25T15:02:08.882415+00:00",
         "actor": "mock",
         "action": "DRAFTED",
         "subject": "GRC-01.1",
@@ -986,11 +986,11 @@
           ],
           "coverage": "complete"
         },
-        "prev_hash": "14a42ebc2754a71b0a8dfd3d1ee488a236c84f0f0f0280b13b1ef63ebb58ff72",
-        "hash": "5bbdd532acaab659cc705dc7adfe634ef7a231c015ca3a84320f30bb57b72c59"
+        "prev_hash": "5ae6cb6c4d324228c255413e59cb8c0caefdeb2143ca09e6de51081c6e50e257",
+        "hash": "87b4353cb07b12573e3122a598f167479449c7e115af929ff55c003ddf88302e"
       },
       {
-        "ts": "2026-08-18T08:14:53.310971+00:00",
+        "ts": "2026-08-25T15:02:08.882466+00:00",
         "actor": "demo-grc-reviewer (simulated)",
         "action": "APPROVED",
         "subject": "GRC-01.1",
@@ -1000,11 +1000,11 @@
             "POL-ISMS-001@para:2"
           ]
         },
-        "prev_hash": "5bbdd532acaab659cc705dc7adfe634ef7a231c015ca3a84320f30bb57b72c59",
-        "hash": "d70ef42f1019afc938466c5054e0b2c5807f2f075e650a59e31cd7220a6b9f14"
+        "prev_hash": "87b4353cb07b12573e3122a598f167479449c7e115af929ff55c003ddf88302e",
+        "hash": "df93488cb28978710ca7563f42cbdb519808e8e62733d63190a789abaee561cb"
       },
       {
-        "ts": "2026-08-18T08:14:53.311703+00:00",
+        "ts": "2026-08-25T15:02:08.882688+00:00",
         "actor": "mock",
         "action": "DRAFTED",
         "subject": "GRC-02.1",
@@ -1014,8 +1014,8 @@
           ],
           "coverage": "complete"
         },
-        "prev_hash": "d70ef42f1019afc938466c5054e0b2c5807f2f075e650a59e31cd7220a6b9f14",
-        "hash": "887cc514378e78add8575646bcca2fcad75965df6064d64b866397480d3e1d74"
+        "prev_hash": "df93488cb28978710ca7563f42cbdb519808e8e62733d63190a789abaee561cb",
+        "hash": "3b09e573b137d67e0cc5ac71f9b076b1880497d0e728b44d34b4bacca769e897"
       }
     ]
   }

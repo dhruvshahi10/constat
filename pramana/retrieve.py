@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .evidence import EvidenceStore
+from .evidence import EvidenceStore, validate_tenant
 from .models import Chunk
 
 STOP = {
@@ -40,6 +40,11 @@ class Retriever:
         self._chunks = store.chunks()
 
     def search(self, query: str, tenant: str, k: int = 4) -> list[Hit]:
+        # the mismatch check below compares two strings; if the caller may pass
+        # an arbitrary string it can satisfy that check by matching a store
+        # that was itself built from a crafted name. Validating here means the
+        # comparison is between two names that are each a real boundary.
+        validate_tenant(tenant)
         if tenant != self.store.tenant:
             raise PermissionError(
                 f"tenant mismatch: store is '{self.store.tenant}', query is '{tenant}'"

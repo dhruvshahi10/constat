@@ -1,0 +1,92 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Northwind Health — Pramana engagement package</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F3F5EF;--card:#FCFDFA;--ink:#14231C;--muted:#5A6B61;--line:#D9E0D4;
+--ok:#1E6B47;--okbg:#E4EFE7;--warn:#A25E00;--warnbg:#F6EBD9;--rev:#34506B;--revbg:#E5EBF2;
+--bad:#A02C21;--badbg:#F4E2E0;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif;padding:0 0 64px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+header{border-bottom:2px solid var(--ink);padding:44px 0 22px;margin-bottom:30px}
+.eyebrow{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--ok);margin-bottom:14px}
+h1{font-family:"Space Grotesk",sans-serif;font-size:clamp(28px,4vw,42px);font-weight:600;letter-spacing:-.015em}
+.runmeta{margin-top:14px;font:12px/1.7 "IBM Plex Mono",monospace;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:26px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ink);padding:14px 14px 12px}
+.stat b{display:block;font-family:"Space Grotesk",sans-serif;font-size:30px;font-weight:600;line-height:1.1}
+.stat span{font:600 10px/1.4 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat.ok{border-top-color:var(--ok)} .stat.warn{border-top-color:var(--warn)}
+.stat.bad{border-top-color:var(--bad)} .stat.bad b{color:var(--bad)}
+.stat.ok b{color:var(--ok)} .stat.warn b{color:var(--warn)}
+h2{font-family:"Space Grotesk",sans-serif;font-size:19px;font-weight:600;margin:38px 0 6px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px;max-width:70ch}
+.panel{background:var(--card);border:1px solid var(--line);padding:16px 18px;margin-bottom:10px}
+.panel h3{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;color:var(--warn)}
+.panel p{font-size:13.5px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line)}
+th{font:600 10px/1.3 "IBM Plex Mono",monospace;letter-spacing:.13em;text-transform:uppercase;text-align:left;
+padding:10px 12px;border-bottom:2px solid var(--ink);color:var(--muted)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13.5px}
+tr:last-child td{border-bottom:none}
+.qid{font:600 12px "IBM Plex Mono",monospace;white-space:nowrap}
+.dom{color:var(--muted);font-size:11.5px}
+.chip{display:inline-block;font:700 10px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;padding:5px 8px;
+border:1.5px solid;white-space:nowrap}
+.c-ok{color:var(--ok);border-color:var(--ok);background:var(--okbg)}
+.c-rev{color:var(--rev);border-color:var(--rev);background:var(--revbg)}
+.c-warn{color:var(--warn);border-color:var(--warn);background:var(--warnbg)}
+.c-bad{color:var(--bad);border-color:var(--bad);background:var(--badbg)}
+.ans{max-width:52ch}
+.gap{color:var(--warn);font-size:12.5px;margin-top:6px}
+.prov{margin-top:8px;font:11px/1.6 "IBM Plex Mono",monospace;color:var(--muted);
+border-left:3px solid var(--ok);padding:2px 0 2px 8px;background:linear-gradient(90deg,var(--okbg),transparent 70%)}
+.prov.p-warn{border-left-color:var(--warn);background:linear-gradient(90deg,var(--warnbg),transparent 70%)}
+.evals td:first-child{font:600 12px "IBM Plex Mono",monospace;white-space:nowrap}
+footer{margin-top:44px;padding-top:18px;border-top:2px solid var(--ink);
+font:12px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
+.pass{color:var(--ok);font-weight:700}
+@media(max-width:720px){td:nth-child(2),th:nth-child(2){display:none}}
+
+.lede{font-size:16.5px;line-height:1.65;max-width:74ch;margin-bottom:14px}
+.lede.first{font-size:18px}
+.files{margin-top:6px}
+.file{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ok);
+padding:14px 18px;margin-bottom:9px}
+.file a{color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;
+border-bottom:1.5px solid var(--ok)}
+.file a:hover{color:var(--ok)}
+.file .path{font:11.5px "IBM Plex Mono",monospace;color:var(--muted);margin-top:3px}
+.file .what{font-size:13.5px;color:var(--ink);margin-top:7px;max-width:74ch}
+.file.work{border-left-color:var(--warn)}
+.file.work a{border-bottom-color:var(--warn)}
+.note{background:var(--warnbg);border:1px solid var(--warn);padding:12px 16px;
+font-size:13px;margin-top:12px}
+.reasons{margin-top:10px}
+</style></head><body><div class="wrap">
+<header>
+<div class="eyebrow">Pramana · Engagement package</div>
+<h1>Northwind Health — security questionnaire response</h1>
+<div class="runmeta">engagement date 2026-08-08 ·
+package generated 2026-08-25 · questions 24 ·
+audit chain VALID</div>
+</header>
+
+<div class="grid"><div class="stat ok"><b>9</b><span>Answered with citations</span></div><div class="stat warn"><b>15</b><span>Refused — nothing citable</span></div><div class="stat warn"><b>15</b><span>Open items for you</span></div><div class="stat ok"><b>VALID</b><span>Audit chain</span></div></div>
+
+<h2>What was done</h2>
+<p class="lede first">Of the 24 questions in acme_security_questionnaire.xlsx, 9 were answered from Northwind Health&#x27;s own approved evidence. Each of those answers carries the document, version and location it came from — 10 citations in total — so a buyer&#x27;s security team can check any answer against the source rather than take it on trust.</p><p class="lede">15 questions were refused. The engine found nothing it was permitted to cite, so it wrote nothing. That is the control working, not a shortfall: an unsupported answer on a security questionnaire is a statement Northwind Health would have to stand behind later, and the engine is built so it cannot produce one.</p><p class="lede">Those 15 refusals are your work-list, set out in evidence_gaps.md. Each one names the document that has to be produced, renewed or reconciled and who it was routed to. Close them and the same questions answer themselves from evidence next time.</p><p class="lede">Your trust page answers 9 of the 38 questions buyers most commonly ask, without anyone at Northwind Health being asked. The remaining 29 are shown as open items a buyer must request, because publishing an answer that is not fully evidence-backed is how a trust page starts lying.</p><p class="lede">The audit log covering this engagement verifies intact. Every step — receipt of your questionnaire, classification, drafting, each gate decision, every approval and the final export — is recorded and hash-chained. The log is tamper-evident: an edit to any past line breaks the chain from that point on. It is not signed, so it evidences that history was not edited, not that it could not have been rewritten from scratch.</p>
+
+<h2>What the open items are</h2><p class="sub">Every refused question, grouped by why the answer could not be released. The full list — with the document to produce and who owns it — is in evidence_gaps.md.</p><table class="reasons"><tr><th>Reason</th><th>Questions</th></tr><tr><td>Certification claimed, no certificate on file</td><td>2</td></tr><tr><td>No approved document covers this</td><td>12</td></tr><tr><td>Needs legal, not evidence</td><td>1</td></tr></table>
+
+<h2>Everything in this package</h2>
+<p class="sub">All files are in this folder. Nothing below needs an account or an internet
+connection to open.</p>
+<div class="files"><div class="file"><a href="acme_security_questionnaire__DELIVERED.xlsx">Your completed questionnaire</a><div class="path">acme_security_questionnaire__DELIVERED.xlsx</div><div class="what">The workbook you were sent, returned with the answers filled in. Row order, question wording and every original tab are unchanged — only the answer columns were written. This is the file you send back.</div></div><div class="file"><a href="run_report.html">Audit working paper</a><div class="path">run_report.html</div><div class="what">Every question with its answer, the documents cited underneath it, and the gate decision that released or refused it. This is what you hand an auditor or a buyer who asks how an answer was reached.</div></div><div class="file"><a href="trust_page/index.html">Your trust page</a><div class="path">trust_page/index.html</div><div class="what">A publishable page answering the 38 questions buyers ask most often. Only the 9 that are fully evidence-backed are answered; the rest are shown as open items a buyer must request. Host it, or send it as a file. The same answers as data are in trust_page/deflection.json.</div></div><div class="file work"><a href="evidence_gaps.md">Your work-list — the evidence gaps</a><div class="path">evidence_gaps.md</div><div class="what">The 15 questions that could not be answered, grouped by reason, each naming the document to produce, renew or reconcile and who it was routed to. Close these and the same questions answer themselves next time.</div></div><div class="file"><a href="contracts.json">Machine-readable answers</a><div class="path">contracts.json</div><div class="what">Every answer as structured data — the citations behind it, its evidence status, and any recorded gap. For loading into your own GRC tooling.</div></div><div class="file"><a href="audit_log.jsonl">Tamper-evident audit log</a><div class="path">audit_log.jsonl</div><div class="what">One line per step, each carrying the hash of the line before it. Editing any past line breaks the chain from that point on, which is what makes the record checkable rather than merely stored.</div></div><div class="file"><a href="README.md">This package, explained</a><div class="path">README.md</div><div class="what">A plain-English description of every file here and how to read a refusal.</div></div></div>
+
+<footer>Prepared by Pramana for Northwind Health · engagement date
+2026-08-08 · package generated 2026-08-25.<br>
+Every released answer names the approved document behind it. Every refusal names what is
+missing. Both are recorded in the audit log shipped with this package.</footer>
+</div></body></html>

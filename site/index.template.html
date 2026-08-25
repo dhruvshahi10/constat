@@ -844,7 +844,9 @@ window.__rv = new IntersectionObserver(function (es) {
       <a href="#ask">Try it</a>
       <a href="#refuse">Why it refuses</a>
       <a href="#get">What you get</a>
-      <a href="#data">Your data</a>
+      <a href="/how-it-works/">How it works</a>
+      <a href="/pricing/">Pricing</a>
+      <a href="/trust/">Trust centre</a>
     </span>
     <a class="cta" href="#access">Get early access</a>
     <span class="progress" id="progress" aria-hidden="true"></span>
@@ -1201,6 +1203,14 @@ window.__rv = new IntersectionObserver(function (es) {
 <script>
 const DEMO=/*@DEMO@*/;
 const $=id=>document.getElementById(id);
+/* dnode(tag, className, text): the demo renders engine answers, citations and
+   gap messages, and an answer is a paragraph lifted verbatim from a governed
+   document. Those go in as text nodes — never as markup — so nothing in a
+   document can become script here. */
+const dnode=(tag,cls,text)=>{const n=document.createElement(tag);
+  if(cls)n.className=cls;
+  if(text!=null)n.textContent=String(text);
+  return n};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1831,12 +1841,20 @@ function show(key,d,instant,userInit){
     $("qlive").textContent=q;
     $("verdict").textContent=d.verdict;$("verdict").className=chipClass(d.tone);
     paint(d.tone);
-    $("answer").innerHTML=d.answer?esc(d.answer)
-      :'<span class="none">Nothing released</span>';
-    $("prov").innerHTML=d.citations.length
-      ?`<div class="d-prov">${d.citations.map(esc).join("<br>")}</div>`
-      :`<div class="d-prov warn">no citation released</div>`;
-    $("gaps").innerHTML=d.gaps.map(g=>`<div class="d-gap"><span>&#9656;</span><span>${esc(g)}</span></div>`).join("");
+    $("answer").replaceChildren(d.answer?document.createTextNode(d.answer)
+      :dnode("span","none","Nothing released"));
+    const prov=dnode("div",d.citations.length?"d-prov":"d-prov warn");
+    if(d.citations.length)d.citations.forEach((c,i)=>{
+      if(i)prov.append(document.createElement("br"));
+      prov.append(document.createTextNode(String(c)));
+    });
+    else prov.textContent="no citation released";
+    $("prov").replaceChildren(prov);
+    $("gaps").replaceChildren(...d.gaps.map(g=>{
+      const row=dnode("div","d-gap");
+      row.append(dnode("span",null,"\u25B8"),dnode("span",null,g));
+      return row;
+    }));
     revealed=true;scheduleAdvance();
   };
   if(instant||reduced){$("qtext").textContent=q;reveal();return}

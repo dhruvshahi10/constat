@@ -1,0 +1,557 @@
+{
+  "GRC-01.1": {
+    "question_id": "GRC-01.1",
+    "answer": "Per Information Security Policy v3.2: Acme maintains a formal information security program governed by this policy, reviewed and approved annually by the CISO and executive leadership. The program is aligned to ISO/IEC 27001 control themes and covers all production systems and personnel.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:2",
+        "excerpt": "Acme maintains a formal information security program governed by this policy, reviewed and approved annually by the CISO and executive leadership. The program is aligned to ISO/IEC 27001 control themes and covers all production systems and personnel."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "GRC-02.1": {
+    "question_id": "GRC-02.1",
+    "answer": "Per Information Security Policy v3.2: ## Risk management Formal risk assessments are performed at least annually and upon significant change. Results are tracked in the risk register with named owners and remediation dates.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:3",
+        "excerpt": "## Risk management Formal risk assessments are performed at least annually and upon significant change. Results are tracked in the risk register with named owners and remediation dates."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "A&A-01.1": {
+    "question_id": "A&A-01.1",
+    "answer": "Per SOC 2 Type II Report (Security and Availability) v1.0: Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal.",
+    "citations": [
+      {
+        "source_id": "CRT-SOC2-2025",
+        "version": "1.0",
+        "location": "para:2",
+        "excerpt": "Acme holds a SOC 2 Type II attestation covering the Security and Availability trust services criteria, issued by Hollis & Marsh LLP for the twelve-month period ending 31 December 2025, with no exceptions noted. The report is available to customers under NDA via the trust portal."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "requires_human",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": true,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [
+      "CERT_CLAIM: certification evidence class required"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "A&A-02.1": {
+    "question_id": "A&A-02.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "Retrieval found no sufficiently relevant approved evidence.",
+      "No approved evidence retrieved for this question."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [
+      "CERT_CLAIM: certification evidence class required"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "AIS-01.1": {
+    "question_id": "AIS-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "RPT-PEN-2024 v1.0: EXPIRED 2025-06-10 — cannot support a current-state claim; route to security@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [
+      "STALE_EVIDENCE:RPT-PEN-2024"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "AIS-02.1": {
+    "question_id": "AIS-02.1",
+    "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.",
+    "citations": [
+      {
+        "source_id": "POL-SDLC-001",
+        "version": "1.2",
+        "location": "para:2",
+        "excerpt": "All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IAM-01.1": {
+    "question_id": "IAM-01.1",
+    "answer": "Per Access Control Policy v2.3: Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO.",
+    "citations": [
+      {
+        "source_id": "POL-AC-001",
+        "version": "2.3",
+        "location": "para:2",
+        "excerpt": "Access to production systems follows least privilege and role-based access control. Multi-factor authentication is mandatory for all workforce access to corporate and production environments, including VPN and SSO."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IAM-02.1": {
+    "question_id": "IAM-02.1",
+    "answer": "Per Access Control Policy v2.3: Access rights are reviewed quarterly by system owners; review evidence is retained. Access is revoked within 24 hours of termination as part of the offboarding runbook.",
+    "citations": [
+      {
+        "source_id": "POL-AC-001",
+        "version": "2.3",
+        "location": "para:3",
+        "excerpt": "Access rights are reviewed quarterly by system owners; review evidence is retained. Access is revoked within 24 hours of termination as part of the offboarding runbook."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "CEK-01.1": {
+    "question_id": "CEK-01.1",
+    "answer": "Per Backup and Archival Standard v1.1: Backup archives are retained on a 12-month rolling schedule. Customer content present in backup archives is purged as archives age out, meaning residual customer data may persist in encrypted archives for up to 365 days after termination.",
+    "citations": [
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:2",
+        "excerpt": "Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled. Data at rest is encrypted with AES-256 across databases, object storage an"
+      }
+    ],
+    "evidence_coverage": "partial",
+    "status": "partial",
+    "risk": "medium",
+    "gaps": [
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [
+      "STALE_EVIDENCE:POL-RET-002"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "CEK-02.1": {
+    "question_id": "CEK-02.1",
+    "answer": "Per Encryption Standard v1.4: Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled. Data at rest is encrypted with AES-256 across databases, object storage and backups.",
+    "citations": [
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:2",
+        "excerpt": "Data in transit is protected with TLS 1.2 or higher on all external and inter-service connections; weak ciphers are disabled. Data at rest is encrypted with AES-256 across databases, object storage and backups."
+      }
+    ],
+    "evidence_coverage": "partial",
+    "status": "partial",
+    "risk": "medium",
+    "gaps": [
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [
+      "STALE_EVIDENCE:POL-RET-002"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "DSP-01.1": {
+    "question_id": "DSP-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation",
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SOURCE_OWNER:infra@acme.example,privacy@acme.example",
+    "gate_flags": [
+      "CONTRADICTION:POL-RET-001",
+      "STALE_EVIDENCE:POL-RET-002"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "DSP-02.1": {
+    "question_id": "DSP-02.1",
+    "answer": "Per Subprocessor List v4.0: Customers are notified of subprocessor changes at least 30 days in advance via the trust portal subscription.",
+    "citations": [
+      {
+        "source_id": "LST-SUBPROC-001",
+        "version": "4.0",
+        "location": "para:3",
+        "excerpt": "Customers are notified of subprocessor changes at least 30 days in advance via the trust portal subscription."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "IVS-01.1": {
+    "question_id": "IVS-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "POL-RET-002 v1.1: EXPIRED 2026-06-20 — cannot support a current-state claim; route to infra@acme.example"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [
+      "STALE_EVIDENCE:POL-RET-002"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "LOG-01.1": {
+    "question_id": "LOG-01.1",
+    "answer": "Per Information Security Policy v3.2: ## Logging and monitoring Production systems emit centralized audit logs retained for security analysis. Logs are protected against tampering and monitored for anomalous activity with 24x7 alerting.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:4",
+        "excerpt": "## Logging and monitoring Production systems emit centralized audit logs retained for security analysis. Logs are protected against tampering and monitored for anomalous activity with 24x7 alerting."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "SEF-01.1": {
+    "question_id": "SEF-01.1",
+    "answer": "Per Incident Response Plan v2.1: Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…",
+    "citations": [
+      {
+        "source_id": "PLN-IR-001",
+        "version": "2.1",
+        "location": "para:2",
+        "excerpt": "Acme operates a documented incident response process with defined severity levels, an on-call rotation and escalation paths. Confirmed incidents affecting customer data trigger customer notification without undue delay and within 72 hours of confirmation, consistent with contract…"
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "SEF-02.1": {
+    "question_id": "SEF-02.1",
+    "answer": "Per Incident Response Plan v2.1: Post-incident reviews are mandatory for SEV-1 and SEV-2 events, with corrective actions tracked to closure. The plan is tested at least annually via tabletop exercise; the most recent exercise was completed in March 2026.",
+    "citations": [
+      {
+        "source_id": "PLN-IR-001",
+        "version": "2.1",
+        "location": "para:3",
+        "excerpt": "Post-incident reviews are mandatory for SEV-1 and SEV-2 events, with corrective actions tracked to closure. The plan is tested at least annually via tabletop exercise; the most recent exercise was completed in March 2026."
+      },
+      {
+        "source_id": "PLN-BCP-001",
+        "version": "1.8",
+        "location": "para:3",
+        "excerpt": "DR procedures are tested at least annually; the most recent full failover test was completed in March 2026 and met both objectives."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "BCR-01.1": {
+    "question_id": "BCR-01.1",
+    "answer": "Per Business Continuity and Disaster Recovery Plan v1.8: The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services, using cross-region replication and automated failover runbooks.",
+    "citations": [
+      {
+        "source_id": "PLN-BCP-001",
+        "version": "1.8",
+        "location": "para:2",
+        "excerpt": "The platform targets a recovery time objective (RTO) of 4 hours and a recovery point objective (RPO) of 1 hour for production services, using cross-region replication and automated failover runbooks."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "HRS-01.1": {
+    "question_id": "HRS-01.1",
+    "answer": "Per Personnel Security and Awareness Policy v1.0: All employees complete security awareness training at hire and annually thereafter, with completion tracked to 100%. Role-specific secure coding training is required for engineers.",
+    "citations": [
+      {
+        "source_id": "POL-HR-001",
+        "version": "1.0",
+        "location": "para:2",
+        "excerpt": "All employees complete security awareness training at hire and annually thereafter, with completion tracked to 100%. Role-specific secure coding training is required for engineers."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "HRS-02.1": {
+    "question_id": "HRS-02.1",
+    "answer": "Per Personnel Security and Awareness Policy v1.0: Background checks are performed for all new hires prior to start, to the extent permitted by local law.",
+    "citations": [
+      {
+        "source_id": "POL-HR-001",
+        "version": "1.0",
+        "location": "para:3",
+        "excerpt": "Background checks are performed for all new hires prior to start, to the extent permitted by local law."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "TVM-01.1": {
+    "question_id": "TVM-01.1",
+    "answer": "Per Secure Development Policy v1.2: All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively.",
+    "citations": [
+      {
+        "source_id": "POL-SDLC-001",
+        "version": "1.2",
+        "location": "para:2",
+        "excerpt": "All production code changes require peer review and passing CI, including static application security testing (SAST) and dependency vulnerability scanning, before merge. Critical and high vulnerabilities are remediated within 15 and 30 days respectively."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "UEM-01.1": {
+    "question_id": "UEM-01.1",
+    "answer": "Per Information Security Policy v3.2: ## Endpoint protection Company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM.",
+    "citations": [
+      {
+        "source_id": "POL-ISMS-001",
+        "version": "3.2",
+        "location": "para:5",
+        "excerpt": "## Endpoint protection Company-managed endpoints run centrally managed anti-malware and disk encryption, with automatic patching enforced by MDM."
+      },
+      {
+        "source_id": "STD-ENC-001",
+        "version": "1.4",
+        "location": "para:3",
+        "excerpt": "Encryption keys are managed in a cloud KMS with annual rotation, split administrative duties and audit logging of key usage."
+      }
+    ],
+    "evidence_coverage": "complete",
+    "status": "evidence_backed",
+    "risk": "medium",
+    "gaps": [],
+    "requires_human": false,
+    "abstained": false,
+    "route": null,
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "STA-01.1": {
+    "question_id": "STA-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "Retrieval found no sufficiently relevant approved evidence.",
+      "No approved evidence retrieved for this question."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SME",
+    "gate_flags": [],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  },
+  "LGL-01.1": {
+    "question_id": "LGL-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "routed",
+    "risk": "high",
+    "gaps": [
+      "Question requests a contractual/legal commitment; outside answerable scope."
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "LEGAL",
+    "gate_flags": [
+      "LEGAL_COMMITMENT: routed to counsel; never drafted as fact"
+    ],
+    "drafter": "gate",
+    "model_version": "n/a",
+    "prompt_version": "pre-gate-v1"
+  },
+  "PRV-01.1": {
+    "question_id": "PRV-01.1",
+    "answer": null,
+    "citations": [],
+    "evidence_coverage": "none",
+    "status": "no_evidence",
+    "risk": "medium",
+    "gaps": [
+      "POL-RET-001: conflicting approved sources on a machine-checked assertion — route to owners for reconciliation"
+    ],
+    "requires_human": true,
+    "abstained": true,
+    "route": "SOURCE_OWNER:infra@acme.example,privacy@acme.example",
+    "gate_flags": [
+      "CONTRADICTION:POL-RET-001"
+    ],
+    "drafter": "mock",
+    "model_version": "deterministic-v1",
+    "prompt_version": "trustops-contract-v1.0"
+  }
+}

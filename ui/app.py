@@ -186,6 +186,14 @@ and the hash-chained audit log.</p>
 </div>
 <script>
 const $=id=>document.getElementById(id);
+/* dnode(tag, className, text): an answer is a paragraph lifted verbatim from a
+   governed document, and a citation and a gap message both quote one. They are
+   written as text nodes, never assembled into markup, so nothing an ingested
+   document contains can execute in this console. */
+const dnode=(tag,cls,text)=>{const n=document.createElement(tag);
+  if(cls)n.className=cls;
+  if(text!=null)n.textContent=String(text);
+  return n};
 async function boot(){
   const opts=await (await fetch('/api/options')).json();
   for(const sel of [$('drafter'),$('rundrafter')]){
@@ -210,11 +218,21 @@ $('ask').onclick=async()=>{
     if(data.error)throw new Error(data.error);
     const c=data.contract;
     $('verdict').textContent=data.verdict;$('verdict').className=chipClass(data.verdict);
-    $('answer').innerHTML=c.answer?c.answer:'<em>No answer released.</em>';
-    $('prov').innerHTML=c.citations.length
-      ?'<div class="prov">'+c.citations.map(x=>`${x.source_id} · v${x.version} · ${x.location}`).join('<br>')+'</div>'
-      :`<div class="prov p-warn">no citation released · ${c.route||'no-evidence'}</div>`;
-    $('gaps').innerHTML=c.gaps.map(g=>`<div class="gap">&#9656; ${g}</div>`).join('');
+    $('answer').replaceChildren(c.answer?document.createTextNode(c.answer)
+      :dnode('em',null,'No answer released.'));
+    const prov=dnode('div',c.citations.length?'prov':'prov p-warn');
+    if(c.citations.length)c.citations.forEach((x,i)=>{
+      if(i)prov.append(document.createElement('br'));
+      prov.append(document.createTextNode(
+        `${x.source_id} · v${x.version} · ${x.location}`));
+    });
+    else prov.textContent=`no citation released · ${c.route||'no-evidence'}`;
+    $('prov').replaceChildren(prov);
+    $('gaps').replaceChildren(...c.gaps.map(g=>{
+      const d=dnode('div','gap');
+      d.append(document.createTextNode('\u25B8 '),document.createTextNode(String(g)));
+      return d;
+    }));
     $('meta').textContent=`coverage=${c.evidence_coverage} · risk=${c.risk} · drafter=${c.drafter} (${c.model_version})`
       +` · human_review=${c.requires_human?'required':'not required'}`+(c.gate_flags.length?` · flags: ${c.gate_flags.join(' | ')}`:'');
     $('askresult').style.display='block';

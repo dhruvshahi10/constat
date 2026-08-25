@@ -27,7 +27,7 @@ import re
 import unicodedata
 from pathlib import Path
 
-from .evidence import EvidenceStore
+from .evidence import EvidenceStore, validate_tenant
 from .models import Chunk
 from .retrieve import Hit, tokens
 
@@ -173,6 +173,10 @@ class SemanticRetriever:
         self._vectors = raw["vectors"]
 
     def search(self, query: str, tenant: str, k: int = 4) -> list[Hit]:
+        # same reasoning as retrieve.Retriever.search: an unvalidated name can
+        # satisfy the mismatch check by matching a store built from the same
+        # crafted string. This is the retriever the hosted server uses.
+        validate_tenant(tenant)
         if tenant != self.store.tenant:
             raise PermissionError(
                 f"tenant mismatch: store is '{self.store.tenant}', query is '{tenant}'")

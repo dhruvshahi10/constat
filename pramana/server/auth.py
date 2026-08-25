@@ -23,9 +23,22 @@ SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,40}$")
 
 
 def make_slug(org: str, taken: set[str]) -> str:
+    """Derive a workspace slug from a user-supplied org name.
+
+    The slug becomes a URL path segment AND a filesystem path component (it is
+    the tenant name handed to EvidenceStore), so it is built by whitelisting
+    rather than by rejecting bad characters: every run of anything that is not
+    a lowercase letter or digit collapses to a hyphen, which is why "../x"
+    cannot survive as anything but "x". SLUG_RE, the router's path pattern and
+    evidence.validate_tenant all require at least two characters, so a
+    one-character base is padded — otherwise a single-letter org name minted a
+    workspace that no layer would afterwards accept.
+    """
     base = re.sub(r"[^a-z0-9]+", "-", org.lower()).strip("-")[:24] or "org"
     if not base[0].isalnum():
         base = "org-" + base
+    if len(base) < 2:
+        base = f"{base}-org"
     slug = base
     n = 2
     while slug in taken:
