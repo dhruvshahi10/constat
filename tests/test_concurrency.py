@@ -23,14 +23,14 @@ from pathlib import Path
 
 import pytest
 
-from pramana.pipeline import AuditLog
-from pramana.server import auth, config, db, limits, runqueue
+from constat.pipeline import AuditLog
+from constat.server import auth, config, db, limits, runqueue
 
 
 @pytest.fixture()
 def env(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA", tmp_path / "data")
-    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "pramana.db")
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "constat.db")
     monkeypatch.setattr(config, "TENANTS", tmp_path / "data" / "tenants")
     db.init()
     with db.connect() as conn:
@@ -243,7 +243,7 @@ def test_run_budget_stops_a_hung_run(env, monkeypatch):
 # ---------------------------------------------------------------------------
 def test_status_never_returns_internal_detail(env):
     run_id = runqueue.enqueue("alpha", "Alpha", "mock")
-    leak = ("OperationalError: /srv/data-hosted/pramana.db is locked; "
+    leak = ("OperationalError: /srv/data-hosted/constat.db is locked; "
             "https://generativelanguage.googleapis.com/v1beta/models?key=AIza")
     with db.connect() as conn:
         conn.execute("UPDATE runs SET status='error', error=?, error_detail=? WHERE id=?",

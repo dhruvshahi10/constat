@@ -1,16 +1,16 @@
 services:
   - type: web
-    name: pramana
+    name: constat
     runtime: docker
     plan: starter
     numInstances: 1  # global run queue + SQLite are single-process by design
     healthCheckPath: /healthz
     disk:
-      name: pramana-data
+      name: constat-data
       mountPath: /data
       sizeGB: 1
     envVars:
       - key: GEMINI_API_KEY
         sync: false
-      - key: PRAMANA_DATA
+      - key: CONSTAT_DATA
         value: /data

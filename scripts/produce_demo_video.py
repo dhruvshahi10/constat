@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-produce_demo_video.py -- cut the raw Pramana AI screen capture into a PRODUCED,
+produce_demo_video.py -- cut the raw Constat screen capture into a PRODUCED,
 edited, silent film: title card, act cards, hard cuts, punch-in zooms,
 kinetic lower-third captions, cross-dissolves, a running progress bar and a
 closing stat card.
@@ -100,13 +100,13 @@ OUT_DIR = os.path.join(ROOT, "site", "img")
 OUT_MP4 = os.path.join(OUT_DIR, "demo_edit.mp4")
 OUT_WEBM = os.path.join(OUT_DIR, "demo_edit.webm")
 OUT_POSTER = os.path.join(OUT_DIR, "demo_edit_poster.jpg")
-FONT_DIR = os.path.join(ROOT, "pramana", "assets", "fonts")
+FONT_DIR = os.path.join(ROOT, "constat", "assets", "fonts")
 
 W, H = 960, 600
 FPS = 24
 
 # --------------------------------------------------------------------------
-# Brand palette (exact values from the Pramana AI design tokens)
+# Brand palette (exact values from the Constat design tokens)
 # --------------------------------------------------------------------------
 
 INK = (0x14, 0x14, 0x16)  # page
@@ -266,7 +266,7 @@ CLOSE_COLUMNS = [
     ("4", "REFUSED, GAPS NAMED", REFUSAL),
     ("0", "UNCITED ANSWERS RELEASED", OK),
 ]
-CLOSE_WORDMARK = "Pramana AI"
+CLOSE_WORDMARK = "Constat"
 CLOSE_LINE = "EVERY ANSWER CITED, OR REFUSED."
 
 # frames of fade-to-ink at the very end so the loop back to frame 0 is soft
@@ -650,7 +650,7 @@ def render_title(i: int, n: int) -> Image.Image:
     a2 = int(255 * ease_out((i - 20) / 12))
     if a2 > 0:
         f = font("mono", 11)
-        draw_over(img, lambda d: draw_tracked(d, (x0, 392), "PRAMANA AI / EVIDENCE GATED ANSWER ENGINE",
+        draw_over(img, lambda d: draw_tracked(d, (x0, 392), "CONSTAT / EVIDENCE GATED ANSWER ENGINE",
                                               f, (0x60, 0x60, 0x5C), track=2.6, alpha=a2))
     return img
 

@@ -6,6 +6,11 @@ __pycache__/
 .venv/
 .DS_Store
 .claude/
-pramana-v0.zip
+constat-v0.zip
 site/img/*.png
 .demo_master/
+deliveries/
+commitment_register/
+.vercel/
+public/
+trust_center/

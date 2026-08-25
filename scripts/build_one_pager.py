@@ -12,7 +12,7 @@ sheet cannot drift from the product, and PRINT_CSS sets print-color-adjust on
 html, body and .sheet so the ink survives the print pipeline.
 
 The PDF is printed here too. It used to be produced by hand, which meant the
-committed binary went stale the moment the HTML changed: the rename to Pramana
+committed binary went stale the moment the HTML changed: the rename to Constat
 found a PDF still carrying the old brand in its glyphs, where no text search
 could see it. Printing it in the same script that writes the HTML removes that
 class of drift. Playwright is optional; without it the HTML is still written
@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from pramana import brand  # noqa: E402
+from constat import brand  # noqa: E402
 
 PRINT_CSS = """
 /* Browsers drop background paint when printing unless the document insists.
@@ -113,13 +113,13 @@ background:var(--surface-page);padding:10px 0}
 SHEET = """
 <div class="sheet">
   <div class="mast">
-    <span class="wordmark">Pramana&nbsp;<b>AI</b></span>
+    <span class="wordmark">Constat&nbsp;<b>AI</b></span>
     <span class="tag">Evidence gated answers for security questionnaires</span>
   </div>
 
   <div>
     <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
-    <p class="lede">Pramana AI answers security questionnaires from your own approved evidence.
+    <p class="lede">Constat answers security questionnaires from your own approved evidence.
     Deterministic gates decide what ships, not model confidence: every released answer carries a
     citation, every refusal names its gap and routes to the right human, and nothing reaches the
     delivered workbook without a named reviewer in a tamper evident audit log.</p>
@@ -190,7 +190,7 @@ def build() -> Path:
     html = (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        "<title>Pramana AI one pager</title>"
+        "<title>Constat one pager</title>"
         f"<style>{brand.stylesheet(PRINT_CSS)}</style></head>"
         f"<body>{SHEET}</body></html>"
     )
@@ -206,7 +206,7 @@ def build_pdf(src: Path) -> Path | None:
         from playwright.sync_api import sync_playwright
     except ImportError:
         return None
-    dest = ROOT / "marketing" / "Pramana-one-pager.pdf"
+    dest = ROOT / "marketing" / "Constat-one-pager.pdf"
     # Playwright's default here is the headless shell, which this image does not
     # ship; the full Chromium it does ship is the one the capture scripts use.
     chrome = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")

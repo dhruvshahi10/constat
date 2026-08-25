@@ -1,4 +1,4 @@
-"""Pramana AI console — zero-dependency web UI over the evidence-gated engine.
+"""Constat console — zero-dependency web UI over the evidence-gated engine.
 
   .venv/bin/python ui/app.py          # http://localhost:8787
   .venv/bin/python ui/app.py --port N
@@ -21,14 +21,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from pramana.drafter import make_drafter                     # noqa: E402
-from pramana.envfile import load_env                         # noqa: E402
-from pramana.evidence import EvidenceStore                   # noqa: E402
-from pramana.gates import post_gate, pre_gate                # noqa: E402
-from pramana.models import Draft, Question                   # noqa: E402
-from pramana.pipeline import run                             # noqa: E402
-from pramana.report import CSS, write_report                 # noqa: E402
-from pramana.retrieve import Retriever                       # noqa: E402
+from constat.drafter import make_drafter                     # noqa: E402
+from constat.envfile import load_env                         # noqa: E402
+from constat.evidence import EvidenceStore                   # noqa: E402
+from constat.gates import post_gate, pre_gate                # noqa: E402
+from constat.models import Draft, Question                   # noqa: E402
+from constat.pipeline import run                             # noqa: E402
+from constat.report import CSS, write_report                 # noqa: E402
+from constat.retrieve import Retriever                       # noqa: E402
 
 import os                                                     # noqa: E402
 
@@ -131,10 +131,10 @@ a.filelink{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;col
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pramana AI console</title>
+<title>Constat console</title>
 <style>/*CSS*/</style></head><body><div class="wrap">
 <header>
-<div class="eyebrow"><b>Pramana AI</b> / Evidence gated answer engine / v0</div>
+<div class="eyebrow"><b>Constat</b> / Evidence gated answer engine / v0</div>
 <h1>Every answer cited to an approved source, <i>or refused.</i></h1>
 <div class="runmeta">tenant=acme (synthetic)<br>gates: cite-or-abstain / cert-evidence-class /
 staleness / contradiction / legal-routing / tenant-isolation</div>
@@ -182,7 +182,7 @@ and the hash-chained audit log.</p>
 </div>
 </div>
 
-<footer>Pramana AI v0 · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
+<footer>Constat v0 · synthetic tenant data only · release rule: zero unsupported material claims.</footer>
 </div>
 <script>
 const $=id=>document.getElementById(id);
@@ -309,15 +309,15 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": f"{type(exc).__name__}: {exc}"}, code=500)
 
     def log_message(self, fmt: str, *args) -> None:
-        print(f"[pramana-console] {self.address_string()} {fmt % args}")
+        print(f"[constat-console] {self.address_string()} {fmt % args}")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Pramana AI zero-dependency web console")
+    ap = argparse.ArgumentParser(description="Constat zero-dependency web console")
     ap.add_argument("--port", type=int, default=8787)
     args = ap.parse_args()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"Pramana AI console → http://localhost:{args.port}  (Ctrl-C to stop)")
+    print(f"Constat console → http://localhost:{args.port}  (Ctrl-C to stop)")
     server.serve_forever()
 
 

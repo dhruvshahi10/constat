@@ -6,11 +6,11 @@ from pathlib import Path
 import json
 import pytest
 
-from pramana.models import QState
-from pramana.pipeline import AuditLog, run
-from pramana.qgen import build_questionnaire_workbook
-from pramana.server import config, db, review
-from pramana.server.demo_questions import DEMO_QUESTIONS
+from constat.models import QState
+from constat.pipeline import AuditLog, run
+from constat.qgen import build_questionnaire_workbook
+from constat.server import config, db, review
+from constat.server.demo_questions import DEMO_QUESTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
 TODAY = date(2026, 8, 12)
@@ -19,13 +19,13 @@ TODAY = date(2026, 8, 12)
 @pytest.fixture()
 def hosted_run(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA", tmp_path / "data")
-    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "pramana.db")
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "constat.db")
     db.init()
     out = tmp_path / "run_abc"
     qnr = build_questionnaire_workbook(DEMO_QUESTIONS, out / "run_abc.xlsx", "Acme")
     res = run(qnr, tenant="acme", evidence_root=ROOT / "data" / "evidence",
               out_dir=out, drafter_kind="mock", today=TODAY, approval_mode="human")
-    from pramana.report import write_report
+    from constat.report import write_report
     write_report(res, TODAY)
     return out
 

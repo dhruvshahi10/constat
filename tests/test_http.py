@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from pramana.server import app, config, db
+from constat.server import app, config, db
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,7 +48,7 @@ def server(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("http")
     saved = {k: getattr(config, k) for k in _SAVED}
     config.DATA = tmp / "data"
-    config.DB_PATH = tmp / "data" / "pramana.db"
+    config.DB_PATH = tmp / "data" / "constat.db"
     config.TENANTS = tmp / "data" / "tenants"
     config.SIGNUPS_PER_IP_PER_DAY = 100
     config.SIGNUPS_PER_DAY_GLOBAL = 10_000
@@ -106,7 +106,7 @@ def new_workspace(base: str, org: str) -> tuple[str, str]:
 @pytest.fixture()
 def live_worker():
     """Stand-in for the run worker; healthz must key off thread liveness."""
-    from pramana.server import runqueue
+    from constat.server import runqueue
     stop = threading.Event()
     t = threading.Thread(target=stop.wait, daemon=True, name="fake-worker")
     t.start()
@@ -126,7 +126,7 @@ def test_healthz_green_when_worker_alive(server, live_worker):
 
 def test_healthz_red_when_worker_dead(server):
     """C1: a health check that cannot go red is decoration."""
-    from pramana.server import runqueue
+    from constat.server import runqueue
     prev = runqueue._worker
     runqueue._worker = None
     try:

@@ -1,4 +1,4 @@
-"""Platform security invariants — Pramana's own posture, not the answer gates.
+"""Platform security invariants — Constat's own posture, not the answer gates.
 
 `test_gates.py` proves the engine will not make a claim it cannot support.
 These prove the platform around it does not hand an attacker something else:
@@ -28,14 +28,14 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from pramana.drafter import MockDrafter
-from pramana.evidence import (MAX_SOURCE_BYTES, EvidenceStore, validate_tenant)
-from pramana.gates import classify, post_gate, pre_gate
-from pramana.models import Question
-from pramana.retrieve import Retriever
-from pramana.semantic import HashedNgramEmbedder, SemanticRetriever, build_index
-from pramana.server import app as server_app
-from pramana.server import auth, config
+from constat.drafter import MockDrafter
+from constat.evidence import (MAX_SOURCE_BYTES, EvidenceStore, validate_tenant)
+from constat.gates import classify, post_gate, pre_gate
+from constat.models import Question
+from constat.retrieve import Retriever
+from constat.semantic import HashedNgramEmbedder, SemanticRetriever, build_index
+from constat.server import app as server_app
+from constat.server import auth, config
 
 EVIDENCE = ROOT / "data" / "evidence"
 TODAY = date(2026, 8, 8)
@@ -224,7 +224,7 @@ def test_s1b_the_store_still_refuses_a_slug_that_was_never_minted_here():
 # the whole string is a literal authored in the source, and each survivor is
 # named here so that a new one has to be argued for rather than merely added.
 ALLOWED_INNERHTML = {
-    "pramana/server/pages.py": {
+    "constat/server/pages.py": {
         # progressHTML/resultCard interpolate only numbers coerced with
         # Number() and question text defined in demo_questions.py
         "$('runstat').innerHTML=progressHTML(",

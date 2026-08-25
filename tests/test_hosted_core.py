@@ -8,10 +8,10 @@ from pathlib import Path
 import json
 import pytest
 
-from pramana.models import Draft, QState
-from pramana.pipeline import AuditLog, run
-from pramana.qgen import build_questionnaire_workbook
-from pramana.server.demo_questions import DEMO_QUESTIONS
+from constat.models import Draft, QState
+from constat.pipeline import AuditLog, run
+from constat.qgen import build_questionnaire_workbook
+from constat.server.demo_questions import DEMO_QUESTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
 TODAY = date(2026, 8, 12)

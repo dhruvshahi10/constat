@@ -20,15 +20,15 @@ from pathlib import Path
 
 import pytest
 
-from pramana import drafter as drafter_mod
-from pramana.drafter import (MAX_EXCERPT_CHARS, GeminiDrafter, MockDrafter,
+from constat import drafter as drafter_mod
+from constat.drafter import (MAX_EXCERPT_CHARS, GeminiDrafter, MockDrafter,
                               clip_excerpt)
-from pramana.evidence import EvidenceStore
-from pramana.gates import (GROUNDING_MIN_RATIO, is_grounded, post_gate,
+from constat.evidence import EvidenceStore
+from constat.gates import (GROUNDING_MIN_RATIO, is_grounded, post_gate,
                             pre_gate)
-from pramana.models import Draft, Question
-from pramana.pipeline import run
-from pramana.retrieve import Retriever
+from constat.models import Draft, Question
+from constat.pipeline import run
+from constat.retrieve import Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "data" / "evidence"

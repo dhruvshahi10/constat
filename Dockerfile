@@ -14,10 +14,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV FASTEMBED_CACHE_PATH=/opt/models
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
 
-COPY pramana/ pramana/
+COPY constat/ constat/
 COPY site/ site/
 COPY data/ data/
 
-ENV PRAMANA_DATA=/data
+ENV CONSTAT_DATA=/data
 EXPOSE 8790
-CMD ["python", "-m", "pramana.server.app", "--host", "0.0.0.0"]
+CMD ["python", "-m", "constat.server.app", "--host", "0.0.0.0"]

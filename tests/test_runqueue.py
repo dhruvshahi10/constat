@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from pramana.server import auth, config, db, limits, runqueue
+from constat.server import auth, config, db, limits, runqueue
 
 
 @pytest.fixture()
 def env(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA", tmp_path / "data")
-    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "pramana.db")
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "data" / "constat.db")
     monkeypatch.setattr(config, "TENANTS", tmp_path / "data" / "tenants")
     db.init()
     with db.connect() as conn:

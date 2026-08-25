@@ -1,6 +1,6 @@
 """Shoot the source material for the demo film off the real hosted product.
 
-Boots the actual stdlib server (pramana.server.app) against a throwaway data
+Boots the actual stdlib server (constat.server.app) against a throwaway data
 dir and drives it with Playwright exactly like a calm human would -- signup,
 empty workspace, seed the sample pack, run the questionnaire with the offline
 mock drafter, read the report.
@@ -58,10 +58,10 @@ PW_FFMPEG = "/opt/pw-browsers/ffmpeg-1011/ffmpeg-linux"
 PORT = int(os.environ.get("DEMO_PORT", "8872"))
 BASE = f"http://127.0.0.1:{PORT}"
 # A scratch dir for the throwaway tenant this script creates. It used to be a
-# hardcoded session path, which the Pramana rename then rewrote into a path that
+# hardcoded session path, which the Constat rename then rewrote into a path that
 # had never existed. Derive it instead, so it cannot go stale again.
 DATA_DIR = Path(os.environ.get(
-    "DEMO_DATA", tempfile.gettempdir() + "/pramana_viddata"))
+    "DEMO_DATA", tempfile.gettempdir() + "/constat_viddata"))
 WORK = DATA_DIR.parent / "vidwork"
 
 OUT_VIDEO = ROOT / "site" / "img" / "demo.webm"
@@ -83,11 +83,11 @@ MASTER_MIN_W = 2560            # produce_demo_video.py enforces this too
 
 # ---------------------------------------------------------------- server ----
 def start_server() -> subprocess.Popen:
-    env = {**os.environ, "PRAMANA_DATA": str(DATA_DIR), "PORT": str(PORT)}
+    env = {**os.environ, "CONSTAT_DATA": str(DATA_DIR), "PORT": str(PORT)}
     # the film must show the deterministic offline drafter, never a live model
     env.pop("GEMINI_API_KEY", None)
     proc = subprocess.Popen(
-        [str(VENV_PY), "-m", "pramana.server.app",
+        [str(VENV_PY), "-m", "constat.server.app",
          "--host", "127.0.0.1", "--port", str(PORT)],
         cwd=ROOT, env=env,
         stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)

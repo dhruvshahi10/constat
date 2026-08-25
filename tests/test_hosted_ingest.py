@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from pramana.evidence import parse_source
-from pramana.server import extract
-from pramana.server.multipart import MultipartError, parse
+from constat.evidence import parse_source
+from constat.server import extract
+from constat.server.multipart import MultipartError, parse
 
 GOOD_META = {
     "title": "Access Control Policy", "type": "policy", "version": "2.1",

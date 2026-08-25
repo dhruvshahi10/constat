@@ -1,10 +1,10 @@
-# Pramana AI v0 — Evidence-Gated Security Questionnaire Engine
+# Constat v0 — Evidence-Gated Security Questionnaire Engine
 
 [![evals](https://github.com/dhruvshahi10/trustops/actions/workflows/ci.yml/badge.svg)](https://github.com/dhruvshahi10/trustops/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-1E6B47.svg)](LICENSE)
 
 **Every answer cited to a versioned, approved source — or refused.** A working demonstration of applied AI inside a GRC control plane: grounded generation, deterministic guardrails, abstention-by-design, tamper-evident audit trail, and an adversarial eval suite that blocks release on any unsupported claim.
 
-Built as v0 of Pramana AI (managed customer assurance for B2B SaaS). All data is synthetic.
+Built as v0 of Constat (managed customer assurance for B2B SaaS). All data is synthetic.
 
 ## What it proves
 
@@ -54,7 +54,7 @@ Key design decision: **the gates do not trust the drafter.** Swapping the determ
 
 ## Client console
 
-![Pramana AI console](docs/ui.png)
+![Constat console](docs/ui.png)
 
 A zero-dependency web UI ([ui/app.py](ui/app.py), Python stdlib only — no framework, no build step). Ask a single security question through the full gate path — refusals render as first-class outcomes with the gap named — or run the whole 24-question workbook and download the audit working paper, the DELIVERED workbook, and the hash-chained audit log. Sample outputs live in [examples/](examples/).
 
@@ -98,7 +98,7 @@ Coverage is derived from citations that **survived the gates** — model confide
 
 ## Roadmap
 
-See `docs/PRAMANA_V0.md` for the phased build directive (live-drafter evals, Streamlit review queue, semantic retrieval, portal ingestion).
+See `docs/CONSTAT_V0.md` for the phased build directive (live-drafter evals, Streamlit review queue, semantic retrieval, portal ingestion).
 
 ---
 *Synthetic data only. Nothing in this repository derives from any client engagement.*

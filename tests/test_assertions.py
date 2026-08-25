@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from pramana.assertions import extract_assertions
-from pramana.evidence import EvidenceStore, parse_source
-from pramana.server import extract
+from constat.assertions import extract_assertions
+from constat.evidence import EvidenceStore, parse_source
+from constat.server import extract
 
 TODAY = date(2026, 8, 16)
 
@@ -308,7 +308,7 @@ NOT_OUR_COMMITMENT = [
      "Our subprocessors are contractually obliged to delete customer data "
      "within 90 days of contract end."),
     ("inbound obligation on the customer",
-     "The customer shall notify Pramana of any suspected incident within 24 hours."),
+     "The customer shall notify Constat of any suspected incident within 24 hours."),
     ("vendor obligation",
      "Vendors must notify us of any breach within 4 hours."),
     ("legacy cipher mention",
