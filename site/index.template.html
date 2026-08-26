@@ -126,17 +126,21 @@ transition:opacity 520ms var(--ease-out) 700ms,transform 520ms var(--ease-out) 7
 display:flex;flex-direction:column;justify-content:center}
 .herobg{position:absolute;inset:0;width:100%;height:100%;z-index:0;
 display:block;pointer-events:none}
+/* The narrowing sits above the wall and below the scrim, so the scrim still
+   does its job of putting a floor under the type. */
+.heronarrow{position:absolute;inset:0;width:100%;height:100%;z-index:1;
+display:block;pointer-events:none}
 /* Type over a moving field needs a floor under it. The scrim is heavy where the
    words are and clears to nothing across the rest, so the field stays visible
    as a field rather than becoming a texture behind a solid block. */
-.heroscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+.heroscrim{position:absolute;inset:0;z-index:2;pointer-events:none;
 background:
 linear-gradient(90deg,rgba(10,10,12,0.94) 0%,rgba(10,10,12,0.82) 26%,
 rgba(10,10,12,0.36) 48%,rgba(10,10,12,0.1) 68%,rgba(10,10,12,0.28) 100%),
 radial-gradient(1200px 760px at 72% 46%,rgba(169,180,245,0.06),transparent 70%),
 linear-gradient(180deg,rgba(10,10,12,0.42),transparent 20%,transparent 80%,
 rgba(10,10,12,0.72))}
-.band.first .wrap{position:relative;z-index:2}
+.band.first .wrap{position:relative;z-index:3}
 .herocopy{max-width:none}
 .herocopy .display{max-width:15ch}
 .herocopy .lede{max-width:38ch}
@@ -145,7 +149,8 @@ rgba(10,10,12,0.72))}
 /* on a phone the field sits behind everything and is dimmed further, because a
    moving background under 38 characters of body copy is where legibility goes */
 .heroscrim{background:linear-gradient(180deg,rgba(10,10,12,0.86),
-rgba(10,10,12,0.7) 40%,rgba(10,10,12,0.9))}}
+rgba(10,10,12,0.7) 40%,rgba(10,10,12,0.9))}
+.heronarrow{display:none}}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -852,6 +857,7 @@ window.__rv = new IntersectionObserver(function (es) {
        box beside a headline, and changing what was in the box never fixed that.
        The scrim below is what makes type over a moving field legible. -->
   <canvas class="herobg" id="herobg" aria-hidden="true"></canvas>
+  <canvas class="heronarrow" id="heronarrow" aria-hidden="true"></canvas>
   <div class="heroscrim" aria-hidden="true"></div>
   <div class="wrap herocopy">
     <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
@@ -1357,6 +1363,217 @@ window.__rvScan();
   addEventListener("resize",()=>{clearTimeout(rt);
     rt=setTimeout(()=>{size();if(reduced)still()},160)},{passive:true});
 })();
+
+/* ── 01b · the narrowing ───────────────────────────────────────────────────
+   Documents arrive from both edges and converge on one vertical seam. What
+   crosses it is what survived the gates: a supported answer thins into a
+   single cited rule and passes through; an unsupported one is struck at the
+   seam and falls away in pieces. The wall behind this states the ratio; this
+   states the mechanism.
+
+   The seam sits at 68% of the width because that is where the scrim is
+   thinnest — the crossing happens in clear air, and the headline never has to
+   compete with it.
+
+   Same discipline as the wall: a small fixed population, nothing random per
+   frame, and it stops completely when off screen, when the tab is hidden, or
+   when the viewer has asked for less motion. */
+(function(){
+  const cv=document.getElementById("heronarrow");
+  if(!cv||!cv.getContext)return;
+  const band=cv.closest(".band");
+  const ctx=cv.getContext("2d",{alpha:true});
+  const INK="232,232,228", SIG="169,180,245", BAD="217,120,98";
+  const SEAM=0.68;
+  const N=20;
+  /* the wall's own split, kept identical so the two layers never disagree */
+  const STRUCK=0.4;
+  let W=0,H=0,dpr=1,cards=[],run=false,raf=0,last=0,flash=0;
+
+  const ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
+
+  /* `t` runs 0 to 1 across one approach, which takes four to nine seconds, so
+     a stagger expressed in t-units is expensive: -2.6 would have meant twenty
+     seconds of empty hero before the first page appeared. The opening fill
+     spreads cards across the approach so the field is populated on arrival;
+     respawns wait just off the edge. */
+  function make(stagger){
+    return {
+      side:Math.random()<0.5?-1:1,
+      t:stagger?Math.random()*0.96:-(0.05+Math.random()*0.30),
+      lane:Math.random()*1.6-0.8,
+      z:0.40+Math.random()*0.62,
+      spd:0.000108+Math.random()*0.000124,
+      struck:Math.random()<STRUCK,
+      rules:2+((Math.random()*3)|0),
+      phase:0, r:0, shards:null
+    };
+  }
+  function size(){
+    const b=cv.getBoundingClientRect();
+    dpr=Math.min(2,devicePixelRatio||1);
+    W=b.width;H=b.height;
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(cards.length!==N)cards=Array.from({length:N},()=>make(true));
+  }
+  function fracture(c){
+    /* three pieces, thrown outward and down; the page's own strike colour */
+    c.shards=Array.from({length:3},(_,i)=>({
+      o:(i-1)*0.30,
+      vx:(Math.random()*0.9-0.45)+c.side*-0.55,
+      vy:0.30+Math.random()*0.55,
+      rot:(Math.random()-0.5)*0.9
+    }));
+  }
+  function seam(){
+    const x=Math.round(W*SEAM)+0.5;
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"rgba("+SIG+",0)");
+    g.addColorStop(0.22,"rgba("+SIG+","+(0.30+flash*0.50).toFixed(3)+")");
+    g.addColorStop(0.78,"rgba("+SIG+","+(0.30+flash*0.50).toFixed(3)+")");
+    g.addColorStop(1,"rgba("+SIG+",0)");
+    ctx.strokeStyle=g;ctx.lineWidth=1.3;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
+  }
+  function card(c){
+    const sx=W*SEAM;
+    /* Pages from the left start clear of the copy, not at the edge: the
+       headline occupies the first third and a page drifting through it costs
+       legibility for no gain. */
+    const from=c.side<0?W*0.42:W*1.14;
+    const p=ease(c.t);
+    const x=from+(sx-from)*p;
+    const s=c.z*(0.70+0.30*p);
+    const y=H*0.5+c.lane*H*0.30*(0.55+0.45*c.z);
+    const w=68*s,h=92*s;
+    /* fade in off the edge, and never at full strength in the far field */
+    const a=Math.min(1,c.t*3.2)*(0.34+0.46*c.z);
+    if(a<=0)return;
+
+    if(c.phase===0){
+      ctx.globalAlpha=a;
+      ctx.fillStyle="rgba("+INK+",0.028)";
+      ctx.fillRect(x-w/2,y-h/2,w,h);
+      ctx.strokeStyle="rgba("+INK+",0.38)";
+      ctx.lineWidth=1;
+      ctx.strokeRect(Math.round(x-w/2)+0.5,Math.round(y-h/2)+0.5,w,h);
+      ctx.strokeStyle="rgba("+INK+",0.22)";
+      for(let i=0;i<c.rules;i++){
+        const ry=Math.round(y-h/2+h*(0.26+i*0.19))+0.5;
+        ctx.beginPath();
+        ctx.moveTo(x-w/2+w*0.16,ry);ctx.lineTo(x+w/2-w*0.16*(1+(i%2)),ry);
+        ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+      return;
+    }
+
+    const r=c.r;
+    if(!c.struck){
+      /* cited: the page collapses into the single rule that carries it */
+      const k=ease(Math.min(1,r*1.9));
+      const hh=Math.max(1.2,h*(1-k));
+      const drift=k*W*0.16;
+      const al=a*(1-ease(Math.max(0,(r-0.45)/0.55)));
+      ctx.globalAlpha=al;
+      if(hh>2.2){
+        ctx.strokeStyle="rgba("+SIG+",0.42)";ctx.lineWidth=1;
+        ctx.strokeRect(Math.round(x-w/2+drift)+0.5,Math.round(y-hh/2)+0.5,w,hh);
+      }
+      ctx.strokeStyle="rgba("+SIG+","+(0.48+0.46*k).toFixed(3)+")";
+      ctx.lineWidth=1.7;
+      const ry=Math.round(y)+0.5, ext=w*(0.5+0.5*k);
+      ctx.beginPath();
+      ctx.moveTo(x-ext/2+drift,ry);ctx.lineTo(x+ext/2+drift,ry);ctx.stroke();
+      ctx.globalAlpha=1;
+      return;
+    }
+
+    /* struck: the strike lands, then the page comes apart */
+    const al=a*(1-ease(Math.max(0,(r-0.30)/0.70)));
+    ctx.globalAlpha=al;
+    if(r<0.16){
+      ctx.strokeStyle="rgba("+BAD+","+(0.52+(1-r/0.16)*0.44).toFixed(3)+")";
+      ctx.lineWidth=1.7;
+      ctx.strokeRect(Math.round(x-w/2)+0.5,Math.round(y-h/2)+0.5,w,h);
+      ctx.beginPath();
+      ctx.moveTo(x-w*0.36,Math.round(y)+0.5);
+      ctx.lineTo(x+w*0.36,Math.round(y)+0.5);ctx.stroke();
+    }else if(c.shards){
+      const f=(r-0.16)/0.84, g=f*f*1.5;
+      for(const sh of c.shards){
+        const px=x+sh.o*w+sh.vx*W*0.10*f;
+        const py=y+sh.vy*H*0.16*g;
+        ctx.save();
+        ctx.translate(px,py);ctx.rotate(sh.rot*f);
+        ctx.strokeStyle="rgba("+BAD+",0.52)";ctx.lineWidth=1;
+        ctx.strokeRect(Math.round(-w*0.16)+0.5,Math.round(-h*0.30)+0.5,w*0.32,h*0.60);
+        ctx.restore();
+      }
+    }
+    ctx.globalAlpha=1;
+  }
+  function step(dt){
+    if(flash>0)flash=Math.max(0,flash-dt*0.0034);
+    for(let i=0;i<cards.length;i++){
+      const c=cards[i];
+      if(c.phase===0){
+        c.t+=dt*c.spd;
+        if(c.t>=1){
+          c.t=1;c.phase=1;c.r=0;flash=1;
+          if(c.struck)fracture(c);
+        }
+      }else{
+        c.r+=dt*0.00092;
+        if(c.r>=1)cards[i]=make(false);
+      }
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    seam();
+    /* far field first, so nearer pages sit over more distant ones */
+    const order=cards.slice().sort((a,b)=>a.z-b.z);
+    for(const c of order)card(c);
+  }
+  function frame(now){
+    if(!run)return;
+    const dt=Math.min(48,now-(last||now));last=now;
+    step(dt);draw();
+    raf=requestAnimationFrame(frame);
+  }
+  function still(){
+    /* one held mid-approach on each side, so the seam is not a bare line */
+    cards.forEach((c,i)=>{c.phase=0;c.t=i%2?0.62:0.34;});
+    draw();
+  }
+  function start(){
+    if(run)return;
+    size();
+    if(reduced){still();return}
+    run=true;last=0;raf=requestAnimationFrame(frame);
+  }
+  function stop(){run=false;if(raf)cancelAnimationFrame(raf);raf=0}
+  if(band)new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop()),
+    {threshold:0}).observe(band);
+  else start();
+  /* Belt and braces: in some embedded and automation browsers the observer
+     never delivers a first entry, which would leave the hero permanently
+     blank. If nothing has started us shortly after load and the band is on
+     screen, start anyway — the observer still owns stopping. */
+  setTimeout(()=>{
+    if(!run&&band&&band.getBoundingClientRect().bottom>0)start();
+  },600);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden)stop();
+    else if(band&&band.getBoundingClientRect().bottom>0)start();
+  });
+  let nt=0;
+  addEventListener("resize",()=>{clearTimeout(nt);
+    nt=setTimeout(()=>{size();if(reduced)still()},160)},{passive:true});
+})();
+
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
    Cards drift left to right at a constant speed. A card is undecided until its
