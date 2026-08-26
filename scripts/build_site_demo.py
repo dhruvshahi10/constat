@@ -1038,38 +1038,6 @@ def build_static(page: str) -> str:
             raise SystemExit(f"static build still contains {banned!r}")
     return page
 
-def trust_rows():
-    """The hero's rows, straight out of the trust-page generator.
-
-    Not illustrative copy: these are the standard buyer questions run against
-    our own corpus, so a row that says a certificate is missing says it because
-    the certification gate actually refused it. Ordered so the opening rows
-    alternate answered and open — the point of the hero is that a trust page
-    which answers everything is one nobody should believe."""
-    from datetime import date as _date
-    from constat import trustpage
-    r = trustpage.generate("constat", ROOT / "data" / "evidence",
-                           display_name="Constat", today=_date.today())
-    answered, openish = [], []
-    for a in r.answers:
-        if a.published and a.citations:
-            c = a.citations[0]
-            answered.append({"q": a.question, "ok": True,
-                             "cite": f"{c['source_id']} v{c['version']}"})
-        else:
-            openish.append({"q": a.question, "ok": False, "cite": ""})
-    rows, i, j = [], 0, 0
-    while i < len(answered) or j < len(openish):
-        if i < len(answered):
-            rows.append(answered[i]); i += 1
-        if i < len(answered):
-            rows.append(answered[i]); i += 1
-        if j < len(openish):
-            rows.append(openish[j]); j += 1
-    return {"rows": rows, "answered": len(answered), "total": len(r.answers),
-            "rate": round(r.deflection_rate * 100)}
-
-
 def main() -> None:
     store = EvidenceStore("acme", ROOT / "data" / "evidence")
     retriever = Retriever(store)
@@ -1079,7 +1047,6 @@ def main() -> None:
                     **answer(text, store, retriever)}
     bank = build_bank(store, retriever)
     chain = build_chain(ROOT)
-    trust = trust_rows()
     demo = {"showcase": out, "bank": bank, "chain": chain}
 
     dest = ROOT / "site" / "demo" / "contracts.json"
@@ -1088,8 +1055,6 @@ def main() -> None:
     refused = sum(1 for v in out.values() if v["tone"] != "ok")
     print(f"wrote {dest}: {len(out)} showcase contracts ({refused} refusals), "
           f"{len(bank)} bank entries, {len(chain['events'])} chain events")
-    print(f"  hero trust rows: {trust['answered']}/{trust['total']} answered "
-          f"({trust['rate']}% deflection)")
 
     # the flagship card is only honest if the cert gate actually fired
     iso_flags = out["iso"]["flags"]
@@ -1105,7 +1070,6 @@ def main() -> None:
     template = (ROOT / "site" / "index.template.html").read_text(encoding="utf-8")
     page = template.replace("/*@CSS@*/", brand.stylesheet())
     page = page.replace("/*@DEMO@*/", json.dumps(demo, ensure_ascii=False))
-    page = page.replace("/*@TRUST@*/", json.dumps(trust, ensure_ascii=False))
     page = page.replace("<!--@CHIPS@-->", chips_html(out))
     page = page.replace("<!--@CHAIN@-->", chain_html(chain))
     page = page.replace("<!--@WORKBOOK@-->", workbook_html())
@@ -1115,7 +1079,7 @@ def main() -> None:
     first_key = next(iter(out))
     for name, html in prerender(out[first_key]).items():
         page = page.replace(f"<!--@{name}@-->", html)
-    leftovers = [m for m in ("@CSS@", "@DEMO@", "@TRUST@", "@CHIPS@", "@CHAIN@", "@WORKBOOK@",
+    leftovers = [m for m in ("@CSS@", "@DEMO@", "@CHIPS@", "@CHAIN@", "@WORKBOOK@",
                              "@Q0@", "@VERDICT0@",
                              "@ANSWER0@", "@PROV0@", "@GAPS0@", "@SHOT_REPORT@",
                              "@SHOT_REVIEW@", "@SHOT_WORKSPACE@",

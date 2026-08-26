@@ -126,43 +126,17 @@ transition:opacity 520ms var(--ease-out) 700ms,transform 520ms var(--ease-out) 7
 display:flex;flex-direction:column;justify-content:center}
 .herobg{position:absolute;inset:0;width:100%;height:100%;z-index:0;
 display:block;pointer-events:none}
-/* The trust page, assembling, as the field itself — not a panel beside the
-   headline. Rows occupy the right of the screen because that is where the
-   scrim clears; on the left they pass under the type as texture and the scrim
-   takes them, which is the same arrangement the wall already uses. */
-.herotrust{position:absolute;z-index:1;pointer-events:none;
-left:38%;right:3.5%;top:12%;bottom:12%;
-display:flex;flex-direction:column;justify-content:center;gap:0}
-.htrow{display:flex;align-items:baseline;gap:16px;padding:9px 0;
-border-bottom:1px solid rgba(232,232,228,0.07);
-opacity:0;transform:translateY(6px)}
-.js .htrow.in{opacity:1;transform:none;
-transition:opacity 620ms var(--ease-out),transform 620ms var(--ease-out)}
-.htq{flex:1;min-width:0;font:13.5px/1.45 var(--font-sans);color:var(--bone-2);
-white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.htv{flex:none;font:var(--type-mono-s);letter-spacing:0.06em;white-space:nowrap}
-.htrow.ok .htv{color:var(--signal)}
-.htrow.no .htv{color:var(--bone-4)}
-.htrow.no .htq{color:var(--bone-3)}
-/* the count, stated where the rows end */
-.htfoot{margin-top:18px;font:var(--type-mono-s);letter-spacing:var(--tracking-caps);
-text-transform:uppercase;color:var(--text-tertiary);opacity:0;
-transition:opacity 700ms var(--ease-out)}
-.htfoot.in{opacity:1}
-.htfoot b{color:var(--signal);font-weight:400}
-@media(prefers-reduced-motion:reduce){
-.htrow{opacity:1;transform:none}.htfoot{opacity:1}}
 /* Type over a moving field needs a floor under it. The scrim is heavy where the
    words are and clears to nothing across the rest, so the field stays visible
    as a field rather than becoming a texture behind a solid block. */
-.heroscrim{position:absolute;inset:0;z-index:2;pointer-events:none;
+.heroscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
 background:
 linear-gradient(90deg,rgba(10,10,12,0.94) 0%,rgba(10,10,12,0.82) 26%,
 rgba(10,10,12,0.36) 48%,rgba(10,10,12,0.1) 68%,rgba(10,10,12,0.28) 100%),
 radial-gradient(1200px 760px at 72% 46%,rgba(169,180,245,0.06),transparent 70%),
 linear-gradient(180deg,rgba(10,10,12,0.42),transparent 20%,transparent 80%,
 rgba(10,10,12,0.72))}
-.band.first .wrap{position:relative;z-index:3}
+.band.first .wrap{position:relative;z-index:2}
 .herocopy{max-width:none}
 .herocopy .display{max-width:15ch}
 .herocopy .lede{max-width:38ch}
@@ -171,8 +145,7 @@ rgba(10,10,12,0.72))}
 /* on a phone the field sits behind everything and is dimmed further, because a
    moving background under 38 characters of body copy is where legibility goes */
 .heroscrim{background:linear-gradient(180deg,rgba(10,10,12,0.86),
-rgba(10,10,12,0.7) 40%,rgba(10,10,12,0.9))}
-.herotrust{display:none}}
+rgba(10,10,12,0.7) 40%,rgba(10,10,12,0.9))}}
 
 /* ── section 04's live object: the gate lane ─────────────────────────────
    Questions drift across a gate. What the approved evidence supports comes
@@ -879,7 +852,6 @@ window.__rv = new IntersectionObserver(function (es) {
        box beside a headline, and changing what was in the box never fixed that.
        The scrim below is what makes type over a moving field legible. -->
   <canvas class="herobg" id="herobg" aria-hidden="true"></canvas>
-  <div class="herotrust" id="herotrust" aria-hidden="true"></div>
   <div class="heroscrim" aria-hidden="true"></div>
   <div class="wrap herocopy">
     <span class="eyebrow-chip"><i></i>The spreadsheet that stalls the deal</span>
@@ -891,11 +863,9 @@ window.__rv = new IntersectionObserver(function (es) {
       <a class="btn btn-ghost" href="#proof">Watch it run</a>
     </div>
   </div>
-  <p class="sr-only">A decorative animation fills this screen: a self-service
-  trust page assembling itself, one buyer question at a time. Questions our
-  evidence supports are answered and cite the document behind them; the rest
-  stay open, to be requested through security review. The sections below state
-  what the product does in text.</p>
+  <p class="sr-only">A decorative animation fills this screen: the documents of a
+  policy library drifting at different depths. The sections below state what the
+  product does in text.</p>
 
   <a class="scrollcue" href="#proof" aria-label="Scroll to the workbook"><span></span></a>
 </section>
@@ -1387,96 +1357,6 @@ window.__rvScan();
   addEventListener("resize",()=>{clearTimeout(rt);
     rt=setTimeout(()=>{size();if(reduced)still()},160)},{passive:true});
 })();
-
-/* ── 01b · the trust page, assembling ──────────────────────────────────────
-   The hero's field is the deflection artifact building itself: the standard
-   buyer questions arriving one at a time, each either answered with the
-   document that carries it, or left open to be asked through security review.
-
-   The rows are real. They come from the trust-page generator run against our
-   own corpus at build time, which is why the certification rows sit open — the
-   certification gate refuses them, and a hero that answered all twenty-three
-   would be advertising the failure this product exists to prevent.
-
-   Driven by timers and CSS transitions rather than a frame loop: the reveal is
-   a sequence of discrete steps, the browser can hand the whole thing to the
-   compositor, and it costs nothing when the tab is in the background. */
-(function(){
-  const host=document.getElementById("herotrust");
-  if(!host)return;
-  /* filled at build time; the build fails if this placeholder survives */
-  const data=/*@TRUST@*/;
-  if(!data||!data.rows||!data.rows.length)return;
-  const band=host.closest(".band");
-  const VISIBLE=11;          /* what fits between 12% and 88% of the hero */
-  const STEP=520;            /* one row lands roughly every half second */
-  let idx=0,timer=0,started=false;
-
-  const foot=document.createElement("div");
-  foot.className="htfoot";
-
-  function row(r){
-    const el=document.createElement("div");
-    el.className="htrow "+(r.ok?"ok":"no");
-    const q=document.createElement("div");
-    q.className="htq";q.textContent=r.q;
-    const v=document.createElement("div");
-    v.className="htv";
-    /* engine output, set as text — never parsed as markup */
-    v.textContent=r.ok?r.cite:"available under review";
-    el.appendChild(q);el.appendChild(v);
-    return el;
-  }
-  function settle(){
-    foot.textContent="";
-    const b=document.createElement("b");
-    b.textContent=data.answered+" of "+data.total;
-    foot.appendChild(b);
-    foot.appendChild(document.createTextNode(
-      " standard questions answered without a human"));
-    if(!foot.parentNode)host.appendChild(foot);
-    requestAnimationFrame?foot.classList.add("in"):foot.classList.add("in");
-  }
-  function push(){
-    const r=data.rows[idx%data.rows.length];idx++;
-    const el=row(r);
-    host.insertBefore(el,foot.parentNode?foot:null);
-    /* let the row exist unstyled for one tick so the transition has a start */
-    setTimeout(()=>el.classList.add("in"),20);
-    const rows=host.querySelectorAll(".htrow");
-    if(rows.length>VISIBLE)rows[0].remove();
-    if(idx===Math.min(VISIBLE,data.rows.length))settle();
-    timer=setTimeout(push,idx<VISIBLE?STEP:STEP*4.2);
-  }
-  function start(){
-    if(started)return;started=true;
-    if(reduced){
-      /* no motion: state the finished page rather than animating to it */
-      data.rows.slice(0,VISIBLE).forEach(r=>{
-        const el=row(r);el.classList.add("in");host.appendChild(el);
-      });
-      settle();return;
-    }
-    push();
-  }
-  function stop(){if(timer){clearTimeout(timer);timer=0}}
-  function resume(){if(started&&!timer&&!reduced)timer=setTimeout(push,STEP)}
-
-  if(band&&window.IntersectionObserver){
-    new IntersectionObserver(es=>es.forEach(e=>{
-      if(e.isIntersecting){start();resume();}else stop();
-    }),{threshold:0}).observe(band);
-  }
-  /* Some embedded and automation browsers never deliver a first observer
-     entry, which would leave the field empty for good. */
-  setTimeout(()=>{
-    if(!started&&band&&band.getBoundingClientRect().bottom>0)start();
-  },400);
-  document.addEventListener("visibilitychange",()=>{
-    if(document.hidden)stop();else resume();
-  });
-})();
-
 
 /* ── section 04's gate lane ─────────────────────────────────────────────────────────
    Cards drift left to right at a constant speed. A card is undecided until its
