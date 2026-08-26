@@ -12,6 +12,7 @@ separately later.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import tempfile
@@ -86,6 +87,11 @@ def main() -> int:
     # nothing, producing a deployment with no files that answers 404 on every
     # route — while still reporting success. A .vercelignore does not override
     # it. Staging a copy outside the repository sidesteps git entirely.
+    if os.environ.get("VERCEL"):
+        # On the build host the output directory IS the deploy; staging a copy
+        # outside the repo is only needed for a local push from a git worktree.
+        print(f"\nsite/publish/ ready — {sum(1 for _ in OUT.rglob('*.html'))} pages, no backend")
+        return 0
     stage = Path(tempfile.gettempdir()) / "constat-deploy"
     if stage.exists():
         shutil.rmtree(stage)
