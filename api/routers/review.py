@@ -13,6 +13,7 @@ from constat.workflow.ranking import rank
 
 from ..auth import CallerPrincipal, require
 from ..deps import get_claim_store, get_repo
+from ..views import ViewCache, item_view
 
 router = APIRouter(prefix="/v1/review", tags=["review"])
 
@@ -33,7 +34,7 @@ class RouteBody(BaseModel):
 
 
 class SendBody(BaseModel):
-    customer: str = Field(min_length=1, max_length=200)
+    customer: str = Field(default="", max_length=200)
 
 
 class BulkBody(BaseModel):
@@ -61,11 +62,12 @@ def _err(e: Exception) -> HTTPException:
     return HTTPException(status_code=422, detail={"error": str(e), "code": "REVIEW_RULE"})
 
 
-def _row(it, score=None) -> dict:
-    d = it.to_row() | {"verdict_json": it.verdict_json, "flags": it.flags}
-    if score is not None:
-        d["score"] = score
-    return d
+def _row(it, score=None, repo: Repository | None = None) -> dict:
+    return item_view(it, ViewCache(repo or _REPO_FALLBACK()), score)
+
+
+def _REPO_FALLBACK():
+    return get_repo()
 
 
 @router.get("/queue")
@@ -80,15 +82,16 @@ def queue(state: str = "REVIEW,HELD", p: CallerPrincipal = Depends(require("revi
             if d:
                 deals[q.id] = d
     ranked = rank(items, deals)
-    return {"items": [_row(it, s) for it, s in ranked], "count": len(ranked)}
+    cache = ViewCache(repo)
+    return {"items": [item_view(it, cache, s) for it, s in ranked], "count": len(ranked)}
 
 
 @router.post("/{item_id}/approve")
-def approve(item_id: str, body: NoteBody, p: CallerPrincipal = Depends(require("reviewer")),
+def approve(item_id: str, body: NoteBody | None = None, p: CallerPrincipal = Depends(require("reviewer")),
             repo: Repository = Depends(get_repo), store: ClaimStore = Depends(get_claim_store)):
     it = _item(repo, item_id, p)
     try:
-        return _row(rv.approve(_ctx(p, repo, store, it), it, body.note))
+        return _row(rv.approve(_ctx(p, repo, store, it), it, body.note if body else ""), repo=repo)
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
 
@@ -101,7 +104,9 @@ def edit(item_id: str, body: EditBody, p: CallerPrincipal = Depends(require("rev
         it, verdict = rv.edit(_ctx(p, repo, store, it), it, body.answer, body.note)
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
-    return _row(it) | {"verdict": verdict}
+    proposal = next((pr.to_dict() for pr in store.pending()
+                     if pr.claim.claim_id == it.claim_id and pr.actor == p.email), None)
+    return {"item": _row(it, repo=repo), "verdict": verdict, "proposal": proposal}
 
 
 @router.post("/{item_id}/route")
@@ -109,7 +114,7 @@ def route(item_id: str, body: RouteBody, p: CallerPrincipal = Depends(require("r
           repo: Repository = Depends(get_repo), store: ClaimStore = Depends(get_claim_store)):
     it = _item(repo, item_id, p)
     try:
-        return _row(rv.route(_ctx(p, repo, store, it), it, body.to, body.deadline, body.note))
+        return _row(rv.route(_ctx(p, repo, store, it), it, body.to, body.deadline, body.note), repo=repo)
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
 
@@ -119,17 +124,18 @@ def reject(item_id: str, body: NoteBody, p: CallerPrincipal = Depends(require("r
            repo: Repository = Depends(get_repo), store: ClaimStore = Depends(get_claim_store)):
     it = _item(repo, item_id, p)
     try:
-        return _row(rv.reject(_ctx(p, repo, store, it), it, body.note))
+        return _row(rv.reject(_ctx(p, repo, store, it), it, body.note), repo=repo)
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
 
 
 @router.post("/{item_id}/send")
-def send(item_id: str, body: SendBody, p: CallerPrincipal = Depends(require("reviewer")),
+def send(item_id: str, body: SendBody | None = None, p: CallerPrincipal = Depends(require("reviewer")),
          repo: Repository = Depends(get_repo), store: ClaimStore = Depends(get_claim_store)):
     it = _item(repo, item_id, p)
+    customer = (body.customer if body else "") or (repo.get("questionnaires", it.questionnaire_id).customer)
     try:
-        return _row(rv.send(_ctx(p, repo, store, it), it, body.customer))
+        return _row(rv.send(_ctx(p, repo, store, it), it, customer), repo=repo)
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
 
@@ -142,7 +148,7 @@ def bulk(body: BulkBody, p: CallerPrincipal = Depends(require("reviewer")),
         done = rv.bulk_approve_reused(_ctx(p, repo, store, items[0] if items else None), items, set(body.spot_checked_ids))
     except (rv.ReviewError, ValueError) as e:
         raise _err(e)
-    return {"approved": [_row(i) for i in done], "spot_checks_required": rv.spot_checks_required(len(items))}
+    return {"approved": [_row(i, repo=repo) for i in done], "spot_checks_required": rv.spot_checks_required(len(items))}
 
 
 deals_router = APIRouter(prefix="/v1/deals", tags=["deals"])

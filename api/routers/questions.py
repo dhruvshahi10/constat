@@ -17,6 +17,7 @@ from constat.workflow.diff import word_diff
 
 from ..auth import CallerPrincipal, current_principal
 from ..deps import get_matcher, get_repo
+from ..views import ViewCache, item_view
 
 router = APIRouter(prefix="/v1/questions", tags=["questions"])
 
@@ -54,17 +55,18 @@ def _item(repo: Repository, item_id: str, p: CallerPrincipal):
     return it
 
 
-def _last_approved(repo: Repository, it) -> str | None:
+def _last_approved(repo: Repository, it) -> tuple[str | None, dict | None]:
     """The most recent SENT or APPROVED answer in this tenant that rested on
     the same claim: what the reviewer compares the new draft against."""
     if not it.claim_id:
-        return None
+        return None, None
     for prev in repo.list("question_items", {"tenant": it.tenant, "claim_id": it.claim_id,
                                              "state": [State.SENT, State.APPROVED]},
                           order="updated_at desc", limit=5):
         if prev.id != it.id and prev.final_answer:
-            return prev.final_answer
-    return None
+            q = repo.get("questionnaires", prev.questionnaire_id)
+            return prev.final_answer, {"customer": q.customer if q else "", "sent_on": prev.updated_at[:10]}
+    return None, None
 
 
 @router.get("/{item_id}")
@@ -72,17 +74,21 @@ def get_question(item_id: str, p: CallerPrincipal = Depends(current_principal),
                  repo: Repository = Depends(get_repo), matcher: ClaimMatcher = Depends(get_matcher)):
     it = _item(repo, item_id, p)
     claim = matcher.store.get(it.claim_id) if it.claim_id else None
-    last = _last_approved(repo, it)
+    last, meta = _last_approved(repo, it)
     actions = repo.list("review_actions", {"item_id": it.id}, order="at asc", limit=200)
-    return {"item": it.to_row() | {"verdict_json": it.verdict_json, "flags": it.flags},
+    draft = it.final_answer or it.draft_answer or ""
+    return {"item": item_view(it, ViewCache(repo)),
+            "verdict": it.verdict_json if it.verdict_json.get("outcome") else None,
+            "draft": draft,
             "claim": claim.to_dict() if claim else None,
-            "last_approved_answer": last,
-            "diff": word_diff(last or "", it.final_answer or it.draft_answer or "") if last else [],
+            "claims": [claim.to_dict()] if claim else [],
+            "last_approved_answer": last, "last_approved_meta": meta,
+            "diff": word_diff(last or "", draft) if last else [],
             "actions": [a.to_row() for a in actions]}
 
 
 @router.get("/{item_id}/diff")
 def diff(item_id: str, p: CallerPrincipal = Depends(current_principal), repo: Repository = Depends(get_repo)):
     it = _item(repo, item_id, p)
-    last = _last_approved(repo, it)
+    last, _meta = _last_approved(repo, it)
     return {"last_approved_answer": last, "ops": word_diff(last or "", it.final_answer or it.draft_answer or "")}

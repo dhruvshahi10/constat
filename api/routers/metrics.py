@@ -7,8 +7,12 @@ from constat.persist import MetricEvent, Repository, ulid
 from constat.workflow import degradation as dg
 from constat.workflow.metrics import compute
 
+from datetime import date
+
+from constat.claims import Audience, ClaimStore
+
 from ..auth import CallerPrincipal, current_principal, require
-from ..deps import get_repo
+from ..deps import get_claim_store, get_repo
 
 router = APIRouter(prefix="/v1/metrics", tags=["metrics"])
 
@@ -20,8 +24,14 @@ class ShippedWrongBody(BaseModel):
 
 @router.get("")
 def metrics(deal_id: str | None = None, since: str | None = None,
-            p: CallerPrincipal = Depends(current_principal), repo: Repository = Depends(get_repo)):
-    return compute(repo, p.tenant, deal_id=deal_id, since=since)
+            p: CallerPrincipal = Depends(current_principal), repo: Repository = Depends(get_repo),
+            store: ClaimStore = Depends(get_claim_store)):
+    m = compute(repo, p.tenant, deal_id=deal_id, since=since)
+    claims = store.list()
+    fresh = sum(1 for c in claims if c.is_usable(date.today(), Audience.INTERNAL)[0])
+    m["claim_fresh_share"] = round(fresh / len(claims), 3) if claims else None
+    m["cost_per_100_usd"] = round(m["model_cost_usd"] / m["questions"] * 100, 4) if m["questions"] else 0.0
+    return m
 
 
 @router.post("/shipped-wrong", status_code=201)

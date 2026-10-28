@@ -19,6 +19,7 @@ from constat.workflow.pipeline2 import PipelineConfig, create_items, process_que
 
 from ..auth import CallerPrincipal, current_principal, require
 from ..deps import get_claim_store, get_repo, get_settings
+from ..views import ViewCache, item_view
 from ..settings import Settings
 
 router = APIRouter(prefix="/v1/questionnaires", tags=["questionnaires"])
@@ -121,7 +122,8 @@ def items(qid: str, state: str | None = None, p: CallerPrincipal = Depends(curre
     if state:
         where["state"] = state
     rows = repo.list("question_items", where, order="ordinal asc", limit=5000)
-    return {"items": [r.to_row() | {"verdict_json": r.verdict_json, "flags": r.flags} for r in rows]}
+    cache = ViewCache(repo)
+    return {"items": [item_view(r, cache) for r in rows]}
 
 
 @router.get("/{qid}/quarantine")
@@ -129,7 +131,8 @@ def quarantine(qid: str, p: CallerPrincipal = Depends(current_principal), repo: 
     _owned(repo, qid, p)
     rows = repo.list("question_items", {"questionnaire_id": qid, "state": State.QUARANTINED}, limit=5000)
     from constat.intake.quarantine import CUSTOMER_NOTE
-    return {"items": [r.to_row() | {"flags": r.flags} for r in rows], "customer_note": CUSTOMER_NOTE}
+    cache = ViewCache(repo)
+    return {"items": [item_view(r, cache) for r in rows], "customer_note": CUSTOMER_NOTE}
 
 
 @router.get("/{qid}/export")

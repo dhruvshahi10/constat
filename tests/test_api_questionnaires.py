@@ -91,3 +91,23 @@ def test_bad_uploads(client):
     assert client.post("/v1/questionnaires", headers=H, data={"audience": "secret"},
                        files={"file": ("x.csv", b"ID,Question\n1,Is MFA on?\n", "text/csv")}).status_code == 422
     assert client.get("/v1/questionnaires/nope", headers=H).status_code == 404
+
+
+def test_queue_items_carry_customer_and_ranking_fields(client):
+    f = ROOT / "data/questionnaires/acme_security_questionnaire.xlsx"
+    with f.open("rb") as fh:
+        qid = client.post("/v1/questionnaires", headers=H, data={"customer": "Acme Corp"},
+                          files={"file": (f.name, fh, "application/octet-stream")}).json()["id"]
+    _wait_done(client, qid)
+    q = client.get("/v1/review/queue", headers=H).json()
+    assert q["count"] > 0
+    first = q["items"][0]
+    assert first["customer"] == "Acme Corp" and "value_rank" in first and "age_days" in first and "score" in first
+    assert first["verdict"]["outcome"] in ("ANSWER", "HOLD_HUMAN")
+    review = [i for i in q["items"] if i["state"] == "REVIEW"][0]
+    a = client.post(f"/v1/review/{review['id']}/approve", headers=H)
+    assert a.status_code == 200 and a.json()["state"] == "APPROVED"
+    s = client.post(f"/v1/review/{review['id']}/send", headers=H)
+    assert s.status_code == 200 and s.json()["state"] == "SENT"
+    m = client.get("/v1/metrics", headers=H).json()
+    assert m["claim_fresh_share"] is not None and "cost_per_100_usd" in m

@@ -306,29 +306,9 @@ export interface Api {
   evalRecords(): Promise<EvalRecord[]>;
 }
 
-const live: Api = {
-  listQuestionnaires: () => request("GET", "/questionnaires"),
-  getQuestionnaire: (id) => request("GET", `/questionnaires/${id}`),
-  listItems: (id) => request("GET", `/questionnaires/${id}/items`),
-  listQuarantine: (id) => request("GET", `/questionnaires/${id}/quarantine`),
-  reviewQueue: () => request("GET", "/review/queue"),
-  getQuestion: (id) => request("GET", `/questions/${id}`),
-  ask: (text, audience = "nda") => request("POST", "/questions/ask", { text, audience }),
-  approve: (id) => request("POST", `/review/${id}/approve`),
-  edit: (id, answer) => request("POST", `/review/${id}/edit`, { answer }),
-  route: (id, to, deadline) => request("POST", `/review/${id}/route`, { to, deadline }),
-  send: (id) => request("POST", `/review/${id}/send`),
-  listClaims: () => request("GET", "/claims"),
-  getClaim: (id) => request("GET", `/claims/${id}`),
-  listProposals: () => request("GET", "/claims/proposals"),
-  approveProposal: (id) => request("POST", `/claims/proposals/${id}/approve`),
-  rejectProposal: (id) => request("POST", `/claims/proposals/${id}/reject`),
-  freshness: () => request("GET", "/claims/freshness"),
-  degradation: () => request("GET", "/degradation"),
-  metrics: () => request("GET", "/metrics"),
-  trustPreview: () => request("GET", "/trust/preview"),
-  evalRecords: () => request("GET", "/evals/records"),
-};
+import { liveApi } from "./live";
+
+const live: Api = liveApi(request);
 
 // The mock is loaded lazily so the live bundle does not carry fixture data.
 let mockPromise: Promise<Api> | null = null;

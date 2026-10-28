@@ -119,3 +119,10 @@ def test_eval_records_admin_only(client):
     assert client.post("/v1/evals/records", headers={"Authorization": f"Bearer {rev_tok}"}, json=body).status_code == 403
     assert client.post("/v1/evals/records", headers=ADMIN, json=body).status_code == 201
     assert len(client.get("/v1/evals/records", headers=ADMIN).json()["records"]) == 1
+
+
+def test_trust_preview_lists_only_public_usable_claims(client):
+    r = client.get("/v1/trust/preview", headers=ADMIN).json()
+    ids = {e["claim_id"] for e in r["entries"]}
+    assert "iam.mfa" in ids and "crypto.at_rest" not in ids and "appsec.pentest" not in ids
+    assert all(e["last_verified"] for e in r["entries"]) and "human action" in r["note"]
