@@ -9,6 +9,7 @@ const TABS = [
   { path: "/claims", label: "Explorer" },
   { path: "/claims/proposals", label: "Proposals" },
   { path: "/claims/freshness", label: "Freshness" },
+  { path: "/claims/import", label: "Import" },
 ] as const;
 
 function isActive(bare: string, path: string): boolean {
@@ -19,13 +20,13 @@ function isActive(bare: string, path: string): boolean {
   return bare === path || bare.startsWith(path + "/");
 }
 
-/** Section switcher shared by the three claims screens, bare or embedded. */
+/** Section switcher shared by the claims screens, bare or embedded. */
 export function ClaimsSubnav({ className }: { className?: string }) {
   const pathname = usePathname() ?? "/claims";
   const { href } = useEmbed();
   const bare = pathname.replace(/^\/embed(?=\/|$)/, "") || "/";
   return (
-    <nav aria-label="Claims sections" className={cn("mb-6 flex flex-wrap gap-1 border-b", className)}>
+    <nav aria-label="Claims sections" className={cn("mb-4 flex flex-wrap gap-0.5 border-b", className)}>
       {TABS.map((tab) => {
         const active = isActive(bare, tab.path);
         return (
@@ -34,10 +35,10 @@ export function ClaimsSubnav({ className }: { className?: string }) {
             href={href(tab.path)}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+              "-mb-px border-b-2 px-3 py-1.5 text-[13px] font-medium transition-colors",
               active
                 ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
             )}
           >
             {tab.label}

@@ -7,7 +7,8 @@ import "@xyflow/react/dist/style.css";
 import { api, type Claim, type QuestionDetail } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
 import { useEmbed } from "@/lib/embed";
-import { PageHeader, LoadingState, ErrorState } from "@/components/page-header";
+import { DetailSkeleton } from "@/components/skeletons";
+import { PageHeader, ErrorState } from "@/components/page-header";
 import { OutcomeBadge, DifficultyBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +68,7 @@ export function ProvenanceChain({ id }: { id: string }) {
   const { href } = useEmbed();
   const { data, loading, error } = useAsync(() => api.getQuestion(id), [id]);
   const graph = React.useMemo(() => (data ? buildGraph(data, data.claims) : null), [data]);
-  if (loading) return <LoadingState />;
+  if (loading) return <DetailSkeleton />;
   if (error) return <ErrorState error={error} />;
   if (!data || !graph) return null;
 

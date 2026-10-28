@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   DEFAULT_THEME,
   THEME_STORAGE_KEY,
@@ -28,26 +28,45 @@ function applyTheme(theme: Theme) {
   }
 }
 
-function ThemeProviderInner({ children }: { children: React.ReactNode }) {
-  const params = useSearchParams();
-  const param = params.get("theme");
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    if (isTheme(param)) return param;
-    if (typeof document !== "undefined") {
+function themeFromUrl(): Theme | null {
+  try {
+    const t = new URLSearchParams(window.location.search).get("theme");
+    return isTheme(t) ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Theme state. The boot script in the root layout has already set
+ * data-theme before first paint (from ?theme=, then storage, then the
+ * default). This provider adopts that value on mount and owns it after.
+ *
+ * It reads ?theme= from window.location rather than useSearchParams on
+ * purpose: useSearchParams would force a Suspense boundary around the whole
+ * app, which turns every page into client-only rendering and makes
+ * notFound() answer 200 instead of 404.
+ */
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [theme, setThemeState] = React.useState<Theme>(DEFAULT_THEME);
+  const adopted = React.useRef(false);
+
+  // Adopt what the boot script chose; re-check ?theme= on client navigation
+  // so a link carrying ?theme= still switches the theme.
+  React.useEffect(() => {
+    const fromUrl = themeFromUrl();
+    if (!adopted.current) {
+      adopted.current = true;
       const current = document.documentElement.getAttribute("data-theme");
-      if (isTheme(current)) return current;
+      setThemeState(fromUrl ?? (isTheme(current) ? current : DEFAULT_THEME));
+      return;
     }
-    return DEFAULT_THEME;
-  });
-
-  // A ?theme= in the URL always wins, so the embedded host can force a theme.
-  React.useEffect(() => {
-    if (isTheme(param) && param !== theme) setThemeState(param);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [param]);
+    if (fromUrl) setThemeState(fromUrl);
+  }, [pathname]);
 
   React.useEffect(() => {
-    applyTheme(theme);
+    if (adopted.current) applyTheme(theme);
   }, [theme]);
 
   // The Atlan handshake may hand us a theme after init.
@@ -70,15 +89,6 @@ function ThemeProviderInner({ children }: { children: React.ReactNode }) {
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // useSearchParams needs a Suspense boundary during static rendering.
-  return (
-    <React.Suspense fallback={null}>
-      <ThemeProviderInner>{children}</ThemeProviderInner>
-    </React.Suspense>
-  );
 }
 
 export function useTheme(): ThemeContextValue {

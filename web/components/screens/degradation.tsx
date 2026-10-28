@@ -2,13 +2,14 @@
 
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
-import { PageHeader, LoadingState, ErrorState } from "@/components/page-header";
+import { CardsSkeleton } from "@/components/skeletons";
+import { PageHeader, ErrorState } from "@/components/page-header";
 import { DegradationNotice } from "@/components/shell/degradation-banner";
 import { StatTile } from "@/components/stat-tile";
 
 export function DegradationPage() {
   const { data, loading, error } = useAsync(() => api.degradation());
-  if (loading) return <LoadingState />;
+  if (loading) return <CardsSkeleton />;
   if (error) return <ErrorState error={error} />;
   if (!data) return null;
   const degraded = data.state === "degraded";

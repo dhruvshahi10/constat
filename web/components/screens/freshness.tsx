@@ -2,47 +2,111 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { api, type FreshnessClaim } from "@/lib/api";
+import { api, type FreshnessClaim, type FreshnessGroup } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
 import { useEmbed } from "@/lib/embed";
 import { cn } from "@/lib/utils";
-import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/page-header";
+import { EmptyState, ErrorState, PageHeader } from "@/components/page-header";
+import { CardsSkeleton } from "@/components/skeletons";
+import { SummaryStrip } from "@/components/summary-strip";
 import { ClaimsSubnav } from "@/components/screens/claims-subnav";
+
+/** The timeline runs from today to 180 days out; ticks mark the 30 and 90 day lines. */
+const SCALE = 180;
+const TICKS = [30, 90] as const;
+
+const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,16rem)_6.5rem_7rem]";
 
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function DaysLeftChip({ days }: { days: number }) {
-  const expired = days < 0;
-  const soon = !expired && days < 30;
-  const label = expired ? `expired ${-days} d ago` : `${days} d left`;
+function tone(days: number): "critical" | "warn" | "info" | "ok" {
+  if (days < 0) return "critical";
+  if (days < 30) return "warn";
+  if (days < 90) return "info";
+  return "ok";
+}
+
+const FILL: Record<ReturnType<typeof tone>, string> = {
+  critical: "bg-status-critical",
+  warn: "bg-status-warn",
+  info: "bg-status-info",
+  ok: "bg-status-ok",
+};
+
+const TEXT: Record<ReturnType<typeof tone>, string> = {
+  critical: "text-status-critical",
+  warn: "text-status-warn",
+  info: "text-foreground",
+  ok: "text-muted-foreground",
+};
+
+function Timeline({ days }: { days: number }) {
+  const t = tone(days);
+  const pct = Math.min(100, (Math.max(0, days) / SCALE) * 100);
+  const label = days < 0 ? `Expired ${-days} days ago` : `${days} days left on a ${SCALE} day scale`;
   return (
-    <span
-      className={cn(
-        "inline-flex h-5 shrink-0 items-center rounded-sm px-1.5 font-mono text-[10px] uppercase tracking-[0.12em] whitespace-nowrap",
-        expired && "bg-status-critical-wash text-status-critical",
-        soon && "bg-status-warn-wash text-status-warn",
-        !expired && !soon && "bg-status-ok-wash text-status-ok",
+    <div role="img" aria-label={label} className="relative h-1.5 w-full rounded-[2px] bg-muted">
+      {TICKS.map((d) => (
+        <span key={d} aria-hidden className="absolute -top-0.5 h-2.5 w-px bg-border" style={{ left: `${(d / SCALE) * 100}%` }} />
+      ))}
+      {days < 0 ? (
+        <span aria-hidden className="absolute -top-0.5 left-0 h-2.5 w-1 rounded-[1px] bg-status-critical" />
+      ) : (
+        <span aria-hidden className={cn("absolute inset-y-0 left-0 rounded-[2px]", FILL[t])} style={{ width: `${Math.max(pct, 1.5)}%` }} />
       )}
-    >
-      {label}
-    </span>
+    </div>
   );
 }
 
 function ClaimRow({ claim }: { claim: FreshnessClaim }) {
   const { href } = useEmbed();
+  const t = tone(claim.days_left);
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 px-3 py-2.5">
-      <Link href={href(`/claims/${claim.id}`)} className="min-w-0 flex-1 basis-[16rem] text-sm leading-snug hover:underline">
+    <li className={cn(ROW_GRID, "min-h-9 px-3 py-1.5 transition-colors hover:bg-muted/40")}>
+      <Link href={href(`/claims/${claim.id}`)} className="min-w-0 truncate text-[13px] hover:underline" title={claim.statement}>
+        {claim.status === "draft" ? (
+          <span className="mr-1.5 rounded-sm bg-status-warn-wash px-1 font-mono text-[9.5px] uppercase tracking-wider text-status-warn">draft</span>
+        ) : null}
         {claim.statement}
       </Link>
-      <span className="flex shrink-0 items-center gap-2">
-        <span className="font-mono text-xs text-muted-foreground">{fmtDate(claim.valid_until)}</span>
-        <DaysLeftChip days={claim.days_left} />
+      <div className="col-span-2 sm:col-span-1">
+        <Timeline days={claim.days_left} />
+      </div>
+      <span className="hidden font-mono text-[11px] text-muted-foreground tabular-nums sm:block">{fmtDate(claim.valid_until)}</span>
+      <span className={cn("col-start-2 row-start-1 text-right font-mono text-[11px] tabular-nums sm:col-start-auto sm:row-start-auto", TEXT[t])}>
+        {claim.days_left < 0 ? `expired ${-claim.days_left} d` : `${claim.days_left} d left`}
       </span>
     </li>
+  );
+}
+
+function OwnerSection({ group: g }: { group: FreshnessGroup }) {
+  const expired = g.claims.filter((c) => c.days_left < 0).length;
+  const soon = g.claims.filter((c) => c.days_left >= 0 && c.days_left < 30).length;
+  const headingId = `owner-${g.owner_email.replace(/[^a-z0-9]/gi, "-")}`;
+  return (
+    <section aria-labelledby={headingId} className="overflow-hidden rounded-md border bg-card">
+      <header className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b bg-muted/40 px-3 py-2">
+        <h2 id={headingId} className="font-heading text-base leading-tight font-semibold">
+          {g.owner}
+        </h2>
+        <a href={`mailto:${g.owner_email}`} className="font-mono text-[11px] text-muted-foreground hover:text-foreground hover:underline">
+          {g.owner_email}
+        </a>
+        <span className="ml-auto flex gap-3 font-mono text-[11px] tabular-nums">
+          <span className="text-muted-foreground">{g.claims.length} claims</span>
+          {expired ? <span className="text-status-critical">{expired} expired</span> : null}
+          {soon ? <span className="text-status-warn">{soon} under 30 d</span> : null}
+        </span>
+      </header>
+      <ul className="divide-y">
+        {g.claims.map((c) => (
+          <ClaimRow key={c.id} claim={c} />
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -53,10 +117,22 @@ export function Freshness() {
     const all = data?.flatMap((g) => g.claims) ?? [];
     return {
       expired: all.filter((c) => c.days_left < 0).length,
-      soon: all.filter((c) => c.days_left >= 0 && c.days_left < 30).length,
+      under30: all.filter((c) => c.days_left >= 0 && c.days_left < 30).length,
+      under90: all.filter((c) => c.days_left >= 0 && c.days_left < 90).length,
       total: all.length,
+      owners: data?.length ?? 0,
+      ownersOverdue: data?.filter((g) => g.claims.some((c) => c.days_left < 0)).length ?? 0,
     };
   }, [data]);
+
+  // Owners with the most urgent claim first.
+  const groups = React.useMemo(
+    () =>
+      data
+        ? [...data].sort((a, b) => Math.min(...a.claims.map((c) => c.days_left)) - Math.min(...b.claims.map((c) => c.days_left)))
+        : [],
+    [data],
+  );
 
   return (
     <div>
@@ -67,40 +143,45 @@ export function Freshness() {
       />
       <ClaimsSubnav />
 
-      {loading ? <LoadingState label="Loading freshness" /> : null}
+      {loading && !data ? <CardsSkeleton count={4} /> : null}
       {error ? <ErrorState error={error} /> : null}
 
       {data ? (
         <>
-          <p className="mb-6 text-sm" aria-live="polite">
-            <span className={cn("font-mono", summary.expired > 0 ? "text-status-critical" : "text-muted-foreground")}>
-              {summary.expired} expired
-            </span>
-            <span className="text-muted-foreground">, </span>
-            <span className={cn("font-mono", summary.soon > 0 ? "text-status-warn" : "text-muted-foreground")}>
-              {summary.soon} expiring within 30 days
-            </span>
-            <span className="text-muted-foreground">, of {summary.total} claims.</span>
-          </p>
+          <SummaryStrip
+            className="mb-4 sm:grid-cols-4 md:grid-cols-4"
+            stats={[
+              { label: "Expired", value: summary.expired, tone: summary.expired ? "critical" : "default", hint: "no longer supporting answers" },
+              { label: "Under 30 d", value: summary.under30, tone: summary.under30 ? "warn" : "default", hint: "re-verify this month" },
+              { label: "Under 90 d", value: summary.under90, tone: summary.under90 ? "info" : "default", hint: `of ${summary.total} claims` },
+              { label: "Owners", value: summary.owners, hint: summary.ownersOverdue ? `${summary.ownersOverdue} with an expired claim` : "all in date" },
+            ]}
+          />
 
-          {data.length === 0 ? (
+          {groups.length === 0 ? (
             <EmptyState title="No claims to track" />
           ) : (
-            <div className="flex flex-col gap-6">
-              {data.map((g) => (
-                <section key={g.owner_email} aria-labelledby={`owner-${g.owner_email}`}>
-                  <h2 id={`owner-${g.owner_email}`} className="font-heading text-lg leading-tight">
-                    {g.owner}
-                  </h2>
-                  <p className="mb-2 font-mono text-xs text-muted-foreground">{g.owner_email}</p>
-                  <ul className="divide-y rounded-md border bg-card">
-                    {g.claims.map((c) => (
-                      <ClaimRow key={c.id} claim={c} />
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
+            <>
+              <div aria-hidden className={cn(ROW_GRID, "mb-1 hidden px-3 sm:grid")}>
+                <span className="eyebrow">Claim</span>
+                <span className="relative block h-4 font-mono text-[10px] text-muted-foreground tabular-nums">
+                  <span className="absolute left-0">0</span>
+                  {TICKS.map((d) => (
+                    <span key={d} className="absolute -translate-x-1/2" style={{ left: `${(d / SCALE) * 100}%` }}>
+                      {d}
+                    </span>
+                  ))}
+                  <span className="absolute right-0">{SCALE} d</span>
+                </span>
+                <span className="eyebrow">Valid until</span>
+                <span className="eyebrow text-right">Left</span>
+              </div>
+              <div className="flex flex-col gap-3">
+                {groups.map((g) => (
+                  <OwnerSection key={g.owner_email} group={g} />
+                ))}
+              </div>
+            </>
           )}
         </>
       ) : null}

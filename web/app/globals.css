@@ -49,6 +49,7 @@
   --color-status-warn-wash: var(--status-warn-wash);
   --color-status-critical-wash: var(--status-critical-wash);
   --color-status-info-wash: var(--status-info-wash);
+  --color-indicator: var(--indicator);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -101,6 +102,7 @@
   --border: rgba(232, 232, 228, 0.10);
   --input: rgba(232, 232, 228, 0.18);
   --ring: var(--signal);
+  --indicator: var(--signal);
   --status-ok: #9BC49C;
   --status-warn: #D9B36A;
   --status-critical: #D97862;
@@ -130,9 +132,11 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Theme "native": light, for rendering inside Atlan. Atlan's published */
-/* neutral scale 25 to 800, primary blue 500, cyan only for focus and   */
-/* indicators (never a background), system type.                        */
+/* Theme "native": Atlan. Values from atlan.com/brand/color: Blue 25 to */
+/* 900 (primary), Cyan (accent: focus and indicators only, never a      */
+/* fill), Pink 600 sparingly for destructive, Neutrals 25 to 800.       */
+/* Type: Funnel Display for headings, Inter for everything else, on     */
+/* Atlan's scale (body P-04 14/22, H-04 20/24, H-03 30/34).            */
 /* ------------------------------------------------------------------ */
 :root[data-theme="native"] {
   color-scheme: light;
@@ -147,9 +151,20 @@
   --n-700: #252530;
   --n-800: #141517;
   --blue-25: #F9F9FC;
+  --blue-50: #F3F4FD;
+  --blue-100: #E8E9FB;
+  --blue-200: #AEB0F3;
+  --blue-300: #7F83EC;
+  --blue-400: #3940E1;
   --blue-500: #2026D2;
+  --blue-600: #181D9D;
+  --blue-700: #13177E;
+  --blue-800: #0D0F54;
   --blue-900: #0A0B3F;
-  --cyan: #62E1FC;
+  --cyan-500: #62E1FC;
+  --cyan-600: #0CD1FA;
+  --pink-500: #F34D77;
+  --pink-600: #C23E5F;
 
   --background: #FFFFFF;
   --foreground: var(--n-800);
@@ -159,41 +174,44 @@
   --popover-foreground: var(--n-800);
   --primary: var(--blue-500);
   --primary-foreground: #FFFFFF;
-  --secondary: var(--n-50);
-  --secondary-foreground: var(--n-700);
+  --secondary: var(--blue-50);
+  --secondary-foreground: var(--blue-700);
   --muted: var(--n-25);
   --muted-foreground: var(--n-500);
-  --accent: var(--n-50);
-  --accent-foreground: var(--n-800);
-  --destructive: #B42318;
+  --accent: var(--blue-100);
+  --accent-foreground: var(--blue-800);
+  --destructive: var(--pink-600);
   --border: var(--n-100);
   --input: var(--n-200);
-  --ring: var(--cyan);
+  /* Focus in content uses Blue 400 (3:1 on white); Cyan carries focus and
+     the live indicator inside the deep blue sidebar, where it reads. */
+  --ring: var(--blue-400);
+  --indicator: var(--cyan-500);
   --status-ok: #1B7A3E;
   --status-warn: #A15C07;
-  --status-critical: #B42318;
+  --status-critical: var(--pink-600);
   --status-info: var(--blue-500);
   --status-ok-wash: rgba(27, 122, 62, 0.08);
   --status-warn-wash: rgba(161, 92, 7, 0.10);
-  --status-critical-wash: rgba(180, 35, 24, 0.08);
+  --status-critical-wash: rgba(194, 62, 95, 0.08);
   --status-info-wash: rgba(32, 38, 210, 0.07);
   --chart-1: var(--blue-500);
   --chart-2: var(--status-ok);
   --chart-3: var(--status-warn);
-  --chart-4: var(--status-critical);
+  --chart-4: var(--pink-600);
   --chart-5: var(--n-400);
   --radius: 0.5rem;
-  --sidebar: var(--n-25);
-  --sidebar-foreground: var(--n-600);
-  --sidebar-primary: var(--blue-500);
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: var(--n-50);
-  --sidebar-accent-foreground: var(--n-800);
-  --sidebar-border: var(--n-100);
-  --sidebar-ring: var(--cyan);
+  --sidebar: var(--blue-900);
+  --sidebar-foreground: var(--blue-200);
+  --sidebar-primary: var(--cyan-500);
+  --sidebar-primary-foreground: var(--blue-900);
+  --sidebar-accent: var(--blue-700);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: var(--blue-800);
+  --sidebar-ring: var(--cyan-500);
 
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-funnel), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
@@ -207,7 +225,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-size: 14px;
-    line-height: 1.55;
+    line-height: 22px;
   }
   :focus-visible {
     outline: 2px solid var(--ring);

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { api, type QuestionItem } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
 import { useEmbed } from "@/lib/embed";
-import { PageHeader, LoadingState, ErrorState, EmptyState } from "@/components/page-header";
+import { TableSkeleton } from "@/components/skeletons";
+import { PageHeader, ErrorState, EmptyState } from "@/components/page-header";
 import { StateBadge, DifficultyBadge } from "@/components/badges";
 
 export function ProvenanceList() {
@@ -14,7 +15,7 @@ export function ProvenanceList() {
     const lists = await Promise.all(qs.map((q) => api.listItems(q.id)));
     return lists.flat().filter((i): i is QuestionItem => !!i.claim_id || !!i.final_answer);
   });
-  if (loading) return <LoadingState />;
+  if (loading) return <TableSkeleton />;
   if (error) return <ErrorState error={error} />;
   return (
     <div>

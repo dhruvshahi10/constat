@@ -2,13 +2,14 @@
 
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
-import { PageHeader, LoadingState, ErrorState, EmptyState } from "@/components/page-header";
+import { TableSkeleton } from "@/components/skeletons";
+import { PageHeader, ErrorState, EmptyState } from "@/components/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 export function Evals() {
   const { data, loading, error } = useAsync(() => api.evalRecords());
-  if (loading) return <LoadingState />;
+  if (loading) return <TableSkeleton />;
   if (error) return <ErrorState error={error} />;
   return (
     <div>

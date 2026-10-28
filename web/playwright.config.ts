@@ -13,7 +13,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `npm run build >/dev/null 2>&1 && npx next start -p ${PORT}`,
+    // Built the way a tenant deployment is: one allowed frame ancestor.
+    command: `NEXT_PUBLIC_ATLAN_ORIGINS=${process.env.E2E_TENANT_ORIGIN ?? "https://tenant.atlan.com"} npm run build >/dev/null 2>&1 && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/inbox`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

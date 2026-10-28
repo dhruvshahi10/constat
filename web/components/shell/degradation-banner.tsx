@@ -28,9 +28,10 @@ export function DegradationNotice({ state, className, compact }: { state: Degrad
       data-testid="degradation-banner"
       role="status"
     >
+      <span aria-hidden className="relative flex size-2 shrink-0"><span className="absolute inline-flex size-full animate-ping rounded-full bg-status-warn opacity-60 motion-reduce:animate-none" /><span className="relative inline-flex size-2 rounded-full bg-status-warn" /></span>
       <AlertTriangle className="size-3.5 shrink-0 text-status-warn" aria-hidden />
       <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-status-warn">Degraded</span>
-      <span className={cn("min-w-0 truncate", compact && "hidden sm:inline")}>{sentence}</span>
+      <span className={cn("min-w-0 line-clamp-2 sm:truncate", compact && "hidden sm:inline")}>{sentence}</span>
     </Link>
   );
 }

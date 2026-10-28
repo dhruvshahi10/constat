@@ -225,6 +225,35 @@ export interface TrustPreviewEntry {
   last_verified: string;
 }
 
+/** One answered row from a completed questionnaire being imported. */
+export interface ImportRow {
+  ordinal: number;
+  question: string;
+  answer: string;
+  domain: string;
+  /** Rows that say the same thing share a cluster; one claim per cluster. */
+  cluster: string;
+  confidence: number; // 0..1, how sure the matcher is about the cluster
+  existing_claim_id: string | null; // a verified claim already covers it
+  action: "new_claim" | "attach_answer" | "skip";
+  suggested_owner: string | null;
+  reason: string;
+}
+
+export interface ImportPreview {
+  id: string;
+  filename: string;
+  customer: string;
+  rows: ImportRow[];
+  counts: { new_claim: number; attach_answer: number; skip: number };
+}
+
+export interface ImportCommitResult {
+  proposals: number; // draft claims opened as proposals
+  attached: number; // approved answers attached to existing claims
+  skipped: number;
+}
+
 export interface ApiError {
   error: string;
   code: string;
@@ -301,6 +330,10 @@ export interface Api {
   approveProposal(id: string): Promise<ClaimProposal>;
   rejectProposal(id: string): Promise<ClaimProposal>;
   freshness(): Promise<FreshnessGroup[]>;
+  /** Upload a completed questionnaire; returns a preview, commits nothing. */
+  importAnswers(file: File, meta: { customer: string; audience: Audience }): Promise<ImportPreview>;
+  /** Commit the preview: every new_claim becomes a proposal, never a verified claim. */
+  commitImport(previewId: string, rows: Array<{ ordinal: number; action: ImportRow["action"]; owner: string | null }>): Promise<ImportCommitResult>;
   degradation(): Promise<DegradationState>;
   metrics(): Promise<Metrics>;
   trustPreview(): Promise<TrustPreviewEntry[]>;
@@ -309,7 +342,23 @@ export interface Api {
 
 import { liveApi } from "./live";
 
-const live: Api = liveApi(request);
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (bearer) headers.Authorization = `Bearer ${bearer}`;
+  const res = await fetch(`${API_BASE}/v1${path}`, { method: "POST", headers, body: form, credentials: "omit" });
+  if (!res.ok) {
+    let err: ApiError = { error: res.statusText, code: `HTTP_${res.status}` };
+    try {
+      err = (await res.json()) as ApiError;
+    } catch {
+      // not JSON; keep the status text
+    }
+    throw new ApiRequestError(res.status, err.code, err.error);
+  }
+  return (await res.json()) as T;
+}
+
+const live: Api = liveApi(request, upload);
 
 // The mock is loaded lazily so the live bundle does not carry fixture data.
 let mockPromise: Promise<Api> | null = null;
@@ -342,6 +391,8 @@ export const api: Api = IS_MOCK
       approveProposal: viaMock("approveProposal"),
       rejectProposal: viaMock("rejectProposal"),
       freshness: viaMock("freshness"),
+      importAnswers: viaMock("importAnswers"),
+      commitImport: viaMock("commitImport"),
       degradation: viaMock("degradation"),
       metrics: viaMock("metrics"),
       trustPreview: viaMock("trustPreview"),

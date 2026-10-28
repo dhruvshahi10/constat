@@ -73,19 +73,16 @@ export function CommandPalette() {
   return (
     <>
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
-        className="hidden gap-2 text-muted-foreground sm:inline-flex"
+        className="gap-2 text-muted-foreground"
         onClick={() => setOpen(true)}
         aria-label="Open the command palette"
         data-testid="open-palette"
       >
         <Search aria-hidden />
-        <span>Ask or jump</span>
-        <Kbd className="ml-1">cmd K</Kbd>
-      </Button>
-      <Button variant="ghost" size="icon-sm" className="sm:hidden" onClick={() => setOpen(true)} aria-label="Open the command palette">
-        <Search aria-hidden />
+        <span className="hidden lg:inline">Jump</span>
+        <Kbd className="hidden lg:inline-flex">cmd K</Kbd>
       </Button>
 
       <CommandDialog open={open} onOpenChange={setOpen} title="Ask or jump" description="Type a question for a dry-run verdict, or a page name to jump to it." className="max-w-2xl">

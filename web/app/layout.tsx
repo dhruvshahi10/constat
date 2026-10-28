@@ -17,11 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="constat" suppressHydrationWarning>
+    <html lang="en" data-theme="constat" className={fontVariables} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
-      <body className={`${fontVariables} min-h-dvh`}>
+      <body className="min-h-dvh">
         <ThemeProvider>
           {children}
           <Toaster position="bottom-right" />

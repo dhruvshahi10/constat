@@ -4,7 +4,8 @@ import Link from "next/link";
 import { api, DIFFICULTY_LABEL, type Difficulty } from "@/lib/api";
 import { useAsync } from "@/lib/use-api";
 import { useEmbed } from "@/lib/embed";
-import { PageHeader, LoadingState, ErrorState } from "@/components/page-header";
+import { DetailSkeleton } from "@/components/skeletons";
+import { PageHeader, ErrorState } from "@/components/page-header";
 import { StatTile } from "@/components/stat-tile";
 import { DifficultyBadge } from "@/components/badges";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,7 +18,7 @@ const CLASS_ORDER: Difficulty[] = ["reused", "covered", "parameter_missing", "no
 export function Metrics() {
   const { data, loading, error } = useAsync(() => api.metrics());
   const { href } = useEmbed();
-  if (loading) return <LoadingState />;
+  if (loading) return <DetailSkeleton />;
   if (error) return <ErrorState error={error} />;
   if (!data) return null;
   const oldest = data.oldest_open_hard;
@@ -30,9 +31,9 @@ export function Metrics() {
         <p className="eyebrow mb-2">Oldest open hard question</p>
         {oldest ? (
           <>
-            <p className="font-heading text-2xl leading-snug">{oldest.text}</p>
+            <p className="font-heading text-[30px] leading-[34px] font-semibold tracking-tight">{oldest.text}</p>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="font-heading text-3xl font-light text-status-critical">{oldest.age_days} d</span>
+              <span className="font-heading text-4xl font-semibold tabular-nums text-status-critical">{oldest.age_days} d</span>
               <span>open for {oldest.customer}</span>
               <DifficultyBadge difficulty={oldest.difficulty} />
               <Link href={href(`/review/${oldest.question_id}`)} className="text-primary underline-offset-2 hover:underline">

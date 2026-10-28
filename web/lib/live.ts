@@ -11,6 +11,8 @@ import type {
   Difficulty,
   EvalRecord,
   FreshnessGroup,
+  ImportCommitResult,
+  ImportPreview,
   ItemState,
   Metrics,
   QuestionDetail,
@@ -136,7 +138,15 @@ function daysLeft(validUntil: string): number {
   return Math.round(ms / 86_400_000);
 }
 
-export function liveApi(request: Requester): Api {
+/**
+ * Multipart upload for the claim import. Kept beside liveApi because the
+ * JSON requester cannot send a file. Added by the web session; the API side
+ * (POST /v1/claims/import, POST /v1/claims/import/{id}/commit) is proposed in
+ * the shared contract note and does not exist yet.
+ */
+export type Uploader = <T>(path: string, form: FormData) => Promise<T>;
+
+export function liveApi(request: Requester, upload?: Uploader): Api {
   const items = async (path: string): Promise<QuestionItem[]> => {
     const r = await request<{ items: Json[] }>("GET", path);
     return (r.items ?? []).map(mapItem);
@@ -261,6 +271,15 @@ export function liveApi(request: Requester): Api {
         evidence: Array.isArray(e.evidence) ? (e.evidence as string[]) : [], last_verified: s(e.last_verified),
       }));
     },
+    importAnswers: async (file, meta): Promise<ImportPreview> => {
+      if (!upload) throw new Error("claim import needs an uploader");
+      const form = new FormData();
+      form.append("file", file);
+      form.append("customer", meta.customer);
+      form.append("audience", meta.audience);
+      return upload<ImportPreview>("/claims/import", form);
+    },
+    commitImport: (id, rows): Promise<ImportCommitResult> => request("POST", `/claims/import/${id}/commit`, { rows }),
     evalRecords: async (): Promise<EvalRecord[]> => {
       const r = await request<{ records: Json[] }>("GET", "/evals/records");
       return (r.records ?? []).map((e) => {

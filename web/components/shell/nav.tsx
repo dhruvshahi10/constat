@@ -51,12 +51,13 @@ export function Nav({ onNavigate, className }: { onNavigate?: () => void; classN
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors",
+              "relative flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-sidebar-ring",
               active
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                 : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
             )}
           >
+            {active ? <span aria-hidden className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-sidebar-primary" /> : null}
             <Icon className="size-4 shrink-0" aria-hidden />
             <span>{item.label}</span>
           </Link>

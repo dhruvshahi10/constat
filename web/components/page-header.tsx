@@ -1,24 +1,22 @@
 import { cn } from "@/lib/utils";
+import { TableSkeleton } from "@/components/skeletons";
 
 export function PageHeader({ eyebrow, title, description, actions, className }: { eyebrow?: string; title: string; description?: string; actions?: React.ReactNode; className?: string }) {
   return (
-    <header className={cn("mb-6 flex flex-wrap items-end justify-between gap-4", className)}>
+    <header className={cn("mb-5 flex flex-wrap items-end justify-between gap-4", className)}>
       <div className="min-w-0">
-        {eyebrow ? <p className="eyebrow mb-2">{eyebrow}</p> : null}
-        <h1 className="font-heading text-2xl font-normal tracking-tight sm:text-3xl">{title}</h1>
-        {description ? <p className="mt-1 max-w-[70ch] text-sm text-muted-foreground">{description}</p> : null}
+        {eyebrow ? <p className="eyebrow mb-1.5">{eyebrow}</p> : null}
+        <h1 className="font-heading text-[30px] leading-[34px] font-semibold tracking-tight">{title}</h1>
+        {description ? <p className="mt-1.5 max-w-[70ch] text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </header>
   );
 }
 
+/** Default loading state: a table-shaped skeleton. Screens with another shape use components/skeletons. */
 export function LoadingState({ label = "Loading" }: { label?: string }) {
-  return (
-    <div role="status" className="eyebrow py-10 text-center" aria-live="polite">
-      {label}
-    </div>
-  );
+  return <TableSkeleton aria-label={label} />;
 }
 
 export function ErrorState({ error }: { error: Error }) {
