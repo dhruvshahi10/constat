@@ -98,13 +98,18 @@ def parse_xlsx(path: Path) -> Parsed:
     warnings: list[str] = []
     for r in range(lay.header_row + 1, ws.max_row + 1):
         text = _clean(ws.cell(row=r, column=lay.col_question).value)
+        qid = _clean(ws.cell(row=r, column=lay.col_id).value) if lay.col_id else ""
         if not text:
             raw_formula = ws_formulas.cell(row=r, column=lay.col_question).value
             if isinstance(raw_formula, str) and raw_formula.startswith("="):
+                if lay.col_id and not qid:
+                    # a formula below the table (a COUNTA footer, a total) is not a question;
+                    # a formula inside a numbered row still is, and reaches quarantine
+                    warnings.append(f"row {r}: formula cell outside the question rows skipped")
+                    continue
                 text = _clean(raw_formula)
         if not text:
             continue
-        qid = _clean(ws.cell(row=r, column=lay.col_id).value) if lay.col_id else ""
         dom = _clean(ws.cell(row=r, column=lay.col_domain).value) if lay.col_domain else ""
         out.append(RawQuestion(ordinal=len(out) + 1, text=text, domain=dom, qid=qid or f"R{r}", row=r))
         if len(out) >= MAX_QUESTIONS:

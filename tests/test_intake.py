@@ -26,6 +26,11 @@ def test_xlsx_layout_is_detected_by_name_not_position():
     assert p.questions[0].qid == "GRC-01.1" and p.questions[0].row == 4
 
 
+def test_footer_formula_is_skipped_not_quarantined():
+    p = parse_xlsx(QNR / "acme_security_questionnaire.xlsx")
+    assert len(p.questions) == 24 and any("formula cell outside" in w for w in p.warnings)
+
+
 def test_xlsx_with_question_column_elsewhere(tmp_path):
     from openpyxl import Workbook
     wb = Workbook(); ws = wb.active
