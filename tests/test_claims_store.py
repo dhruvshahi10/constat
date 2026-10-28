@@ -86,6 +86,15 @@ def test_no_op_proposal_is_refused(tmp_path):
         s.propose(mk(), actor="a@x.io", reason="same", today=TODAY)
 
 
+def test_notes_or_keyword_changes_are_proposable(tmp_path):
+    s = FileClaimStore(tmp_path)
+    s.bootstrap([mk()], approver="seed", today=TODAY)
+    p = s.propose(mk(notes="owner: please confirm the KMS region"), actor="a@x.io", reason="note", today=TODAY)
+    c = s.approve(p.proposal_id, approver="b@x.io", today=TODAY)
+    assert c.notes.startswith("owner:") and c.version == 2
+    assert c.version_hash() == mk().version_hash(), "notes do not change the content version"
+
+
 def test_bootstrap_never_overwrites(tmp_path):
     s = FileClaimStore(tmp_path)
     s.bootstrap([mk()], approver="seed", today=TODAY)

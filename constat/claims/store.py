@@ -93,6 +93,15 @@ class ClaimStore(ABC):
         return out
 
 
+_VOLATILE = {"version", "version_hash", "updated_by", "updated_on", "approved_answers"}
+
+
+def _proposable_fields(c: Claim) -> dict:
+    """Everything a proposal may change: content fields plus notes, keywords,
+    topics, framework map and owner. Volatile bookkeeping is left out."""
+    return {k: v for k, v in c.to_dict().items() if k not in _VOLATILE}
+
+
 class FileClaimStore(ClaimStore):
     """Directory layout:
         <root>/claims/<claim_id>.json
@@ -128,7 +137,7 @@ class FileClaimStore(ClaimStore):
             raise ValueError(f"claim {claim.claim_id}: " + "; ".join(problems))
         existing = self.get(claim.claim_id)
         prev_hash = existing.version_hash() if existing else ""
-        if existing and existing.version_hash() == claim.version_hash() and existing.status == claim.status:
+        if existing and _proposable_fields(existing) == _proposable_fields(claim):
             raise ValueError(f"claim {claim.claim_id}: proposal changes nothing")
         pid = hashlib.sha256(
             f"{claim.claim_id}|{claim.version_hash()}|{actor}|{today.isoformat()}|{len(self._load_proposals())}"
