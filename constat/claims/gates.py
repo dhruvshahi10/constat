@@ -51,7 +51,28 @@ PARAMETER_ASK = re.compile(
     r"\b(specify|which|what (are|is) (your|the)|how (many|long|often)|within how many|state (the|your)|"
     r"provide (the )?(number|date|version|certificate number)|minimum protocol|versions?|rto|rpo|"
     r"number of days|timeframe|time frame|cadence|frequency|date of)\b", re.I)
-HAS_VALUE = re.compile(r"\d|\b(tls|aes|sha|rsa)\b", re.I)
+# a stated value: a number, a named algorithm or protocol, or a named cadence
+HAS_VALUE = re.compile(r"\d|\b(tls|aes|sha|rsa|annual(?:ly)?|yearly|quarterly|monthly|weekly|daily|"
+                       r"semi-annual(?:ly)?|biannual(?:ly)?|continuous(?:ly)?|real[\s-]?time)\b", re.I)
+_NUM = re.compile(r"\b\d+(?:[.,]\d+)*(?:\s*(?:%|days?|hours?|minutes?|months?|years?|bit|bits))?\b|"
+                  r"\b(?:tls|aes|sha|rsa)[\s-]?\d+(?:\.\d+)?\b", re.I)
+
+
+def claim_values(claim: Claim) -> set[str]:
+    text = claim.statement + " " + " ".join(claim.exceptions)
+    return {m.group(0).lower().replace(" ", "") for m in _NUM.finditer(text)}
+
+
+def new_numbers(answer: str, claim: Claim) -> list[str]:
+    """Numbers, versions or units in the answer that the claim does not state.
+    A drafted or edited answer may rephrase a claim; it may not add to it."""
+    allowed = claim_values(claim)
+    out: list[str] = []
+    for m in _NUM.finditer(answer or ""):
+        v = m.group(0).lower().replace(" ", "")
+        if v not in allowed and m.group(0) not in out:
+            out.append(m.group(0))
+    return out
 PARAM_WORDS = {"often", "cadence", "frequency", "applied", "apply", "specify", "version", "versions",
                "number", "date", "timeframe", "minimum", "long", "many", "frequently", "summarise",
                "summarize", "detail", "state", "list"}
@@ -225,6 +246,14 @@ def gate(question: str, matches: list[Match], today: date, audience: Audience,
         return _refuse(DifficultyClass.COVERED, "ABSOLUTE_LANGUAGE",
                        "Answer contains absolute language the claim does not support.",
                        f"OWNER:{c.owner}", c)
+
+    # 8b. values the claim does not state (a reviewer edit or a model draft). After
+    # absolutes on purpose: "100% secure" is refused as an absolute, not held as a value.
+    introduced = new_numbers(answer, c)
+    if introduced:
+        return _hold(DifficultyClass.PARAMETER_MISSING, "NEW_VALUE_INTRODUCED",
+                     f"Answer states values the claim does not: {', '.join(introduced)}. "
+                     f"Ask {c.owner} to add them to the claim first.", f"OWNER:{c.owner}", c, answer=None)
 
     # 9. contractual wording, on the question or introduced in the answer
     if contractual_q or (CONTRACTUAL.search(answer) and not CONTRACTUAL.search(c.statement)):

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .deps import get_claim_store, get_repo, get_settings
-from .routers import claims, evals, questionnaires, questions
+from .routers import claims, evals, questionnaires, questions, review
 
 
 def create_app() -> FastAPI:
@@ -38,6 +38,8 @@ def create_app() -> FastAPI:
 
     app.include_router(claims.router)
     app.include_router(questionnaires.router)
+    app.include_router(review.router)
+    app.include_router(review.deals_router)
     app.include_router(questions.router)
     app.include_router(evals.router)
     return app

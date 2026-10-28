@@ -12,7 +12,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from .gates import default_answer
+from .gates import claim_values, default_answer, new_numbers  # noqa: F401 - re-exported
 from .match import Match
 from .models import Audience, Claim
 
@@ -23,7 +23,6 @@ PRICES = {
     "claude-sonnet-4-5-20250929": (3.00, 15.00),
     "mock": (0.0, 0.0),
 }
-_NUM = re.compile(r"\b\d+(?:[.,]\d+)*(?:\s*(?:%|days?|hours?|minutes?|months?|years?|bit|bits))?\b|\b(?:tls|aes|sha|rsa)[\s-]?\d+(?:\.\d+)?\b", re.I)
 
 
 @dataclass
@@ -48,22 +47,6 @@ class ClaimDrafter(Protocol):
     model_id: str
 
     def draft(self, question: str, match: Match, audience: Audience) -> ClaimDraft: ...
-
-
-def claim_values(claim: Claim) -> set[str]:
-    text = claim.statement + " " + " ".join(claim.exceptions)
-    return {m.group(0).lower().replace(" ", "") for m in _NUM.finditer(text)}
-
-
-def new_numbers(answer: str, claim: Claim) -> list[str]:
-    """Numbers, versions or units in the answer that the claim does not state."""
-    allowed = claim_values(claim)
-    out = []
-    for m in _NUM.finditer(answer or ""):
-        v = m.group(0).lower().replace(" ", "")
-        if v not in allowed and v not in out:
-            out.append(m.group(0))
-    return out
 
 
 class DeterministicClaimDrafter:
