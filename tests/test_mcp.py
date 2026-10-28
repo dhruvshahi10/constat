@@ -25,6 +25,7 @@ def tools(tmp_path, monkeypatch):
                                                   today=date(2026, 10, 28))
     import importlib
     mod = importlib.import_module("mcp_server.server")
+    mod = importlib.reload(mod)      # the module caches nothing, but a stale import from another test would
     yield mod
     deps.reset()
 

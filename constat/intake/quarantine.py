@@ -21,7 +21,12 @@ FORMULA = re.compile(r"^\s*[=+\-@]\s*[A-Za-z(]")                 # =HYPERLINK(, 
 ROLE_MARKUP = re.compile(r"<\s*/?\s*(system|assistant|user|tool|instruction)s?\s*>|\[(INST|SYS)\]", re.I)
 HIDDEN = re.compile(r"[​‌‍⁠﻿‪-‮⁦-⁩]")
 CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-BASE64ISH = re.compile(r"\b[A-Za-z0-9+/]{80,}={0,2}\b")
+BASE64ISH = re.compile(r"[A-Za-z0-9+/=]{60,}")                   # long opaque runs, padding included
+HTML_ACTIVE = re.compile(r"<\s*(script|iframe|object|embed|svg|img)\b|\bon(error|load|click|mouseover)\s*=|javascript:", re.I)
+TEMPLATE = re.compile(r"\{\{[^}]{0,80}\}\}|\$\{[^}]{0,80}\}|<%[^%]{0,80}%>")
+DIRECTIVE = re.compile(r"\b(the|an|this|any|your)\s+(assistant|model|ai|system|bot|llm)\s+(must|should|shall|will|is to|has to|needs? to)\b|"
+                       r"\b(note|instruction|message)s?\s+(to|for)\s+the\s+(ai|assistant|model|system)\b|"
+                       r"\bsystem\s+override\b|\bpre-?approved\s+all\s+answers\b", re.I)
 
 
 @dataclass
@@ -48,6 +53,12 @@ def screen_raw(text: str) -> QuarantineDecision:
         d.add("control characters in text")
     if BASE64ISH.search(text):
         d.add("long base64-like blob in a question")
+    if HTML_ACTIVE.search(text):
+        d.add("active HTML (script, event handler or javascript URL) inside question text")
+    if TEMPLATE.search(text):
+        d.add("template expression inside question text")
+    if DIRECTIVE.search(text):
+        d.add("a directive addressed to the assistant or system inside question text")
     # homoglyph check: letters outside Latin, Greek and Cyrillic scripts mixed into ASCII words
     for ch in text:
         if ch.isalpha() and ord(ch) > 0x24F and unicodedata.category(ch).startswith("L"):
