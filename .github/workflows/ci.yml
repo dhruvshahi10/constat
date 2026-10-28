@@ -2,15 +2,15 @@ name: ci
 on: [push, pull_request]
 
 jobs:
-  evals:
+  engine:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Install the pinned dev set, not a hand-listed subset. The upload evals
-      # need pypdf and python-docx; installing only pytest+openpyxl meant CI was
-      # silently skipping them.
-      - run: pip install -r requirements-dev.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest tests/ -q
+      # the golden set is the release gate for the claims layer: zero dangerous failures
+      - run: python evals/run_golden.py --split dev
+      - run: python evals/run_golden.py --split holdout

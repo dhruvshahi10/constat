@@ -1,0 +1,15 @@
+# Constat API: FastAPI over the engine. Fastembed model baked in so runtime has no egress.
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY constat ./constat
+COPY api ./api
+COPY evals ./evals
+COPY data/evidence ./data/evidence
+COPY data/questionnaires ./data/questionnaires
+ENV CONSTAT_ENV=prod DATABASE_URL=sqlite:////data/sidecar.db CLAIM_STORE=file CLAIM_STORE_PATH=/data/claims
+EXPOSE 8000
+HEALTHCHECK CMD python -c "import urllib.request;urllib.request.urlopen('http://localhost:8000/healthz')"
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
