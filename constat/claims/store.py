@@ -244,6 +244,17 @@ class FileClaimStore(ClaimStore):
         self._write_claim(c)
         return c
 
+    def record_evidence_check(self, claim_id: str, ref: str, checked_on: date) -> None:
+        """Bookkeeping, not a fact change: the date a cited test was last seen
+        passing. Does not touch the content hash."""
+        c = self.get(claim_id)
+        if c is None:
+            raise KeyError(claim_id)
+        from .models import EvidenceRef
+        c.evidence_refs = [EvidenceRef(e.kind, e.ref, checked_on if e.ref == ref else e.checked_on)
+                           for e in c.evidence_refs]
+        self._write_claim(c)
+
     # ---- internals ------------------------------------------------------
     def _claim_path(self, claim_id: str) -> Path:
         safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in claim_id)
