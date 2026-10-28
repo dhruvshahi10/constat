@@ -2,3 +2,4 @@
 -r requirements.txt
 pytest==9.1.1
 httpx==0.28.1          # FastAPI TestClient
+pytest-cov==7.1.0       # branch coverage gate on the claim gates
