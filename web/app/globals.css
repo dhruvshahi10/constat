@@ -1,0 +1,267 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Dark-mode utilities follow the Constat theme, never the OS setting. The
+   embedded (native) theme is light inside Atlan regardless of the device. */
+@custom-variant dark (&:where([data-theme="constat"], [data-theme="constat"] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-status-ok: var(--status-ok);
+  --color-status-warn: var(--status-warn);
+  --color-status-critical: var(--status-critical);
+  --color-status-info: var(--status-info);
+  --color-status-ok-wash: var(--status-ok-wash);
+  --color-status-warn-wash: var(--status-warn-wash);
+  --color-status-critical-wash: var(--status-critical-wash);
+  --color-status-info-wash: var(--status-info-wash);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --tracking-caps: 0.16em;
+  --ease-out-brand: cubic-bezier(0.22, 0.72, 0.28, 1);
+  --ease-inout-brand: cubic-bezier(0.62, 0, 0.32, 1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Theme "constat": the standalone dark product. Hex values are copied  */
+/* verbatim from constat/brand.py TOKENS (ink, bone, signal, status).   */
+/* ------------------------------------------------------------------ */
+:root,
+:root[data-theme="constat"] {
+  color-scheme: dark;
+  --ink-0: #0E0E10;
+  --ink-1: #141416;
+  --ink-2: #1A1A1D;
+  --ink-3: #222226;
+  --ink-4: #2B2B30;
+  --bone-1: #E8E8E4;
+  --bone-2: #B4B4AE;
+  --bone-3: #8F8F88;
+  --bone-4: #7A7A73;
+  --signal: #B7C4FF;
+  --signal-bright: #CFD8FF;
+  --signal-deep: #6E7CC3;
+  --signal-wash: rgba(183, 196, 255, 0.09);
+  --signal-ink: #14151F;
+
+  --background: var(--ink-1);
+  --foreground: var(--bone-1);
+  --card: var(--ink-2);
+  --card-foreground: var(--bone-1);
+  --popover: var(--ink-3);
+  --popover-foreground: var(--bone-1);
+  --primary: var(--signal);
+  --primary-foreground: var(--signal-ink);
+  --secondary: var(--ink-3);
+  --secondary-foreground: var(--bone-1);
+  --muted: var(--ink-3);
+  --muted-foreground: var(--bone-2);
+  --accent: var(--ink-4);
+  --accent-foreground: var(--bone-1);
+  --destructive: #D97862;
+  --border: rgba(232, 232, 228, 0.10);
+  --input: rgba(232, 232, 228, 0.18);
+  --ring: var(--signal);
+  --status-ok: #9BC49C;
+  --status-warn: #D9B36A;
+  --status-critical: #D97862;
+  --status-info: #8FB0BE;
+  --status-ok-wash: rgba(155, 196, 156, 0.10);
+  --status-warn-wash: rgba(217, 179, 106, 0.12);
+  --status-critical-wash: rgba(217, 120, 98, 0.12);
+  --status-info-wash: rgba(143, 176, 190, 0.10);
+  --chart-1: var(--signal);
+  --chart-2: var(--status-ok);
+  --chart-3: var(--status-warn);
+  --chart-4: var(--status-critical);
+  --chart-5: var(--status-info);
+  --radius: 0.25rem;
+  --sidebar: var(--ink-0);
+  --sidebar-foreground: var(--bone-2);
+  --sidebar-primary: var(--signal);
+  --sidebar-primary-foreground: var(--signal-ink);
+  --sidebar-accent: var(--ink-3);
+  --sidebar-accent-foreground: var(--bone-1);
+  --sidebar-border: rgba(232, 232, 228, 0.10);
+  --sidebar-ring: var(--signal);
+
+  --font-sans: var(--font-archivo), Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-fragment-mono), "Courier New", monospace;
+}
+
+/* ------------------------------------------------------------------ */
+/* Theme "native": light, for rendering inside Atlan. Atlan's published */
+/* neutral scale 25 to 800, primary blue 500, cyan only for focus and   */
+/* indicators (never a background), system type.                        */
+/* ------------------------------------------------------------------ */
+:root[data-theme="native"] {
+  color-scheme: light;
+  --n-25: #F6F6F8;
+  --n-50: #EEEEF1;
+  --n-100: #DDDDE3;
+  --n-200: #CCCCD5;
+  --n-300: #9999AA;
+  --n-400: #77778E;
+  --n-500: #555572;
+  --n-600: #2B2B39;
+  --n-700: #252530;
+  --n-800: #141517;
+  --blue-25: #F9F9FC;
+  --blue-500: #2026D2;
+  --blue-900: #0A0B3F;
+  --cyan: #62E1FC;
+
+  --background: #FFFFFF;
+  --foreground: var(--n-800);
+  --card: #FFFFFF;
+  --card-foreground: var(--n-800);
+  --popover: #FFFFFF;
+  --popover-foreground: var(--n-800);
+  --primary: var(--blue-500);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--n-50);
+  --secondary-foreground: var(--n-700);
+  --muted: var(--n-25);
+  --muted-foreground: var(--n-500);
+  --accent: var(--n-50);
+  --accent-foreground: var(--n-800);
+  --destructive: #B42318;
+  --border: var(--n-100);
+  --input: var(--n-200);
+  --ring: var(--cyan);
+  --status-ok: #1B7A3E;
+  --status-warn: #A15C07;
+  --status-critical: #B42318;
+  --status-info: var(--blue-500);
+  --status-ok-wash: rgba(27, 122, 62, 0.08);
+  --status-warn-wash: rgba(161, 92, 7, 0.10);
+  --status-critical-wash: rgba(180, 35, 24, 0.08);
+  --status-info-wash: rgba(32, 38, 210, 0.07);
+  --chart-1: var(--blue-500);
+  --chart-2: var(--status-ok);
+  --chart-3: var(--status-warn);
+  --chart-4: var(--status-critical);
+  --chart-5: var(--n-400);
+  --radius: 0.5rem;
+  --sidebar: var(--n-25);
+  --sidebar-foreground: var(--n-600);
+  --sidebar-primary: var(--blue-500);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--n-50);
+  --sidebar-accent-foreground: var(--n-800);
+  --sidebar-border: var(--n-100);
+  --sidebar-ring: var(--cyan);
+
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+@utility font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Eyebrow: mono caps label, the brand's section marker. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* The gate stamp and the struck draft: the refusal performs itself. */
+@keyframes constat-strike {
+  from { background-size: 0% 1.5px; }
+  to { background-size: 100% 1.5px; }
+}
+@keyframes constat-stamp {
+  0% { opacity: 0; transform: scale(1.35) rotate(-6deg); }
+  60% { opacity: 1; transform: scale(0.96) rotate(-3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-3deg); }
+}
+.draft-struck {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 100% 1.5px;
+  animation: constat-strike 700ms var(--ease-out-brand) 350ms both;
+  color: var(--muted-foreground);
+}
+.gate-stamp {
+  animation: constat-stamp 420ms var(--ease-out-brand) 900ms both;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .draft-struck,
+  .gate-stamp {
+    animation: none;
+    opacity: 1;
+    transform: rotate(-3deg);
+  }
+  .draft-struck {
+    transform: none;
+  }
+}
