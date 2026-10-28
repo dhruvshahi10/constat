@@ -73,12 +73,13 @@ def test_same_question_next_time_is_reused(world):
 
 def test_edit_is_regated_and_material_edit_opens_a_proposal(world):
     repo, store, q, ctx = world
-    it = _review_items(repo, q)[0]
-    # an edit that invents a number is refused
+    it2 = next(i for i in _review_items(repo, q) if i.claim_id == "grc.isms")
+    it = next(i for i in _review_items(repo, q) if i.id != it2.id)
+    # an edit that invents a number is held for the owner, never approved
     _, v = rv.edit(ctx, it, "Yes, reviewed every 7 days by the board with 99.999% coverage.")
     assert v["outcome"] != "ANSWER" and it.state in (State.HELD, State.REFUSED)
+    assert "NEW_VALUE_INTRODUCED" in v["flags"] or "ABSOLUTE_LANGUAGE" in v["flags"]
     # a faithful rewrite is approved and, being material, proposes a claim update
-    it2 = next(i for i in _review_items(repo, q) if i.claim_id == "grc.isms")
     faithful = ("Yes. We keep an approved information security policy set, which the CISO reviews "
                 "and re-approves at least once a year.")
     _, v2 = rv.edit(ctx, it2, faithful, "rephrased for the customer")
