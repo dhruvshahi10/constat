@@ -10,7 +10,10 @@ from pydantic import BaseModel, Field
 from constat.claims import Audience
 from constat.claims.gates import gate
 from constat.claims.match import ClaimMatcher
-from constat.persist import MetricEvent, Repository, ulid
+from fastapi import HTTPException
+
+from constat.persist import MetricEvent, Repository, State, ulid
+from constat.workflow.diff import word_diff
 
 from ..auth import CallerPrincipal, current_principal
 from ..deps import get_matcher, get_repo
@@ -42,3 +45,44 @@ def ask(body: AskBody, p: CallerPrincipal = Depends(current_principal),
                      "matched_terms": m.matched_terms, "reused": m.reused is not None}
                     for m in matches],
     }
+
+
+def _item(repo: Repository, item_id: str, p: CallerPrincipal):
+    it = repo.get("question_items", item_id)
+    if it is None or it.tenant != p.tenant:
+        raise HTTPException(status_code=404, detail={"error": "no such question", "code": "NOT_FOUND"})
+    return it
+
+
+def _last_approved(repo: Repository, it) -> str | None:
+    """The most recent SENT or APPROVED answer in this tenant that rested on
+    the same claim: what the reviewer compares the new draft against."""
+    if not it.claim_id:
+        return None
+    for prev in repo.list("question_items", {"tenant": it.tenant, "claim_id": it.claim_id,
+                                             "state": [State.SENT, State.APPROVED]},
+                          order="updated_at desc", limit=5):
+        if prev.id != it.id and prev.final_answer:
+            return prev.final_answer
+    return None
+
+
+@router.get("/{item_id}")
+def get_question(item_id: str, p: CallerPrincipal = Depends(current_principal),
+                 repo: Repository = Depends(get_repo), matcher: ClaimMatcher = Depends(get_matcher)):
+    it = _item(repo, item_id, p)
+    claim = matcher.store.get(it.claim_id) if it.claim_id else None
+    last = _last_approved(repo, it)
+    actions = repo.list("review_actions", {"item_id": it.id}, order="at asc", limit=200)
+    return {"item": it.to_row() | {"verdict_json": it.verdict_json, "flags": it.flags},
+            "claim": claim.to_dict() if claim else None,
+            "last_approved_answer": last,
+            "diff": word_diff(last or "", it.final_answer or it.draft_answer or "") if last else [],
+            "actions": [a.to_row() for a in actions]}
+
+
+@router.get("/{item_id}/diff")
+def diff(item_id: str, p: CallerPrincipal = Depends(current_principal), repo: Repository = Depends(get_repo)):
+    it = _item(repo, item_id, p)
+    last = _last_approved(repo, it)
+    return {"last_approved_answer": last, "ops": word_diff(last or "", it.final_answer or it.draft_answer or "")}

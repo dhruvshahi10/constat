@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .deps import get_claim_store, get_repo, get_settings
-from .routers import claims, evals, questions
+from .routers import claims, evals, questionnaires, questions
 
 
 def create_app() -> FastAPI:
@@ -37,6 +37,7 @@ def create_app() -> FastAPI:
                 "claims": len(store.list()) if settings.claim_store == "file" else "atlan"}
 
     app.include_router(claims.router)
+    app.include_router(questionnaires.router)
     app.include_router(questions.router)
     app.include_router(evals.router)
     return app
