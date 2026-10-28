@@ -26,7 +26,7 @@ class State(str, Enum):
     QUARANTINED = "QUARANTINED"
 
 
-_JSON_FIELDS = {"verdict_json", "payload_json", "artefact_json", "flags"}
+_JSON_FIELDS = {"verdict_json", "payload_json", "artefact_json", "layout_json", "flags"}
 
 
 class _Row:
@@ -71,6 +71,7 @@ class Questionnaire(_Row):
     audience: str = "nda"
     deal_id: Optional[str] = None
     status: str = "received"             # received | normalising | processing | done | error
+    layout_json: dict = field(default_factory=dict)   # detected spreadsheet layout, for export
     received_at: str = field(default_factory=now_iso)
     updated_at: str = field(default_factory=now_iso)
 

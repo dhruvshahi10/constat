@@ -4,12 +4,14 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 import tempfile
 import threading
 from datetime import date
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, StreamingResponse
 
 from constat.claims import Audience, ClaimStore
@@ -24,9 +26,21 @@ from ..settings import Settings
 
 router = APIRouter(prefix="/v1/questionnaires", tags=["questionnaires"])
 MAX_UPLOAD = 6 * 1024 * 1024
+MAX_STREAMS_PER_TENANT = 8
 _UPLOAD_DIR = Path(tempfile.gettempdir()) / "constat-uploads"
-_LAYOUTS: dict[str, dict] = {}            # questionnaire id -> layout dict (in-process; export needs it)
+_STREAMS: dict[str, int] = {}
 _LOCK = threading.Lock()
+_SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
+_FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _safe_stem(filename: str) -> str:
+    return (_SAFE_NAME.sub("_", Path(filename).stem).strip("._") or "questionnaire")[:80]
+
+
+def _cell_safe(text: str) -> str:
+    """A cell that would be evaluated as a formula by a spreadsheet gets a leading apostrophe."""
+    return ("'" + text) if text and text.startswith(_FORMULA_START) else text
 
 
 def _owned(repo: Repository, qid: str, p: CallerPrincipal) -> Questionnaire:
@@ -67,30 +81,39 @@ def _domain_owners(store: ClaimStore) -> dict[str, str]:
 
 
 @router.post("", status_code=202)
-async def upload(background: BackgroundTasks, file: UploadFile = File(...), customer: str = Form(""),
+async def upload(request: Request, background: BackgroundTasks, file: UploadFile = File(...), customer: str = Form(""),
                  deal_id: str = Form(""), audience: str = Form("nda"),
                  p: CallerPrincipal = Depends(require("reviewer")), repo: Repository = Depends(get_repo),
                  store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
-    data = await file.read()
-    if len(data) > MAX_UPLOAD:
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > MAX_UPLOAD + 64 * 1024:
         raise HTTPException(status_code=413, detail={"error": "file over 6MB", "code": "TOO_LARGE"})
+    chunks, size = [], 0
+    while True:
+        chunk = await file.read(256 * 1024)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > MAX_UPLOAD:
+            raise HTTPException(status_code=413, detail={"error": "file over 6MB", "code": "TOO_LARGE"})
+        chunks.append(chunk)
+    data = b"".join(chunks)
     if audience not in ("public", "nda", "internal"):
         raise HTTPException(status_code=422, detail={"error": "audience must be public, nda or internal", "code": "INVALID"})
     qid = ulid()
     qdir = _UPLOAD_DIR / p.tenant / qid
     qdir.mkdir(parents=True, exist_ok=True)
     try:
-        parsed = parsers.parse(file.filename or "upload", data, qdir)
+        parsed = await run_in_threadpool(parsers.parse, file.filename or "upload", data, qdir)
     except ValueError as e:
         raise HTTPException(status_code=422, detail={"error": str(e), "code": "UNPARSEABLE"})
     (qdir / "original").write_bytes(data)
-    q = Questionnaire(id=qid, tenant=p.tenant, customer=customer or "unknown", filename=file.filename or "upload",
+    q = Questionnaire(id=qid, tenant=p.tenant, customer=(customer or "unknown")[:200],
+                      filename=_safe_stem(file.filename or "upload") + Path(file.filename or "").suffix.lower()[:6],
                       sha256=hashlib.sha256(data).hexdigest(), source_kind=parsed.source_kind,
-                      audience=audience, deal_id=deal_id or None)
+                      audience=audience, deal_id=deal_id or None, layout_json=parsed.layout.__dict__)
     repo.insert("questionnaires", q)
     create_items(repo, qid, p.tenant, parsed.questions)
-    with _LOCK:
-        _LAYOUTS[qid] = parsed.layout.__dict__
     background.add_task(_run, repo, store, qid, audience, settings)
     return {"id": qid, "questions": len(parsed.questions), "source_kind": parsed.source_kind,
             "warnings": parsed.warnings, "status": "received"}
@@ -136,58 +159,88 @@ def quarantine(qid: str, p: CallerPrincipal = Depends(current_principal), repo: 
 
 
 @router.get("/{qid}/export")
-def export(qid: str, p: CallerPrincipal = Depends(current_principal), repo: Repository = Depends(get_repo)):
+def export(qid: str, internal: bool = False, p: CallerPrincipal = Depends(current_principal),
+           repo: Repository = Depends(get_repo)):
+    """Customer export by default: only SENT answers, generic notes, no owners,
+    no flags, formula-safe cells. `?internal=1` (owner or admin) adds the
+    working state for the team's own copy."""
     q = _owned(repo, qid, p)
+    if internal and not p.at_least("owner"):
+        raise HTTPException(status_code=403, detail={"error": "internal export needs owner", "code": "FORBIDDEN"})
     qdir = _UPLOAD_DIR / p.tenant / qid
     rows = repo.list("question_items", {"questionnaire_id": qid}, order="ordinal asc", limit=5000)
     answers: dict[int, tuple[str, str]] = {}
     for r in rows:
-        resp = r.final_answer if r.state == State.SENT else (
-            r.final_answer or "" if r.state == State.APPROVED else "")
-        notes = {State.SENT: "Sent", State.APPROVED: "Approved, not yet sent",
-                 State.REVIEW: "Draft awaiting review", State.HELD: f"Held: {r.route or ''}",
-                 State.REFUSED: f"Refused: {', '.join(r.flags)}", State.QUARANTINED: "Quarantined"}.get(r.state, r.state.value)
+        if internal:
+            resp = r.final_answer or r.draft_answer or ""
+            notes = {State.SENT: "Sent", State.APPROVED: "Approved, not yet sent",
+                     State.REVIEW: "Draft awaiting review", State.HELD: f"Held: {r.route or ''}",
+                     State.REFUSED: f"Refused: {', '.join(r.flags)}", State.QUARANTINED: "Quarantined"}.get(r.state, r.state.value)
+        else:
+            resp = r.final_answer if r.state == State.SENT else ""
+            notes = "" if r.state == State.SENT else "Pending: we will follow up"
         if r.row is not None:
-            answers[r.row] = (resp or "", notes)
-    if q.source_kind == "xlsx" and qid in _LAYOUTS:
-        out = qdir / f"{Path(q.filename).stem}__DELIVERED.xlsx"
-        parsers.write_xlsx(qdir / "upload.xlsx", out, parsers.Layout(**_LAYOUTS[qid]), answers)
+            answers[r.row] = (_cell_safe(resp or ""), _cell_safe(notes))
+    stem = _safe_stem(q.filename)
+    if q.source_kind == "xlsx" and q.layout_json and (qdir / "upload.xlsx").exists():
+        out = qdir / f"{stem}__{'INTERNAL' if internal else 'DELIVERED'}.xlsx"
+        parsers.write_xlsx(qdir / "upload.xlsx", out, parsers.Layout(**q.layout_json), answers)
         return FileResponse(out, filename=out.name,
                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     # csv and docx: a csv of answers, since there is no in-place write-back
     import csv, io
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["ordinal", "question", "state", "answer", "notes"])
+    w.writerow(["ordinal", "question", "state", "answer", "notes"] if internal else ["ordinal", "question", "answer"])
     for r in rows:
-        w.writerow([r.ordinal, r.text, r.state.value, r.final_answer or "", ", ".join(r.flags)])
+        if internal:
+            w.writerow([r.ordinal, _cell_safe(r.text), r.state.value, _cell_safe(r.final_answer or r.draft_answer or ""),
+                        ", ".join(r.flags)])
+        else:
+            w.writerow([r.ordinal, _cell_safe(r.text), _cell_safe(r.final_answer or "" if r.state == State.SENT else "")])
     return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
-                             headers={"Content-Disposition": f'attachment; filename="{Path(q.filename).stem}__answers.csv"'})
+                             headers={"Content-Disposition": f'attachment; filename="{stem}__answers.csv"'})
 
 
 @router.get("/{qid}/events")
-async def events(qid: str, since: str = "", p: CallerPrincipal = Depends(current_principal),
+async def events(qid: str, request: Request, since: str = "", p: CallerPrincipal = Depends(current_principal),
                  repo: Repository = Depends(get_repo)):
     """Server-sent events: item.state as items change, questionnaire.done at
-    the end. `?since=<updated_at>` returns only changes after that time."""
+    the end. `?since=<updated_at>` returns only changes after that time.
+    Capped per tenant; stops when the client disconnects; queries run off
+    the event loop."""
     _owned(repo, qid, p)
+    with _LOCK:
+        if _STREAMS.get(p.tenant, 0) >= MAX_STREAMS_PER_TENANT:
+            raise HTTPException(status_code=429, detail={"error": "too many open event streams", "code": "RATE_LIMITED"})
+        _STREAMS[p.tenant] = _STREAMS.get(p.tenant, 0) + 1
+
+    def _poll(last: str):
+        rows = repo.list("question_items", {"questionnaire_id": qid}, order="updated_at asc", limit=5000)
+        return [r for r in rows if r.updated_at > last], repo.get("questionnaires", qid)
 
     async def gen():
         last = since
         idle = 0
-        while idle < 600:          # five minutes at 0.5 s
-            rows = repo.list("question_items", {"questionnaire_id": qid}, order="updated_at asc", limit=5000)
-            changed = [r for r in rows if r.updated_at > last]
-            for r in changed:
-                yield f"event: item.state\ndata: {json.dumps({'id': r.id, 'ordinal': r.ordinal, 'state': r.state.value, 'difficulty': r.difficulty, 'updated_at': r.updated_at})}\n\n"
-                last = max(last, r.updated_at)
-            q = repo.get("questionnaires", qid)
-            if q.status == "done" or q.status.startswith("error"):
-                counts = _summary(repo, q)["counts"]
-                yield f"event: questionnaire.done\ndata: {json.dumps({'status': q.status, 'counts': counts})}\n\n"
-                return
-            idle = 0 if changed else idle + 1
-            await asyncio.sleep(0.5)
+        try:
+            while idle < 600:          # five minutes at 0.5 s
+                if await request.is_disconnected():
+                    return
+                changed, q = await run_in_threadpool(_poll, last)
+                for r in changed:
+                    yield f"event: item.state\ndata: {json.dumps({'id': r.id, 'ordinal': r.ordinal, 'state': r.state.value, 'difficulty': r.difficulty, 'updated_at': r.updated_at})}\n\n"
+                    last = max(last, r.updated_at)
+                if q is None:
+                    return
+                if q.status == "done" or q.status.startswith("error"):
+                    counts = _summary(repo, q)["counts"]
+                    yield f"event: questionnaire.done\ndata: {json.dumps({'status': q.status, 'counts': counts})}\n\n"
+                    return
+                idle = 0 if changed else idle + 1
+                await asyncio.sleep(0.5)
+        finally:
+            with _LOCK:
+                _STREAMS[p.tenant] = max(0, _STREAMS.get(p.tenant, 1) - 1)
 
     return StreamingResponse(gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

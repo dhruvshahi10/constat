@@ -126,3 +126,42 @@ def test_trust_preview_lists_only_public_usable_claims(client):
     ids = {e["claim_id"] for e in r["entries"]}
     assert "iam.mfa" in ids and "crypto.at_rest" not in ids and "appsec.pentest" not in ids
     assert all(e["last_verified"] for e in r["entries"]) and "human action" in r["note"]
+
+
+def test_prod_refuses_dev_secrets_and_hides_docs(tmp_path, monkeypatch):
+    monkeypatch.setenv("CONSTAT_ENV", "prod")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    monkeypatch.setenv("CLAIM_STORE_PATH", str(tmp_path / "claims"))
+    monkeypatch.setenv("CONSTAT_DEV_TOKEN", "leaked")
+    from api import deps
+    deps.reset()
+    from api.main import create_app
+    with pytest.raises(RuntimeError, match="CONSTAT_DEV_TOKEN"):
+        create_app()
+    monkeypatch.delenv("CONSTAT_DEV_TOKEN")
+    deps.reset()
+    app = create_app()
+    c = TestClient(app)
+    assert c.get("/docs").status_code == 404 and c.get("/openapi.json").status_code == 404
+    assert c.get("/v1/claims", headers={"Authorization": "Bearer leaked"}).status_code == 401
+    deps.reset()
+
+
+def test_jwt_tenant_must_be_allowlisted_slug(client):
+    for tenant in ("../../etc", "other-tenant", "Acme"):
+        tok = jwt.encode({"email": "u@acme.example", "tenant": tenant, "aud": "constat",
+                          "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
+                         "dev-jwt-secret-0123456789abcdef0123456789", algorithm="HS256")
+        assert client.get("/v1/claims", headers={"Authorization": f"Bearer {tok}"}).status_code == 401, tenant
+
+
+def test_jwt_cannot_inherit_a_bearer_principals_role(client):
+    from api.auth import create_principal
+    from api.deps import get_repo
+    create_principal(get_repo(), "acme", "admin@acme.example", "admin")
+    tok = jwt.encode({"email": "admin@acme.example", "tenant": "acme", "aud": "constat",
+                      "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
+                     "dev-jwt-secret-0123456789abcdef0123456789", algorithm="HS256")
+    body = {"model_id": "m", "prompt_version": "p", "golden_pass_rate": 1, "dangerous_failures": 0,
+            "injection_pass_rate": 1, "cost_per_questionnaire_usd": 0, "p95_latency_ms": 1}
+    assert client.post("/v1/evals/records", headers={"Authorization": f"Bearer {tok}"}, json=body).status_code == 403

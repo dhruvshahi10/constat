@@ -15,11 +15,13 @@ export function EmbedFrame({ view, children }: { view: string; children: React.R
   const [host, setHost] = React.useState<AtlanInitMessage | null>(null);
 
   React.useEffect(() => {
-    const allowed = [
-      window.location.origin, // the dev shell at /dev/atlan-shell, same origin as 'self' in the CSP
-      "https://*.atlan.com",
-      ...originsFromEnv(process.env.NEXT_PUBLIC_ATLAN_ORIGINS),
-    ];
+    // Outside development only the configured tenant origins may host us; the
+    // Atlan wildcard would let any tenant, including a trial one, frame the app.
+    const configured = originsFromEnv(process.env.NEXT_PUBLIC_ATLAN_ORIGINS);
+    const allowed =
+      process.env.NODE_ENV !== "production"
+        ? [window.location.origin, "https://*.atlan.com", ...configured]
+        : configured;
     const hs = startHandshake({
       allowedOrigins: allowed,
       view,

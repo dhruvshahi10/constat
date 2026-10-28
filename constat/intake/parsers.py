@@ -22,6 +22,24 @@ RESPONSE_HDR = re.compile(r"response|answer|vendor|reply|supplier", re.I)
 NOTES_HDR = re.compile(r"note|comment|evidence|remark|reference doc", re.I)
 MAX_QUESTIONS = 2000
 MAX_TEXT = 4000
+MAX_ZIP_UNCOMPRESSED = 64 * 1024 * 1024    # xlsx and docx are zips; this is the inflated cap
+MAX_ZIP_ENTRIES = 2000
+MAX_SHEET_CELLS = 2_000_000
+
+
+def check_zip(path: Path) -> None:
+    """Refuse decompression bombs before any parser inflates them."""
+    import zipfile
+    try:
+        with zipfile.ZipFile(path) as z:
+            infos = z.infolist()
+            if len(infos) > MAX_ZIP_ENTRIES:
+                raise ValueError(f"archive has {len(infos)} entries, above the {MAX_ZIP_ENTRIES} cap")
+            total = sum(i.file_size for i in infos)
+            if total > MAX_ZIP_UNCOMPRESSED:
+                raise ValueError(f"archive inflates to {total} bytes, above the {MAX_ZIP_UNCOMPRESSED} cap")
+    except zipfile.BadZipFile as e:
+        raise ValueError("not a valid Office file") from e
 
 
 @dataclass
@@ -87,8 +105,11 @@ def detect_layout(ws) -> Layout:
 
 def parse_xlsx(path: Path) -> Parsed:
     from openpyxl import load_workbook
+    check_zip(path)
     wb = load_workbook(path, read_only=False, data_only=True)
     ws = wb.active
+    if ws.max_row * max(1, ws.max_column) > MAX_SHEET_CELLS:
+        raise ValueError("sheet is larger than the cell cap")
     # a formula in a question cell has no cached value when the file was never
     # calculated, and data_only reads it as None. Read the formula text too, so
     # a cell that starts with "=" reaches quarantine instead of vanishing.

@@ -6,7 +6,13 @@ const extraOrigins = (process.env.NEXT_PUBLIC_ATLAN_ORIGINS ?? "")
   .split(/[\s,]+/)
   .filter((o) => /^https?:\/\/[\w.*-]+(:\d+)?$/.test(o));
 
-const embedFrameAncestors = ["'self'", "https://*.atlan.com", ...extraOrigins].join(" ");
+// Production frames only the configured tenant origins; development also allows
+// the local shell simulator and any Atlan origin.
+const embedFrameAncestors = (
+  process.env.NODE_ENV === "production"
+    ? extraOrigins.length ? extraOrigins : ["'none'"]
+    : ["'self'", "https://*.atlan.com", ...extraOrigins]
+).join(" ");
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -20,6 +26,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: `frame-ancestors ${embedFrameAncestors}`,
           },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
       {

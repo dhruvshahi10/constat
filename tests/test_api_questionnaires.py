@@ -111,3 +111,34 @@ def test_queue_items_carry_customer_and_ranking_fields(client):
     assert s.status_code == 200 and s.json()["state"] == "SENT"
     m = client.get("/v1/metrics", headers=H).json()
     assert m["claim_fresh_share"] is not None and "cost_per_100_usd" in m
+
+
+def test_customer_export_hides_internals_and_neutralises_formulas(client, tmp_path):
+    from openpyxl import Workbook
+    wb = Workbook(); ws = wb.active
+    ws.append(["ID", "Domain", "Question", "Response", "Notes"])
+    ws.append(["1", "IAM", "Is MFA enforced for all workforce access to production and corporate systems?", "", ""])
+    ws.append(["2", "Legal", "Will you indemnify us without limit?", "", ""])
+    f = tmp_path / "cust.xlsx"; wb.save(f)
+    with f.open("rb") as fh:
+        qid = client.post("/v1/questionnaires", headers=H, data={"customer": "Cust"},
+                          files={"file": (f.name, fh, "application/octet-stream")}).json()["id"]
+    _wait_done(client, qid)
+    review = client.get(f"/v1/questionnaires/{qid}/items?state=REVIEW", headers=H).json()["items"]
+    client.post(f"/v1/review/{review[0]['id']}/approve", headers=H)
+    client.post(f"/v1/review/{review[0]['id']}/send", headers=H)
+    import io
+    from openpyxl import load_workbook
+    cust = load_workbook(io.BytesIO(client.get(f"/v1/questionnaires/{qid}/export", headers=H).content)).active
+    assert cust.cell(row=2, column=4).value.startswith("Multi-factor") and cust.cell(row=2, column=5).value in ("", None)
+    assert cust.cell(row=3, column=4).value in ("", None) and "LEGAL" not in str(cust.cell(row=3, column=5).value)
+    internal = load_workbook(io.BytesIO(client.get(f"/v1/questionnaires/{qid}/export?internal=1", headers=H).content)).active
+    assert "LEGAL" in str(internal.cell(row=3, column=5).value)
+    from api.routers.questionnaires import _cell_safe
+    assert _cell_safe("=HYPERLINK(1)") == "'=HYPERLINK(1)" and _cell_safe("Yes.") == "Yes."
+
+
+def test_oversized_upload_is_refused_early(client):
+    big = b"x" * (6 * 1024 * 1024 + 10)
+    r = client.post("/v1/questionnaires", headers=H, files={"file": ("big.csv", big, "text/csv")})
+    assert r.status_code == 413

@@ -39,18 +39,44 @@ class QuarantineDecision:
         self.reasons.append(reason)
 
 
+_LATIN_WORD = re.compile(r"[A-Za-z]")
+
+
+def mixed_script_words(text: str) -> list[str]:
+    """Words that mix Latin letters with letters of another script: the
+    homoglyph trick (Cyrillic i inside "ignore")."""
+    out = []
+    for word in re.findall(r"\S+", text):
+        letters = [ch for ch in word if ch.isalpha()]
+        if not letters:
+            continue
+        scripts = set()
+        for ch in letters:
+            name = unicodedata.name(ch, "")
+            scripts.add("LATIN" if "LATIN" in name or ch.isascii() else name.split(" ")[0])
+        if "LATIN" in scripts and len(scripts) > 1:
+            out.append(word)
+    return out
+
+
 def screen_raw(text: str) -> QuarantineDecision:
     d = QuarantineDecision(False)
+    from ..claims.gates import canon
+    mixed = mixed_script_words(text)
+    if mixed:
+        d.add(f"mixed-script word(s) {mixed[:3]} (homoglyph)")
+    # hidden and control characters are judged on the raw text; canon() strips them
+    if HIDDEN.search(text):
+        d.add("zero-width or bidirectional control characters (hidden text)")
+    if CONTROL.search(text):
+        d.add("control characters in text")
+    text = canon(text)
     if screen_question(text):
         d.add("instruction-like phrasing (prompt injection pattern)")
     if ROLE_MARKUP.search(text):
         d.add("chat-role markup inside questionnaire text")
     if FORMULA.match(text):
         d.add("spreadsheet formula at the start of a cell (formula injection)")
-    if HIDDEN.search(text):
-        d.add("zero-width or bidirectional control characters (hidden text)")
-    if CONTROL.search(text):
-        d.add("control characters in text")
     if BASE64ISH.search(text):
         d.add("long base64-like blob in a question")
     if HTML_ACTIVE.search(text):

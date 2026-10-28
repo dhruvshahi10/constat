@@ -19,6 +19,7 @@ shown to the reviewer"; nothing in this module sends anything.
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
@@ -26,6 +27,28 @@ from typing import Optional
 from ..gates import CERT_PAT, CERT_VERB, LEGAL_PAT, _content_words
 from .match import Match, key_terms
 from .models import Audience, Claim, ClaimStatus, DifficultyClass
+
+_ZERO_WIDTH = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff\u00ad\u202a-\u202e\u2066-\u2069]")
+_NUMBER_WORDS = {"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+                 "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "fifteen": 15, "twenty": 20, "thirty": 30,
+                 "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90, "hundred": 100}
+_NUMBER_WORD_RE = re.compile(r"\b(" + "|".join(_NUMBER_WORDS) + r")(?:[\s-](one|two|three|four|five|six|seven|eight|nine))?\b", re.I)
+NEGATION = {"not", "no", "never", "except", "unless", "excluding", "without", "only"}
+
+
+def canon(text: str) -> str:
+    """Canonical text for every gate: NFKC, zero-width and format characters
+    removed, number words written as digits, whitespace collapsed. Applied to
+    both sides of every comparison so it can only merge, never split."""
+    t = unicodedata.normalize("NFKC", text or "")
+    t = _ZERO_WIDTH.sub("", t)
+
+    def _num(m):
+        base = _NUMBER_WORDS[m.group(1).lower()]
+        return str(base + (_NUMBER_WORDS[m.group(2).lower()] if m.group(2) else 0))
+    t = _NUMBER_WORD_RE.sub(_num, t)
+    return " ".join(t.split())
+
 
 RELEVANCE_MIN = 0.5          # share of question key terms the claim bag must cover
 RELEVANCE_PARTIAL = 0.25     # below this the claim is treated as not covering
@@ -59,7 +82,7 @@ _NUM = re.compile(r"\b\d+(?:[.,]\d+)*(?:\s*(?:%|days?|hours?|minutes?|months?|ye
 
 
 def claim_values(claim: Claim) -> set[str]:
-    text = claim.statement + " " + " ".join(claim.exceptions)
+    text = canon(claim.statement + " " + " ".join(claim.exceptions))
     return {m.group(0).lower().replace(" ", "") for m in _NUM.finditer(text)}
 
 
@@ -68,7 +91,7 @@ def new_numbers(answer: str, claim: Claim) -> list[str]:
     A drafted or edited answer may rephrase a claim; it may not add to it."""
     allowed = claim_values(claim)
     out: list[str] = []
-    for m in _NUM.finditer(answer or ""):
+    for m in _NUM.finditer(canon(answer or "")):
         v = m.group(0).lower().replace(" ", "")
         if v not in allowed and m.group(0) not in out:
             out.append(m.group(0))
@@ -115,10 +138,18 @@ def screen_question(question: str) -> list[str]:
 
 
 def exception_carried(exception: str, answer: str) -> bool:
-    ex = _content_words(exception)
+    """Enough of the exception's content words appear in the answer, and every
+    negation word the exception uses appears too: "not encrypted" is not
+    carried by "encrypted"."""
+    ex_c, an_c = canon(exception), canon(answer or "")
+    ex = _content_words(ex_c)
     if not ex:
         return True
-    ans = _content_words(answer or "")
+    ans = _content_words(an_c)
+    ex_neg = {w for w in re.findall(r"[a-z]+", ex_c.lower()) if w in NEGATION}
+    an_neg = {w for w in re.findall(r"[a-z]+", an_c.lower()) if w in NEGATION}
+    if ex_neg - an_neg:
+        return False
     return len(ex & ans) / len(ex) >= EXCEPTION_MIN
 
 
@@ -142,7 +173,9 @@ def gate(question: str, matches: list[Match], today: date, audience: Audience,
 
     candidate_answer: the drafted text to judge. None means "use the claim's
     default answer" (statement plus exceptions)."""
-    q = question or ""
+    q = canon(question or "")
+    if candidate_answer is not None:
+        candidate_answer = canon(candidate_answer)
 
     # 0. injection
     hits = screen_question(q)

@@ -55,6 +55,7 @@ def test_propose_is_a_proposal_not_a_write(tools):
     c = store.get("hr.training").to_dict()
     c["statement"] = "All employees and contractors complete security awareness training at hire and annually."
     out = tools.propose_claim(c, "contractors added")
+    assert "error" not in out, out
     assert out["proposal_id"] and store.get("hr.training").statement.startswith("All employees complete")
     assert "cannot approve" in out["note"]
     assert "error" in tools.propose_claim({"claim_id": "x"}, "bad")

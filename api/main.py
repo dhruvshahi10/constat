@@ -11,8 +11,14 @@ from .routers import claims, evals, metrics, questionnaires, questions, review, 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    problems = settings.check()
+    if problems:
+        raise RuntimeError("refusing to start: " + "; ".join(problems))
+    docs = settings.is_dev or bool(settings.expose_docs)
     app = FastAPI(title="Constat API", version="1.0.0-rc1",
-                  description="Claim-gated security answers. The system drafts, a person ships.")
+                  description="Claim-gated security answers. The system drafts, a person ships.",
+                  docs_url="/docs" if docs else None, redoc_url=None,
+                  openapi_url="/openapi.json" if docs else None)
     app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
                        allow_credentials=False, allow_methods=["*"], allow_headers=["Authorization", "Content-Type"])
 
@@ -26,7 +32,8 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(ValueError)
     async def value_error(_: Request, e: ValueError):
-        return JSONResponse(status_code=422, content={"error": str(e), "code": "INVALID"})
+        msg = str(e) if settings.is_dev else "invalid request"
+        return JSONResponse(status_code=422, content={"error": msg, "code": "INVALID"})
 
     @app.get("/healthz", tags=["ops"])
     def healthz():

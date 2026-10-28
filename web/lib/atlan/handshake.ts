@@ -145,10 +145,15 @@ export function startHandshake(opts: HandshakeOptions): Handshake {
   const listener = (event: MessageEvent) => {
     // Rule 1: the origin check happens before anything else.
     if (!originAllowed(event.origin, allowed)) return;
+    // Rule 1b: only the window that frames us may talk to us; a sibling frame
+    // on an allowed origin cannot swap the token.
+    if (event.source !== parent) return;
     if (!isHostMessage(event.data)) return;
     const msg = event.data;
 
     if (msg.type === "atlan:init") {
+      // Rule 4: the first host wins; a later init from another origin is ignored.
+      if (hostOrigin && event.origin !== hostOrigin) return;
       hostOrigin = event.origin;
       setAuthToken(msg.token); // Rule 3: memory only
       if (msg.theme) announceTheme(win, msg.theme);

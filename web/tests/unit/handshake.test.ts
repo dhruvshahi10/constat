@@ -6,15 +6,18 @@ const ALLOWED = ["https://tenant.atlan.com", "https://*.atlan.com", "http://loca
 
 function fakeWindow() {
   const target = new EventTarget();
-  const parentPost = vi.fn();
+  // The parent must be a real MessageEventSource so events can name it as
+  // their source; the handshake ignores any sender that is not the parent.
+  const parentPort = new MessageChannel().port1;
+  const parentPost = vi.spyOn(parentPort, "postMessage").mockImplementation(() => {});
   const win = {
-    parent: { postMessage: parentPost },
+    parent: parentPort,
     addEventListener: target.addEventListener.bind(target),
     removeEventListener: target.removeEventListener.bind(target),
     dispatchEvent: target.dispatchEvent.bind(target),
   } as unknown as Window;
-  const deliver = (origin: string, data: unknown) => {
-    target.dispatchEvent(new MessageEvent("message", { origin, data }));
+  const deliver = (origin: string, data: unknown, source: MessagePort | null = parentPort) => {
+    target.dispatchEvent(new MessageEvent("message", { origin, data, source }));
   };
   return { win, parentPost, deliver };
 }
@@ -125,6 +128,23 @@ describe("startHandshake", () => {
     const hs = startHandshake({ allowedOrigins: ALLOWED, win });
     expect(win.addEventListener).not.toHaveBeenCalled();
     expect(hs.hostOrigin).toBeNull();
+    hs.stop();
+  });
+});
+
+describe("startHandshake source rule", () => {
+  it("ignores an init from a window that is not the parent, even on an allowed origin", () => {
+    const { win, deliver } = fakeWindow();
+    const onInit = vi.fn();
+    const hs = startHandshake({ win, allowedOrigins: ALLOWED, onInit });
+    const sibling = new MessageChannel().port2;
+    deliver("https://tenant.atlan.com", init, sibling);
+    expect(onInit).not.toHaveBeenCalled();
+    deliver("https://tenant.atlan.com", init);
+    expect(onInit).toHaveBeenCalledTimes(1);
+    // a second init from another allowed origin does not replace the host
+    deliver("https://other.atlan.com", init);
+    expect(hs.hostOrigin).toBe("https://tenant.atlan.com");
     hs.stop();
   });
 });

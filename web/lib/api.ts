@@ -241,7 +241,8 @@ let bearer: string | null = null;
 /** The embedded handshake hands us a JWT; it lives in memory only. */
 // Dev only: a bearer for standalone runs against a local API. Never set in a
 // deployed build; embedded views get their token from the Atlan handshake.
-if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEV_TOKEN) {
+if (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DEV_TOKEN) {
+  // dead code in a production build: NODE_ENV is inlined and the branch is removed
   bearer = process.env.NEXT_PUBLIC_DEV_TOKEN;
 }
 

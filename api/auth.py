@@ -10,7 +10,9 @@ grants admin. Neither dev path exists outside CONSTAT_ENV=dev.
 from __future__ import annotations
 
 import hashlib
+import hmac
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request
@@ -85,8 +87,10 @@ def verify_atlan_jwt(token: str, settings: Settings) -> dict:
                 raise _unauthorised("dev JWT secret must be at least 32 bytes (RFC 7518 section 3.2)")
             return jwt.decode(token, settings.dev_jwt_secret, algorithms=["HS256"],
                               options=options, **kwargs)
+        if not settings.is_dev and not settings.atlan_issuer:
+            raise _unauthorised("ATLAN_ISSUER is not configured")
         if settings.atlan_jwks_url:
-            key = jwt.PyJWKClient(settings.atlan_jwks_url).get_signing_key_from_jwt(token).key
+            key = _jwks_client(settings.atlan_jwks_url).get_signing_key_from_jwt(token).key
         elif settings.atlan_jwt_public_key:
             key = settings.atlan_jwt_public_key
         else:
@@ -98,13 +102,25 @@ def verify_atlan_jwt(token: str, settings: Settings) -> dict:
         raise _unauthorised(f"invalid token: {type(e).__name__}") from e
 
 
+@lru_cache(maxsize=4)
+def _jwks_client(url: str):
+    import jwt
+    return jwt.PyJWKClient(url, cache_keys=True, lifespan=600, timeout=5)
+
+
 def _jwt_principal(token: str, repo: Repository, settings: Settings) -> CallerPrincipal:
     claims = verify_atlan_jwt(token, settings)
-    email = str(claims.get("email") or claims.get("preferred_username") or claims.get("sub") or "")
-    if not email:
+    email = str(claims.get("email") or claims.get("preferred_username") or "")
+    sub = str(claims.get("sub") or "")
+    if not email and not sub:
         raise _unauthorised("token carries no identity")
+    email = email or sub
     tenant = str(claims.get("tenant") or settings.default_tenant)
-    existing = repo.list("principals", {"tenant": tenant, "email": email}, limit=1)
+    # the tenant claim selects a data scope and a directory: it must be a slug and on the allowlist
+    if not SLUG_RE.match(tenant) or tenant not in settings.allowed_tenants:
+        raise _unauthorised("token tenant is not served by this deployment")
+    # principals from JWTs are matched by source so a token cannot inherit a bearer principal's role
+    existing = repo.list("principals", {"tenant": tenant, "email": email, "source": "atlan_jwt"}, limit=1)
     if existing:
         p = existing[0]
     else:
@@ -121,7 +137,7 @@ def current_principal(request: Request, repo: Repository = Depends(get_repo),
     if not auth.lower().startswith("bearer "):
         raise _unauthorised("missing bearer token")
     token = auth[7:].strip()
-    if settings.is_dev and settings.dev_token and token == settings.dev_token:
+    if settings.is_dev and settings.dev_token and hmac.compare_digest(token, settings.dev_token):
         return CallerPrincipal(subject="dev", email="dev@localhost", role="admin",
                                tenant=settings.default_tenant, source="dev")
     if token.startswith("t."):
