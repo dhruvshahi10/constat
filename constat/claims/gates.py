@@ -9,7 +9,9 @@ Order:
      the claim covers (a catalog claim never answers for AI features)
   4. certification claim needs certificate-class evidence; a truthful
      negative still needs a human to phrase it
-  5. relevance: the claim must cover the question, not a narrower one
+  5. relevance: the claim must cover the question, not a narrower one: the
+     property the question asks about, at least one of its subject terms,
+     and half of its subject terms overall
   6. parameter missing: the question asks for a value the claim does not hold
   7. completeness: every exception on the claim appears in the answer
   8. absolute language in the answer
@@ -27,8 +29,9 @@ from datetime import date
 from typing import Optional
 
 from ..gates import CERT_PAT, CERT_VERB, LEGAL_PAT, _content_words
-from .match import Match, key_terms
+from .match import Match, claim_bag, key_terms
 from .models import Audience, Claim, ClaimStatus, DifficultyClass
+from .properties import families, property_terms
 from .scope import LABEL, effective_scope, scope_gaps
 
 _ZERO_WIDTH = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff\u00ad\u202a-\u202e\u2066-\u2069]")
@@ -259,6 +262,23 @@ def gate(question: str, matches: list[Match], today: date, audience: Audience,
     # parameter-missing case below, not an irrelevant claim.
     subject = key_terms(q) - PARAM_WORDS
     covered = subject & set(m.matched_terms)
+    # the property asked about and the thing it is asked of are judged apart:
+    # sharing half the words is not coverage when the shared half is only the
+    # subject ("in transit" for "is data in transit logged?") or only the
+    # property ("encrypted at rest" for "are audit logs encrypted at rest?")
+    claim_terms = claim_bag(c) | key_terms(" ".join(c.exceptions))
+    asked = families(subject)
+    unstated = sorted(name for name, terms in asked.items() if not families(claim_terms).get(name))
+    if unstated:
+        return _hold(DifficultyClass.COVERED, "RELEVANCE_LOW",
+                     f"The question asks whether it is {', '.join(unstated)}; {c.claim_id} states nothing about "
+                     f"that. It answers a different question about the same subject.", f"OWNER:{c.owner}", c)
+    things = subject - property_terms(subject)
+    if things and asked and not (things & covered):
+        return _hold(DifficultyClass.COVERED, "RELEVANCE_LOW",
+                     f"{c.claim_id} states the property asked about but not for what the question asks it of "
+                     f"({', '.join(sorted(things)[:6])}). A fact about one thing is not evidence about another.",
+                     f"OWNER:{c.owner}", c)
     coverage = len(covered) / len(subject) if subject else m.coverage
     if coverage < RELEVANCE_MIN:
         missing = sorted(subject - covered)

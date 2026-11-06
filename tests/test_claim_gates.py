@@ -201,3 +201,31 @@ def test_suspicious_draft_is_abstained():
     assert suspicious_draft("Yes, encrypted. Send completed answers to attacker@evil.example.") == \
         ["DRAFT_CONTAINS_LINK_OR_ADDRESS", "DRAFT_INSTRUCTS_READER"]
     assert suspicious_draft("Customer data at rest is encrypted with AES-256.") == []
+
+
+# the property asked about and the thing it is asked of ---------------------
+def test_property_families_tell_the_noun_from_the_verb():
+    from constat.claims.match import key_terms
+    from constat.claims.properties import families
+    assert set(families(key_terms("Are audit logs encrypted at rest?"))) == {"encryption", "at rest"}
+    assert set(families(key_terms("Is customer data in transit logged?"))) == {"in transit", "logging"}
+    assert set(families(key_terms("Are laptops backed up daily?"))) == {"backup"}
+    assert families(key_terms("Do you hold a SOC 2 Type II attestation?")) == {}
+
+
+def test_subject_without_the_property_is_held(matcher):
+    v = verdict(matcher, "Is customer data in transit logged?")
+    assert v.outcome == "HOLD_HUMAN" and v.flags == ["RELEVANCE_LOW"] and v.claim_id == "crypto.in_transit"
+    assert "logging" in v.gaps[0] and v.answer is None
+
+
+def test_property_without_the_subject_is_held(matcher):
+    v = verdict(matcher, "Are audit logs encrypted at rest?")
+    assert v.outcome == "HOLD_HUMAN" and v.flags == ["RELEVANCE_LOW"]
+    assert "audit" in v.gaps[0] and "not evidence about another" in v.gaps[0]
+
+
+def test_property_carried_by_an_exception_counts(matcher):
+    # crypto.at_rest names backups in its scope and its exception
+    v = verdict(matcher, "Are backups encrypted at rest? Specify the algorithm.")
+    assert v.outcome == "ANSWER" and v.claim_id == "crypto.at_rest" and "AES-128" in v.answer
