@@ -46,9 +46,9 @@ metrics by difficulty class · degradation · automation ladder · trust preview
 ```bash
 python -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
 .venv/bin/python -m pytest -q
-CONSTAT_ENV=dev CONSTAT_DEV_TOKEN=dev DATABASE_URL=sqlite:///data/sidecar.db CLAIM_STORE_PATH=data/claims \
+CONSTAT_ENV=dev CONSTAT_DEV_TOKEN=dev CONSTAT_TENANT=acme DATABASE_URL=sqlite:///data/sidecar.db CLAIM_STORE_PATH=data/claims \
   .venv/bin/python scripts/seed_demo.py --tenant acme
-CONSTAT_ENV=dev CONSTAT_DEV_TOKEN=dev DATABASE_URL=sqlite:///data/sidecar.db CLAIM_STORE_PATH=data/claims \
+CONSTAT_ENV=dev CONSTAT_DEV_TOKEN=dev CONSTAT_TENANT=acme DATABASE_URL=sqlite:///data/sidecar.db CLAIM_STORE_PATH=data/claims \
   .venv/bin/uvicorn api.main:app --port 8000
 cd web && npm ci && NEXT_PUBLIC_API_BASE=http://localhost:8000 NEXT_PUBLIC_DEV_TOKEN=dev npm run dev
 ```
