@@ -21,17 +21,23 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from constat.claims import Claim  # noqa: E402
-from constat.claims.atlan import CM_ATTRIBUTES, CM_SET, to_term_payload  # noqa: E402
+from constat.claims.atlan import CM_ATTRIBUTES, CM_OPTIONS, CM_SET, to_term_payload  # noqa: E402
 
 PYATLAN_TYPES = {"Text": "STRING", "Options": "OPTIONS", "Date": "DATE", "Integer": "INTEGER",
                  "Rich text": "STRING", "Boolean": "BOOLEAN", "URL": "URL", "Users": "USERS"}
 
 
+def _attr(name: str, kind: str) -> dict:
+    a = {"name": name, "type": kind, "pyatlan_type": PYATLAN_TYPES.get(kind, "STRING")}
+    if name in CM_OPTIONS:
+        a["options_name"], a["options"], a["multi_valued"] = CM_OPTIONS[name]
+    return a
+
+
 def plan(claims: list[Claim], glossary: str) -> dict:
     return {
         "glossary": glossary,
-        "custom_metadata_set": {"name": CM_SET, "attributes": [{"name": k, "type": v, "pyatlan_type": PYATLAN_TYPES.get(v, "STRING")}
-                                                                for k, v in CM_ATTRIBUTES.items()]},
+        "custom_metadata_set": {"name": CM_SET, "attributes": [_attr(k, v) for k, v in CM_ATTRIBUTES.items()]},
         "terms": [to_term_payload(c) for c in claims],
     }
 
@@ -64,7 +70,8 @@ def apply(p: dict, approver: str, create_cm: bool) -> None:
                 t = getattr(AtlanCustomAttributePrimitiveType, a["pyatlan_type"], AtlanCustomAttributePrimitiveType.STRING)
                 kwargs = {"display_name": a["name"], "attribute_type": t}
                 if a["type"] == "Options":
-                    kwargs["options_name"] = "constat_audience"
+                    kwargs["options_name"] = a["options_name"]
+                    kwargs["multi_valued"] = a["multi_valued"]
                 attrs.append(AttributeDef.create(client=client, **kwargs))
             cm.attribute_defs = attrs
             client.typedef.create(cm)

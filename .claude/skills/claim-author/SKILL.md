@@ -17,5 +17,6 @@ Produce one JSON object matching `constat/claims/models.py` (`Claim.from_dict`).
 8. **Status** is `draft`. A second person approves it into `verified` (`POST /v1/claims/propose`, then approve).
 9. **Keywords and topics**: the words a questionnaire would use, including synonyms (`mfa`, `multi-factor`, `2fa`).
 10. No numbers in the statement that the evidence does not state.
+11. **Product context**: `products` (`catalog`, `ai-features`, `mcp`), `data_classes` (`metadata`, `customer-data`, `prompts`) and `deployment` (`saas-multi-tenant`, `saas-single-tenant`, `self-hosted`, `hybrid`), from `constat/claims/scope.py`. Declare every product and data class the fact is true for and no others: a question naming a product or data class the claim does not cover is held with `PRODUCT_SCOPE_MISMATCH`.
 
 Output the JSON, then one line naming what you were unsure about.

@@ -17,6 +17,7 @@ from typing import Optional
 
 from ..retrieve import tokens
 from .models import ApprovedAnswer, Audience, Claim
+from .scope import effective_scope, named_data_classes, named_products
 from .store import ClaimStore
 
 GENERIC = {"customer", "data", "security", "please", "describe", "organization",
@@ -74,6 +75,7 @@ class ClaimMatcher:
         reason and route to the owner, rather than treating a known-but-stale
         fact as a novel question."""
         q = key_terms(question)
+        q_scope = named_products(question) | named_data_classes(question)
         out: list[Match] = []
         for c in self.store.list():
             if not include_unusable and not c.is_usable(today, audience)[0]:
@@ -85,10 +87,17 @@ class ClaimMatcher:
             coverage = len(hit) / len(q) if q else 0.0
             topic_boost = sum(1.0 for t in c.topics if t.lower() in question.lower())
             reused = self._reuse(question, c)
-            score = len(hit) + topic_boost + (5.0 if reused else 0.0)
+            # a claim that covers the products and data the question names ranks
+            # above one that does not, so the scope gate judges the right claim
+            products, classes = effective_scope(c)
+            scope_boost = 0.5 * len(q_scope & (products | classes))
+            score = len(hit) + topic_boost + scope_boost + (5.0 if reused else 0.0)
             out.append(Match(claim=c, score=score, coverage=coverage, reused=reused,
                              matched_terms=sorted(hit)))
-        out.sort(key=lambda m: (m.score, m.coverage), reverse=True)
+        # on a tie, a question that names no product prefers the claim scoped
+        # to fewer products: the broad fact, not one product's version of it
+        breadth = {} if q_scope else {id(m): -len(effective_scope(m.claim)[0]) for m in out}
+        out.sort(key=lambda m: (m.score, m.coverage, breadth.get(id(m), 0)), reverse=True)
         return out[:k]
 
     @staticmethod

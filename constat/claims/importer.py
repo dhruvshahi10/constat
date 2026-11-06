@@ -11,6 +11,10 @@ store. This turns one into reviewable work in two steps:
                             are clustered and one draft claim is proposed
              skip           too short to be a fact ("Yes"), suspicious, or
                             in conflict with a claim (the reason names it)
+           Each row also carries the products and data classes its question
+           and answer name; they become the draft claim's suggested scope. A
+           row a claim covers for a different product is a new claim, not a
+           conflict.
   commit   a person confirms the actions. Draft claims are opened as
            proposals that a second person approves; attached answers are
            re-gated server-side first. Nothing in the client's copy of the
@@ -34,6 +38,7 @@ from ..intake.quarantine import screen_raw
 from .gates import RELEVANCE_MIN, canon, gate
 from .match import ClaimMatcher, jaccard, key_terms
 from .models import ApprovedAnswer, Audience, Claim, ClaimStatus, EvidenceRef
+from .scope import named_data_classes, named_products
 from .store import ClaimStore
 
 CLUSTER_JACCARD = 0.5
@@ -55,6 +60,8 @@ class ImportRow:
     action: str                       # new_claim | attach_answer | skip
     suggested_owner: Optional[str]
     reason: str
+    products: list[str] = field(default_factory=list)       # suggested from the question and answer
+    data_classes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -125,7 +132,8 @@ def preview(rows: list[RawQuestion], store: ClaimStore, *, filename: str, custom
         q, a = r.text, r.answer
         owner_guess = owners.get((r.domain or "").lower())
         base = dict(ordinal=r.ordinal, question=q, answer=a, domain=r.domain, existing_claim_id=None,
-                    suggested_owner=owner_guess)
+                    suggested_owner=owner_guess, products=sorted(named_products(q + " " + a)),
+                    data_classes=sorted(named_data_classes(q + " " + a)))
         if not a.strip():
             continue                                   # unanswered rows are not part of an import
         screen = screen_raw(q + "\n" + a)
@@ -150,7 +158,7 @@ def preview(rows: list[RawQuestion], store: ClaimStore, *, filename: str, custom
                                            action="attach_answer",
                                            reason=f"{v.claim_id} covers it and the old answer passes the gates"))
                 continue
-            if top.claim.status == ClaimStatus.VERIFIED and v.flags:
+            if top.claim.status == ClaimStatus.VERIFIED and v.flags and "PRODUCT_SCOPE_MISMATCH" not in v.flags:
                 prev.rows.append(ImportRow(**{**base, "existing_claim_id": top.claim.claim_id,
                                               "suggested_owner": top.claim.owner},
                                            cluster=top.claim.claim_id, confidence=round(top.coverage, 2),
@@ -168,8 +176,12 @@ def preview(rows: list[RawQuestion], store: ClaimStore, *, filename: str, custom
         if cid is None:
             cid, best = _cluster_id(terms), 1.0
             clusters.append((cid, terms))
+        reason = "no claim covers this; it becomes a draft claim for its owner to approve"
+        if top and top.coverage >= RELEVANCE_MIN and "PRODUCT_SCOPE_MISMATCH" in v.flags:
+            reason = (f"{top.claim.claim_id} covers the topic for a different product or data class; "
+                      f"it becomes a draft claim scoped to {', '.join(base['products'] + base['data_classes'])}")
         prev.rows.append(ImportRow(**base, cluster=cid, confidence=round(best, 2), action="new_claim",
-                                   reason="no claim covers this; it becomes a draft claim for its owner to approve"))
+                                   reason=reason))
     return prev
 
 
@@ -234,6 +246,8 @@ def commit(prev: ImportPreview, chosen: dict[int, str], store: ClaimStore, *, ac
             evidence_refs=[EvidenceRef("statement", f"import:{prev.filename}#rows "
                                        + ",".join(str(m.ordinal) for m in members))],
             exceptions=[], audience=audience, status=ClaimStatus.DRAFT, keywords=keywords,
+            products=sorted(set().union(*(m.products for m in members))),
+            data_classes=sorted(set().union(*(m.data_classes for m in members))),
             topics=[lead.domain.lower()] if lead.domain else [],
             approved_answers=[ApprovedAnswer(question=m.question, answer=fact_text(m.answer), approver=actor,
                                              approved_on=today, audience=audience) for m in members],

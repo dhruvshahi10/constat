@@ -8,7 +8,7 @@ Mapping (every target verified on docs.atlan.com, 28 Oct 2026):
     status              -> term.certificate_status: DRAFT | VERIFIED | DEPRECATED
     framework_map       -> Atlan tags (one tag per framework control), or glossary categories
     scope, exceptions, audience, valid_from, valid_until, version, evidence_refs,
-    keywords, topics, approved_answers
+    keywords, topics, approved_answers, products, deployment, data_classes
                         -> custom metadata set "Claim" (attribute types below)
 
 Custom metadata set "Claim":
@@ -23,6 +23,15 @@ Custom metadata set "Claim":
     topics              Text (comma separated)
     approved_answers    Rich text (JSON array)  -- the reuse corpus
     version_hash        Text                    -- content hash, recomputed on write
+    products            Options, multi-valued {catalog, ai-features, mcp}
+    deployment          Options {saas-multi-tenant, saas-single-tenant, self-hosted, hybrid}
+    data_classes        Options, multi-valued {metadata, customer-data, prompts}
+
+The three product-context attributes are Options so the tenant can filter
+claims by product in Atlan's own search. Multi-valued Options is documented
+for custom metadata on docs.atlan.com but has not been checked against a live
+tenant (UNVERIFIED until 10 Nov). Reads accept a list or a comma-separated
+string, so a tenant that stores them as Text still round-trips.
 
 What stays outside Atlan: the gates, the matcher, the review queue and the
 sent-answer log. Atlan holds the facts; this code decides what may leave.
@@ -42,6 +51,7 @@ from pathlib import Path
 from typing import Optional
 
 from .models import Audience, Claim, ClaimStatus, EvidenceRef, Proposal
+from .scope import DATA_CLASSES, DEPLOYMENTS, PRODUCTS
 from .store import ClaimStore, FileClaimStore, SentAnswerRecord
 
 CM_SET = "Claim"
@@ -50,6 +60,14 @@ CM_ATTRIBUTES = {
     "valid_until": "Date", "version": "Integer", "evidence_refs": "Text",
     "keywords": "Text", "topics": "Text", "approved_answers": "Rich text",
     "version_hash": "Text",
+    "products": "Options", "deployment": "Options", "data_classes": "Options",
+}
+# Options attributes: the option set each one draws from, and whether it is multi-valued
+CM_OPTIONS = {
+    "audience": ("constat_audience", [a.value for a in Audience], False),
+    "products": ("constat_products", sorted(PRODUCTS), True),
+    "deployment": ("constat_deployment", sorted(DEPLOYMENTS), False),
+    "data_classes": ("constat_data_classes", sorted(DATA_CLASSES), True),
 }
 CERT_FOR_STATUS = {ClaimStatus.DRAFT: "DRAFT", ClaimStatus.VERIFIED: "VERIFIED",
                    ClaimStatus.DEPRECATED: "DEPRECATED"}
@@ -84,6 +102,9 @@ def to_term_payload(claim: Claim) -> dict:
                       "claim_version_hash": a.claim_version_hash}
                      for a in claim.approved_answers], ensure_ascii=False),
                 "version_hash": claim.version_hash(),
+                "products": list(claim.products),
+                "deployment": claim.deployment,
+                "data_classes": list(claim.data_classes),
             }
         },
     }
@@ -104,8 +125,21 @@ def from_term_payload(p: dict) -> Claim:
         "keywords": [k for k in (cm.get("keywords") or "").split(",") if k],
         "topics": [t for t in (cm.get("topics") or "").split(",") if t],
         "approved_answers": json.loads(cm.get("approved_answers") or "[]"),
+        "products": _multi(cm.get("products")),
+        "deployment": cm.get("deployment") or "",
+        "data_classes": _multi(cm.get("data_classes")),
     }
     return Claim.from_dict(d)
+
+
+def _multi(v) -> list[str]:
+    """A multi-valued Options attribute reads back as a list or a set; a Text
+    fallback as a comma-separated string."""
+    if not v:
+        return []
+    if isinstance(v, str):
+        return [x.strip() for x in v.split(",") if x.strip()]
+    return sorted(str(x) for x in v)
 
 
 class AtlanClaimStore(ClaimStore):

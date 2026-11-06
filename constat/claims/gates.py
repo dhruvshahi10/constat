@@ -5,6 +5,8 @@ Order:
   1. legal / contractual wording on the question -> HOLD (LEGAL or OWNER)
   2. no covering claim                           -> REFUSE as NOVEL, route by domain owner
   3. claim usable? (deprecated, draft, stale, audience)
+  3b. product scope: a product or data class the question names must be one
+     the claim covers (a catalog claim never answers for AI features)
   4. certification claim needs certificate-class evidence; a truthful
      negative still needs a human to phrase it
   5. relevance: the claim must cover the question, not a narrower one
@@ -27,6 +29,7 @@ from typing import Optional
 from ..gates import CERT_PAT, CERT_VERB, LEGAL_PAT, _content_words
 from .match import Match, key_terms
 from .models import Audience, Claim, ClaimStatus, DifficultyClass
+from .scope import LABEL, effective_scope, scope_gaps
 
 _ZERO_WIDTH = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff\u00ad\u202a-\u202e\u2066-\u2069]")
 _NUMBER_WORDS = {"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
@@ -227,6 +230,19 @@ def gate(question: str, matches: list[Match], today: date, audience: Audience,
             return _refuse(DifficultyClass.COVERED, "AUDIENCE_BLOCKED",
                            f"{c.claim_id} is {c.audience.value}; the request is {audience.value}. "
                            f"Never widened automatically.", owner_route, c)
+
+    # 3b. product scope. A fact true of the catalog is not evidence about AI
+    # features or the MCP server, nor is a metadata claim evidence about
+    # customer data. Held, not refused: the owner may confirm the claim
+    # extends, which is a one-line scope change.
+    outside = scope_gaps(q, c)
+    if outside:
+        products, classes = effective_scope(c)
+        covers = ", ".join(LABEL[x] for x in sorted(products) + sorted(classes)) or "no named product or data class"
+        return _hold(DifficultyClass.NOVEL, "PRODUCT_SCOPE_MISMATCH",
+                     f"The question names {', '.join(LABEL[x] for x in outside)}; {c.claim_id} covers "
+                     f"{covers}. A fact about one product is not evidence about another. Ask {c.owner} "
+                     f"whether the claim extends, or author one for it.", f"OWNER:{c.owner}", c)
 
     # 4. certification
     is_cert_q = bool(CERT_PAT.search(q)) and bool(CERT_VERB.search(q))

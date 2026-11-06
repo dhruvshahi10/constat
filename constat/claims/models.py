@@ -13,6 +13,8 @@ Design rules this model enforces in code rather than in prose:
   * version_hash() is content-addressed, so a sent answer can record exactly
     what it rested on even when the backing store mutates in place (Atlan
     glossary terms have no immutable versions)
+  * products and data classes are closed lists (`claims.scope`), so a gate can
+    tell that a catalog claim does not cover a question about AI features
 """
 from __future__ import annotations
 
@@ -105,6 +107,9 @@ class Claim:
     updated_by: str = ""
     updated_on: Optional[date] = None
     notes: str = ""
+    products: list[str] = field(default_factory=list)       # "catalog", "ai-features", "mcp"
+    deployment: str = ""                                     # "saas-multi-tenant", ...
+    data_classes: list[str] = field(default_factory=list)   # "metadata", "customer-data", "prompts"
 
     # ---- state ----------------------------------------------------------
     def is_fresh(self, today: date) -> bool:
@@ -128,7 +133,7 @@ class Claim:
     # ---- identity -------------------------------------------------------
     def content_fields(self) -> dict:
         """The fields whose change makes this a materially different claim."""
-        return {
+        out = {
             "claim_id": self.claim_id,
             "statement": self.statement,
             "scope": self.scope,
@@ -139,6 +144,14 @@ class Claim:
             "valid_until": self.valid_until.isoformat(),
             "status": self.status.value,
         }
+        # product context joins the hash only when declared, so every claim
+        # written before it existed keeps the hash its sent answers recorded
+        for k in ("products", "data_classes"):
+            if getattr(self, k):
+                out[k] = sorted(getattr(self, k))
+        if self.deployment:
+            out["deployment"] = self.deployment
+        return out
 
     def version_hash(self) -> str:
         payload = json.dumps(self.content_fields(), sort_keys=True, ensure_ascii=False)
@@ -175,6 +188,9 @@ class Claim:
         d["evidence_refs"] = [
             EvidenceRef(e["kind"], e["ref"], _d(e["checked_on"]) if e.get("checked_on") else None)
             for e in d.get("evidence_refs", [])]
+        d["products"] = list(d.get("products") or [])
+        d["data_classes"] = list(d.get("data_classes") or [])
+        d["deployment"] = d.get("deployment") or ""
         d["approved_answers"] = [
             ApprovedAnswer(question=a["question"], answer=a["answer"], approver=a["approver"],
                            approved_on=_d(a["approved_on"]),
@@ -197,6 +213,8 @@ class Claim:
             problems.append("valid_until is before valid_from")
         if self.status == ClaimStatus.VERIFIED and not self.evidence_refs:
             problems.append("a verified claim needs at least one evidence reference")
+        from .scope import validate_scope
+        problems.extend(validate_scope(self.products, self.data_classes, self.deployment))
         return problems
 
 
