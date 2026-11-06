@@ -187,7 +187,7 @@ def export(qid: str, internal: bool = False, p: CallerPrincipal = Depends(curren
         parsers.write_xlsx(qdir / "upload.xlsx", out, parsers.Layout(**q.layout_json), answers)
         return FileResponse(out, filename=out.name,
                             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    # csv and docx: a csv of answers, since there is no in-place write-back
+    # csv, docx and pdf: a csv of answers, since there is no in-place write-back
     import csv, io
     buf = io.StringIO()
     w = csv.writer(buf)

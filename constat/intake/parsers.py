@@ -1,10 +1,12 @@
-"""Questionnaire parsers for xlsx, docx and csv.
+"""Questionnaire parsers for xlsx, docx, pdf and csv.
 
 Row identity is preserved wherever the format has one (xlsx rows, csv rows)
 so answers can be written back into the original file. Layout detection finds
 the header row and the id, question, response and notes columns by name
 rather than by fixed position; the v0 fixtures (header row 3, columns A to E)
-still resolve the same way.
+still resolve the same way. A docx or pdf has no rows: questions are the
+numbered items and question-shaped lines, and a pdf question's id carries its
+page when the document does not number it.
 """
 from __future__ import annotations
 
@@ -25,6 +27,12 @@ MAX_TEXT = 4000
 MAX_ZIP_UNCOMPRESSED = 64 * 1024 * 1024    # xlsx and docx are zips; this is the inflated cap
 MAX_ZIP_ENTRIES = 2000
 MAX_SHEET_CELLS = 2_000_000
+# a pdf is not a zip, but the same bomb exists: a small file whose content
+# streams inflate without bound. These are the pdf equivalents of the caps above.
+MAX_PDF_PAGES = 400
+MAX_PDF_OBJECTS = 100_000
+MAX_PDF_INFLATED = MAX_ZIP_UNCOMPRESSED     # summed decoded content streams
+MAX_PDF_TEXT = 2_000_000                    # extracted characters
 
 
 def check_zip(path: Path) -> None:
@@ -199,26 +207,127 @@ def parse_csv(data: bytes) -> Parsed:
 _NUMBERED = re.compile(r"^\s*(?:(\d+(?:\.\d+)*|[A-Z]{1,4}-\d+(?:\.\d+)?|[a-z]|[ivx]+)[.):\]]\s+)(.+)$")
 
 
+_PDF_ID = re.compile(r"^\s*([A-Z]{1,5}[-.]\d+(?:\.\d+)*)\s+(.+)$")     # "AC-01 Is MFA enforced?"
+_ASKS = re.compile(r"^(do|does|is|are|how|what|which|describe|provide|please|has|have|can|will)\b", re.I)
+
+
+def _questions(paras: list[tuple[str, str]]) -> list[RawQuestion]:
+    """Numbered items and question-shaped paragraphs; a short line that is
+    neither is a section heading and becomes the domain. `paras` pairs each
+    paragraph with a fallback id prefix (P for docx, p<page>. for pdf)."""
+    out: list[RawQuestion] = []
+    domain = ""
+    for para, prefix in paras:
+        if len(para) < 12:
+            continue
+        m = _NUMBERED.match(para) or _PDF_ID.match(para)
+        if para.isupper() or (len(para) < 60 and not para.endswith("?") and ":" not in para and not m
+                              and not _ASKS.match(para)):
+            domain = para.rstrip(":")
+            continue
+        body = m.group(2) if m else para
+        qid = m.group(1) if m else ""
+        if "?" in body or _ASKS.match(body):
+            out.append(RawQuestion(ordinal=len(out) + 1, text=_clean(body), domain=domain,
+                                   qid=qid or f"{prefix}{len(out) + 1}"))
+            if len(out) >= MAX_QUESTIONS:
+                break
+    return out
+
+
 def parse_docx(data: bytes) -> Parsed:
     """Paragraphs and table cells that look like questions. A docx has no row
     identity, so answers cannot be written back in place; export is a new
     document or a csv."""
     from constat.server.extract import extract_text
     text = extract_text("q.docx", data)
-    out: list[RawQuestion] = []
-    domain = ""
-    for para in [p.strip() for p in text.split("\n") if p.strip()]:
-        if len(para) < 12:
-            continue
-        if para.isupper() or (len(para) < 60 and not para.endswith("?") and ":" not in para and not _NUMBERED.match(para)):
-            domain = para.rstrip(":")
-            continue
-        m = _NUMBERED.match(para)
-        body = m.group(2) if m else para
-        qid = m.group(1) if m else ""
-        if "?" in body or re.match(r"^(do|does|is|are|how|what|which|describe|provide|please|has|have|can|will)\b", body, re.I):
-            out.append(RawQuestion(ordinal=len(out) + 1, text=_clean(body), domain=domain, qid=qid or f"P{len(out) + 1}"))
-    return Parsed(source_kind="docx", questions=out, warnings=["docx has no row identity; export produces a new file"])
+    paras = [(p.strip(), "P") for p in text.split("\n") if p.strip()]
+    return Parsed(source_kind="docx", questions=_questions(paras),
+                  warnings=["docx has no row identity; export produces a new file"])
+
+
+# ---- pdf ------------------------------------------------------------------
+_PAGE_MARK = re.compile(r"^\s*(page\s+)?\d{1,4}(\s*(of|/)\s*\d{1,4})?\s*$", re.I)
+
+
+def check_pdf(reader) -> None:
+    """Refuse a pdf before its text is extracted: encrypted, too many objects
+    or pages, or content streams that inflate past the budget. The pdf
+    equivalent of check_zip; pypdf's own per-stream limit stays underneath."""
+    if reader.is_encrypted:
+        raise ValueError("the PDF is password protected; export an unprotected copy")
+    objects = int(reader.trailer.get("/Size", 0) or 0)
+    if objects > MAX_PDF_OBJECTS:
+        raise ValueError(f"PDF declares {objects} objects, above the {MAX_PDF_OBJECTS} cap")
+    pages = len(reader.pages)
+    if pages > MAX_PDF_PAGES:
+        raise ValueError(f"PDF has {pages} pages, above the {MAX_PDF_PAGES} cap")
+    total = 0
+    for page in reader.pages:
+        contents = page.get_contents()
+        total += len(contents.get_data()) if contents is not None else 0
+        if total > MAX_PDF_INFLATED:
+            raise ValueError(f"PDF content inflates past the {MAX_PDF_INFLATED} byte cap")
+
+
+def _running_lines(pages: list[list[str]]) -> set[str]:
+    """Lines that open or close at least half the pages (running headers and
+    footers), when there are at least two pages."""
+    if len(pages) < 2:
+        return set()
+    counts: dict[str, int] = {}
+    for lines in pages:
+        for ln in {*lines[:2], *lines[-2:]}:
+            key = re.sub(r"\d+", "#", ln.strip().lower())
+            counts[key] = counts.get(key, 0) + 1
+    return {k for k, n in counts.items() if n >= max(2, len(pages) / 2)}
+
+
+def _pdf_items(lines: list[str]) -> list[str]:
+    """Re-join wrapped lines into items. A line continues the item before it
+    only when that item has not ended its sentence and the line starts in
+    lower case; a number, an id, a heading or a capitalised line starts a new
+    one. Tuned for questionnaires, where a line ending in "?" ends a question
+    whatever its width (the evidence paragraphizer joins those)."""
+    items: list[str] = []
+    for ln in lines:
+        if items and not items[-1].endswith((".", "?", "!", ":")) and ln[:1].islower():
+            items[-1] += " " + ln
+        else:
+            items.append(ln)
+    return items
+
+
+def parse_pdf(data: bytes) -> Parsed:
+    """Numbered items and question-shaped lines, page by page. Wrapped lines
+    are re-joined first, so a question that wraps is one question. A pdf has
+    no row identity; export is a new file."""
+    from pypdf import PdfReader
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        check_pdf(reader)
+        raw_pages, total = [], 0
+        for page in reader.pages:
+            t = page.extract_text() or ""
+            total += len(t)
+            if total > MAX_PDF_TEXT:
+                raise ValueError(f"PDF text runs past the {MAX_PDF_TEXT} character cap")
+            raw_pages.append([ln for ln in t.splitlines() if ln.strip()])
+    except ValueError:
+        raise
+    except Exception as e:  # noqa: BLE001 - pypdf raises a zoo of types; none may escape as a 500
+        raise ValueError(f"not a readable PDF ({type(e).__name__})") from e
+    running = _running_lines(raw_pages)
+    paras: list[tuple[str, str]] = []
+    for n, lines in enumerate(raw_pages, start=1):
+        kept = [ln.strip() for ln in lines if not _PAGE_MARK.match(ln)
+                and re.sub(r"\d+", "#", ln.strip().lower()) not in running]
+        paras.extend((item, f"p{n}.") for item in _pdf_items(kept))
+    questions = _questions(paras)
+    if not questions:
+        raise ValueError("no questions found in the PDF; scanned questionnaires need OCR, which is not supported")
+    return Parsed(source_kind="pdf", questions=questions,
+                  warnings=["pdf has no row identity; export produces a new file"])
 
 
 def parse(filename: str, data: bytes, tmp_dir: Path) -> Parsed:
@@ -231,4 +340,6 @@ def parse(filename: str, data: bytes, tmp_dir: Path) -> Parsed:
         return parse_csv(data)
     if name.endswith(".docx"):
         return parse_docx(data)
+    if name.endswith(".pdf"):
+        return parse_pdf(data)
     raise ValueError(f"unsupported questionnaire format: {filename}")

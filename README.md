@@ -74,7 +74,7 @@ scripts/   seed_demo, atlan_setup, principals, load_test, check_eval_record     
 ## Known limits
 
 - Portal intake (Archer, OneTrust, ProcessUnity) is export and import; no browser automation.
-- Docx questionnaires have no row identity, so export is a new file.
+- Docx and PDF questionnaires have no row identity, so export is a new file (a csv of answers). Scanned PDFs need OCR, which is not supported.
 - The regex gates see canonical text (NFKC, zero-width stripped, number words as digits) but remain lexical; they catch fabrication, omission, absolutes and evasion by spacing or homoglyphs, not every paraphrase. Every ANSWER still goes to a person.
 - The Vanta response shape and the App Framework SDK names are taken from public docs and are not yet verified against a live tenant.
-- No model-evaluation record exists yet for Claude Haiku 4.5: it needs an Anthropic key (`evals/run_live.py`). Until the first record is committed, the CI eval-record gate is advisory.
+- No model-evaluation record exists yet for Claude Haiku 4.5: it needs an Anthropic key (`evals/run_live.py`). Until the first record is committed, the CI eval-record gate is advisory. That includes the claim-drafting assistant's Haiku variant (`constat/claims/author.py`), which is tested offline only; the deterministic extractor is the default.

@@ -1,6 +1,8 @@
 """Injection suite: every case must be quarantined at intake or refused by the
 gate. Two paths are exercised: the raw screen (what the normaliser sees) and
-the gate (what a question that slipped through would get).
+the gate (what a question that slipped through would get). A case with
+"via": "pdf" is laid out as PDF lines and parsed first, so a wrap or a page
+layout cannot launder an attack past intake.
 
     python evals/run_injection.py [--verbose]
 """
@@ -25,6 +27,24 @@ CASES = ROOT / "evals" / "injection" / "cases.json"
 GOLDEN_CLAIMS = ROOT / "evals" / "golden" / "claims_acme.json"
 
 
+def _via_pdf(case: dict, matcher: ClaimMatcher, today: date) -> dict:
+    """Every question the PDF parser finds must be quarantined or refused,
+    and it must find at least one: an attack the parser drops silently is a
+    lost question, which is its own failure."""
+    from evals.pdf_fixture import make_pdf
+    from constat.intake.parsers import parse_pdf
+    questions = parse_pdf(make_pdf([case["lines"]])).questions
+    outcomes = []
+    for pq in questions:
+        if screen_raw(pq.text).quarantined:
+            outcomes.append("QUARANTINED")
+            continue
+        outcomes.append(gate(pq.text, matcher.match(pq.text, today, Audience.NDA), today, Audience.NDA).outcome)
+    passed = bool(questions) and all(o in ("QUARANTINED", "REFUSE") for o in outcomes)
+    return {"id": case["id"], "stage": "pdf", "outcome": ",".join(outcomes) or "NO_QUESTION", "passed": passed,
+            "reasons": [pq.text[:80] for pq in questions]}
+
+
 def run(verbose: bool = False) -> dict:
     spec = json.loads(CASES.read_text(encoding="utf-8"))
     today = date(2026, 10, 28)
@@ -35,6 +55,9 @@ def run(verbose: bool = False) -> dict:
         matcher = ClaimMatcher(store)
         results = []
         for case in spec["cases"]:
+            if case.get("via") == "pdf":
+                results.append(_via_pdf(case, matcher, today))
+                continue
             q = screen_raw(case["text"])
             if q.quarantined:
                 results.append({"id": case["id"], "stage": "intake", "outcome": "QUARANTINED", "passed": True,

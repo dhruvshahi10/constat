@@ -81,8 +81,8 @@ def test_docx_questions_without_row_identity():
 
 
 def test_unsupported_format(tmp_path):
-    with pytest.raises(ValueError):
-        parse("q.pdf", b"%PDF", tmp_path)
+    with pytest.raises(ValueError, match="unsupported"):
+        parse("q.pages", b"PK", tmp_path)
 
 
 def test_mock_normaliser_splits_lettered_subitems_only():
