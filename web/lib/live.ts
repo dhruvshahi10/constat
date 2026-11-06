@@ -5,6 +5,7 @@
 import type {
   Api,
   Audience,
+  AuthorRun,
   Claim,
   ClaimProposal,
   Confidence,
@@ -301,6 +302,14 @@ export function liveApi(request: Requester, upload?: Uploader): Api {
       return upload<ImportPreview>("/claims/import", form);
     },
     commitImport: (id, rows): Promise<ImportCommitResult> => request("POST", `/claims/import/${id}/commit`, { rows }),
+    authorClaims: async (input, source): Promise<AuthorRun> => {
+      if ("text" in source) return request<AuthorRun>("POST", "/claims/author", { ...input, text: source.text });
+      if (!upload) throw new Error("authoring from a file needs an uploader");
+      const form = new FormData();
+      form.append("file", source.file);
+      for (const [k, v] of Object.entries(input)) form.append(k, Array.isArray(v) ? v.join(",") : String(v));
+      return upload<AuthorRun>("/claims/author/upload", form);
+    },
     evalRecords: async (): Promise<EvalRecord[]> => {
       const r = await request<{ records: Json[] }>("GET", "/evals/records");
       return (r.records ?? []).map((e) => {

@@ -190,26 +190,73 @@ def _author_extractor(settings: Settings) -> author.ClaimAuthor:
     return author.HaikuAuthor(key)
 
 
-@router.post("/author", status_code=201)
-def author_claims(body: AuthorBody, p: CallerPrincipal = Depends(require("reviewer")),
-                  store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
-    """A source document becomes draft claims, each with the quoted span it
-    came from, opened as proposals a second person approves. Never answers."""
-    if body.audience not in ("public", "nda", "internal"):
+def _author(fields: dict, text: str, p: CallerPrincipal, store: ClaimStore, settings: Settings) -> dict:
+    if fields.get("audience", "nda") not in ("public", "nda", "internal"):
         raise HTTPException(status_code=422, detail={"error": "audience must be public, nda or internal", "code": "INVALID"})
     try:
-        doc = author.SourceDoc(source_id=body.source_id, version=body.version, text=body.text, title=body.title,
-                               url=body.url, kind=body.kind, products=body.products)
+        doc = author.SourceDoc(source_id=fields["source_id"], version=fields["version"], text=text,
+                               title=fields.get("title", ""), url=fields.get("url", ""),
+                               kind=fields.get("kind", "statement"), products=list(fields.get("products") or []))
     except ValueError as e:
         raise _domain_error(e)
     run = author.author_document(doc, _author_extractor(settings), store, actor=p.email, today=date.today(),
-                                 owner=body.owner, audience=Audience(body.audience))
+                                 owner=fields.get("owner", ""), audience=Audience(fields.get("audience", "nda")))
     if run.failed:
         raise HTTPException(status_code=422, detail={
             "error": "the source was not drafted: " + ("; ".join(run.quarantine) or
                                                       "; ".join(s["reason"] for s in run.skipped) or "extractor failed"),
             "code": "QUARANTINED" if run.quarantine else "AUTHOR_FAILED"})
     return run.to_dict()
+
+
+@router.post("/author", status_code=201)
+def author_claims(body: AuthorBody, p: CallerPrincipal = Depends(require("reviewer")),
+                  store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
+    """A source document becomes draft claims, each with the quoted span it
+    came from, opened as proposals a second person approves. Never answers."""
+    return _author(body.model_dump(exclude={"text"}), body.text, p, store, settings)
+
+
+def _check_pdf(data: bytes) -> None:
+    import io
+    from pypdf import PdfReader
+    try:
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as e:  # noqa: BLE001 - pypdf raises a zoo of types
+        raise ValueError(f"not a readable PDF ({type(e).__name__})") from e
+    parsers.check_pdf(reader)
+
+
+@router.post("/author/upload", status_code=201)
+async def author_upload(file: UploadFile = File(...), source_id: str = Form(..., max_length=80),
+                        version: str = Form(..., max_length=40), title: str = Form("", max_length=200),
+                        url: str = Form("", max_length=500), kind: str = Form("statement"),
+                        products: str = Form("", max_length=200), owner: str = Form("", max_length=200),
+                        audience: str = Form("nda"), p: CallerPrincipal = Depends(require("reviewer")),
+                        store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
+    """The same, from a file: pdf, docx, md or txt, through the evidence
+    extractor and its size guards. `products` is comma separated."""
+    from constat.server.extract import ExtractError, extract_text
+    chunks, size = [], 0
+    while True:
+        chunk = await file.read(256 * 1024)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > MAX_IMPORT:
+            raise HTTPException(status_code=413, detail={"error": "file over 6MB", "code": "TOO_LARGE"})
+        chunks.append(chunk)
+    data, name = b"".join(chunks), file.filename or "source.txt"
+    try:
+        if name.lower().endswith(".pdf"):
+            # the questionnaire parser's inflation budget, before the extractor touches a stream
+            await run_in_threadpool(_check_pdf, data)
+        text = await run_in_threadpool(extract_text, name, data)
+    except (ExtractError, ValueError) as e:
+        raise HTTPException(status_code=422, detail={"error": str(e), "code": "UNPARSEABLE"})
+    fields = {"source_id": source_id, "version": version, "title": title, "url": url, "kind": kind,
+              "products": [x.strip() for x in products.split(",") if x.strip()], "owner": owner, "audience": audience}
+    return await run_in_threadpool(_author, fields, text[:author.MAX_SOURCE_CHARS + 1], p, store, settings)
 
 
 @router.get("/{claim_id}")

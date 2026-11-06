@@ -6,6 +6,8 @@
 import type {
   Api,
   Claim,
+  AuthorInput,
+  AuthorRun,
   ClaimProposal,
   Confidence,
   DegradationState,
@@ -748,6 +750,37 @@ function importPreview(file: File, customer: string): ImportPreview {
   return { id: `imp_${Date.now().toString(36)}`, filename: file.name, customer, rows, counts };
 }
 
+/**
+ * A stand-in for the deterministic extractor: one draft per fact-shaped
+ * sentence, quoted verbatim with its offsets; the rest skipped with a reason.
+ * The real rules (exception folding, screening, scope) live in the engine.
+ */
+function mockAuthor(input: AuthorInput, text: string): AuthorRun {
+  const run: AuthorRun = { source_id: input.source_id, version: input.version, model_id: "mock", failed: false, proposals: [], skipped: [], quarantine: [] };
+  const re = /[^.!?\n]+[.!?]/g;
+  let m: RegExpExecArray | null;
+  let n = 0;
+  while ((m = re.exec(text))) {
+    const raw = m[0];
+    const lead = raw.length - raw.trimStart().length;
+    const sentence = raw.trim();
+    const words = sentence.split(/\s+/).length;
+    const reason = sentence.endsWith("?") ? "a question, not a fact" : words < 6 ? "too short to state a fact" : /\bwill\b|roadmap/i.test(sentence) ? "forward-looking; a claim states what is true today" : "";
+    if (reason) {
+      run.skipped.push({ text: sentence, reason });
+      continue;
+    }
+    n += 1;
+    const start = m.index + lead;
+    run.proposals.push({
+      proposal_id: `mock-author-${n}`,
+      claim_id: `src.${input.source_id.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.${String(n).padStart(2, "0")}`,
+      draft: { statement: sentence, span: { start, end: start + sentence.length, text: sentence }, section: input.title, exceptions: [], products: input.products, data_classes: [], scope: `As stated in ${input.title || "the source document"}; confirm the scope before approving` },
+    });
+  }
+  return run;
+}
+
 export const mockApi: Api = {
   listQuestionnaires: () => delay(questionnaires),
   getQuestionnaire: (id) => delay(questionnaires.find((q) => q.id === id) ?? questionnaires[0]),
@@ -823,6 +856,8 @@ export const mockApi: Api = {
     }
     return delay(result, 600);
   },
+  authorClaims: (input, source) =>
+    "text" in source ? delay(mockAuthor(input, source.text), 700) : source.file.text().then((t) => delay(mockAuthor(input, t), 900)),
   degradation: () => delay(degradation),
   metrics: () => delay(metrics),
   trustPreview: () =>

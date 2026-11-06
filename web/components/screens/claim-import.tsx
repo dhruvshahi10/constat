@@ -31,7 +31,8 @@ interface Decision {
   owner: string | null;
 }
 
-const ACCEPT = [".xlsx", ".csv", ".docx"] as const;
+// the import route reads a response column, which only spreadsheets have
+const ACCEPT = [".xlsx", ".csv"] as const;
 
 const NORTHWIND_OWNERS = [
   "priya@northwind.example",

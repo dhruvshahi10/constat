@@ -260,6 +260,43 @@ export interface ImportRow {
   data_classes?: DataClass[];
 }
 
+/** POST /claims/author: a source document becomes draft claims, each quoting its span. */
+export interface AuthorInput {
+  source_id: string;
+  version: string;
+  title: string;
+  url: string;
+  products: Product[];
+  owner: string;
+  audience: Audience;
+}
+
+export interface SourceSpan {
+  start: number;
+  end: number;
+  text: string; // verbatim from the source
+}
+
+export interface AuthorDraft {
+  statement: string;
+  span: SourceSpan;
+  section: string;
+  exceptions: string[];
+  products: Product[];
+  data_classes: DataClass[];
+  scope: string;
+}
+
+export interface AuthorRun {
+  source_id: string;
+  version: string;
+  model_id: string;
+  failed: boolean;
+  proposals: Array<{ proposal_id: string; claim_id: string; draft: AuthorDraft }>;
+  skipped: Array<{ text: string; reason: string }>;
+  quarantine: string[];
+}
+
 export interface ImportPreview {
   id: string;
   filename: string;
@@ -301,6 +338,25 @@ export function setAuthToken(token: string | null) {
   bearer = token;
 }
 
+/**
+ * The API answers errors three ways: `{error, code}` from its own handlers,
+ * `{detail: {error, code}}` from a raised HTTPException, and
+ * `{detail: [{msg, ...}]}` from request validation. One shape out.
+ */
+export function parseApiError(body: unknown, status: number, statusText: string): ApiError {
+  const fallback: ApiError = { error: statusText || `HTTP ${status}`, code: `HTTP_${status}` };
+  if (!body || typeof body !== "object") return fallback;
+  const b = body as Record<string, unknown>;
+  const inner = (b.detail && typeof b.detail === "object" && !Array.isArray(b.detail) ? b.detail : b) as Record<string, unknown>;
+  if (typeof inner.error === "string") return { error: inner.error, code: typeof inner.code === "string" ? inner.code : fallback.code };
+  if (typeof b.detail === "string") return { error: b.detail, code: fallback.code };
+  if (Array.isArray(b.detail)) {
+    const msgs = b.detail.map((d) => (d && typeof d === "object" ? String((d as Record<string, unknown>).msg ?? "") : "")).filter(Boolean);
+    if (msgs.length) return { error: msgs.join("; "), code: "INVALID" };
+  }
+  return fallback;
+}
+
 export class ApiRequestError extends Error {
   constructor(
     public status: number,
@@ -322,12 +378,13 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     credentials: "omit",
   });
   if (!res.ok) {
-    let err: ApiError = { error: res.statusText, code: `HTTP_${res.status}` };
+    let body: unknown = null;
     try {
-      err = (await res.json()) as ApiError;
+      body = await res.json();
     } catch {
-      // not JSON; keep the status text
+      // not JSON; the status text stands
     }
+    const err = parseApiError(body, res.status, res.statusText);
     throw new ApiRequestError(res.status, err.code, err.error);
   }
   return (await res.json()) as T;
@@ -356,6 +413,8 @@ export interface Api {
   importAnswers(file: File, meta: { customer: string; audience: Audience }): Promise<ImportPreview>;
   /** Commit the preview: every new_claim becomes a proposal, never a verified claim. */
   commitImport(previewId: string, rows: Array<{ ordinal: number; action: ImportRow["action"]; owner: string | null }>): Promise<ImportCommitResult>;
+  /** Draft claims from a source document (pasted text, or a pdf, docx, md or txt file). Every draft is a proposal. */
+  authorClaims(input: AuthorInput, source: { text: string } | { file: File }): Promise<AuthorRun>;
   degradation(): Promise<DegradationState>;
   metrics(): Promise<Metrics>;
   trustPreview(): Promise<TrustPreviewEntry[]>;
@@ -369,12 +428,13 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
   if (bearer) headers.Authorization = `Bearer ${bearer}`;
   const res = await fetch(`${API_BASE}/v1${path}`, { method: "POST", headers, body: form, credentials: "omit" });
   if (!res.ok) {
-    let err: ApiError = { error: res.statusText, code: `HTTP_${res.status}` };
+    let body: unknown = null;
     try {
-      err = (await res.json()) as ApiError;
+      body = await res.json();
     } catch {
-      // not JSON; keep the status text
+      // not JSON; the status text stands
     }
+    const err = parseApiError(body, res.status, res.statusText);
     throw new ApiRequestError(res.status, err.code, err.error);
   }
   return (await res.json()) as T;
@@ -415,6 +475,7 @@ export const api: Api = IS_MOCK
       freshness: viaMock("freshness"),
       importAnswers: viaMock("importAnswers"),
       commitImport: viaMock("commitImport"),
+      authorClaims: viaMock("authorClaims"),
       degradation: viaMock("degradation"),
       metrics: viaMock("metrics"),
       trustPreview: viaMock("trustPreview"),

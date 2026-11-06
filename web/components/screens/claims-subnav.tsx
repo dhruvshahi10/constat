@@ -10,6 +10,7 @@ const TABS = [
   { path: "/claims/proposals", label: "Proposals" },
   { path: "/claims/freshness", label: "Freshness" },
   { path: "/claims/import", label: "Import" },
+  { path: "/claims/author", label: "Author" },
 ] as const;
 
 function isActive(bare: string, path: string): boolean {

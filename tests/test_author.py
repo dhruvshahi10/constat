@@ -332,3 +332,33 @@ def test_route_authors_proposals_and_refuses_bad_input(client):
     assert client.post("/v1/claims/author", headers=rev, json=body | {"kind": "certificate"}).status_code == 422
     assert client.post("/v1/claims/author", headers=rev, json=body | {"audience": "everyone"}).status_code == 422
     assert client.post("/v1/claims/author", headers=rev, json=body | {"text": ""}).status_code == 422
+
+
+def test_upload_route_drafts_from_md_and_pdf_and_guards_pdfs(client, monkeypatch):
+    from api.auth import create_principal
+    from api.deps import get_repo
+    from constat.intake import parsers
+    from evals.pdf_fixture import make_pdf
+    _, tok = create_principal(get_repo(), "acme", "rev@acme.example", "reviewer")
+    rev = {"Authorization": f"Bearer {tok}"}
+    fields = {"source_id": "acme/enc", "version": "2.3", "title": "Encryption standard", "products": "catalog",
+              "owner": "lena.hoff@acme.example"}
+    r = client.post("/v1/claims/author/upload", headers=rev, data=fields,
+                    files={"file": ("enc.md", NOISY.encode(), "text/markdown")})
+    assert r.status_code == 201, r.text
+    assert r.json()["proposals"][0]["draft"]["statement"].startswith("Acme encrypts customer data at rest")
+    pdf = make_pdf([["Key management", "Acme rotates every customer encryption key once a year using AWS KMS.",
+                     "Acme stores backups in a second region with the same encryption settings."]])
+    r = client.post("/v1/claims/author/upload", headers=rev, data=fields | {"source_id": "acme/keys"},
+                    files={"file": ("keys.pdf", pdf, "application/pdf")})
+    assert r.status_code == 201, r.text
+    drafts = [p["draft"] for p in r.json()["proposals"]]
+    assert any("rotates every customer encryption key" in d["statement"] for d in drafts)
+    assert all(d["products"] == ["catalog"] for d in drafts)
+    monkeypatch.setattr(parsers, "MAX_PDF_INFLATED", 1_000)
+    r = client.post("/v1/claims/author/upload", headers=rev, data=fields | {"source_id": "acme/bomb"},
+                    files={"file": ("bomb.pdf", make_pdf([["Acme encrypts data."]], pad_stream=50_000), "application/pdf")})
+    assert r.status_code == 422 and "inflates" in r.json()["detail"]["error"]
+    r = client.post("/v1/claims/author/upload", headers=rev, data=fields,
+                    files={"file": ("enc.exe", b"MZ", "application/octet-stream")})
+    assert r.status_code == 422

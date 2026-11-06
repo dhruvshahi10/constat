@@ -103,6 +103,23 @@ test("claim import previews, locks risky rows, and commits as proposals", async 
 
 const TENANT = process.env.E2E_TENANT_ORIGIN ?? "https://tenant.atlan.com";
 
+test("claim authoring quotes each fact and names every skip", async ({ page }) => {
+  await page.goto("/claims/author");
+  await page.locator("#author-text").fill(
+    "Acme encrypts customer data at rest with AES-256 in every region. Does Acme encrypt backups? Acme will offer customer-managed keys next year.",
+  );
+  await page.locator("#author-source").fill("acme/enc-standard");
+  await page.locator("#author-version").fill("2.3");
+  await page.getByRole("button", { name: "Draft claims" }).click();
+  const draft = page.getByTestId("author-draft");
+  await expect(draft).toHaveCount(1);
+  await expect(draft).toContainText("[0:65]"); // the verbatim span, with its offsets
+  await page.getByTestId("author-skipped").locator("summary").click();
+  await expect(page.getByTestId("author-skipped")).toContainText("a question, not a fact");
+  await expect(page.getByTestId("author-skipped")).toContainText("forward-looking");
+  await expect(page.getByRole("link", { name: /review the proposals/i })).toBeVisible();
+});
+
 test("embedded view carries no chrome", async ({ page }) => {
   await page.goto("/embed/review");
   await expect(page.locator("nav[aria-label='Primary']")).toHaveCount(0);

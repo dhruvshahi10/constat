@@ -9,6 +9,7 @@ import { ClaimDetail } from "@/components/screens/claim-detail";
 import { Proposals } from "@/components/screens/proposals";
 import { Freshness } from "@/components/screens/freshness";
 import { ClaimImport } from "@/components/screens/claim-import";
+import { ClaimAuthor } from "@/components/screens/claim-author";
 import { Metrics } from "@/components/screens/metrics";
 import { ProvenanceChain } from "@/components/screens/provenance-chain";
 import { ProvenanceList } from "@/components/screens/provenance-list";
@@ -44,6 +45,7 @@ export default async function EmbedPage({
       if (id === "proposals") screen = <Proposals />;
       else if (id === "freshness") screen = <Freshness />;
       else if (id === "import") screen = <ClaimImport />;
+      else if (id === "author") screen = <ClaimAuthor />;
       else if (id) screen = <ClaimDetail id={id} />;
       else screen = <ClaimsExplorer />;
       break;
