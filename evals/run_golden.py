@@ -53,6 +53,11 @@ def run_case(case: dict, matcher: ClaimMatcher, today: date, owners: dict) -> di
         problems.append(f"route {v.route} != {exp['route']}")
     if "answer_contains" in exp and (v.answer is None or exp["answer_contains"].lower() not in v.answer.lower()):
         problems.append(f"answer lacks {exp['answer_contains']!r}")
+    # every ANSWER carries a computed confidence; a hold or refusal never does
+    if (v.outcome == "ANSWER") != (v.confidence is not None):
+        problems.append(f"confidence {'missing on' if v.outcome == 'ANSWER' else 'present on'} {v.outcome}")
+    if "confidence_band" in exp and (v.confidence or {}).get("band") != exp["confidence_band"]:
+        problems.append(f"confidence band {(v.confidence or {}).get('band')} != {exp['confidence_band']}")
     dangerous = exp["outcome"] in ("REFUSE", "HOLD_HUMAN") and v.outcome == "ANSWER"
     return {"id": case["id"], "weight": case.get("weight", 1), "passed": not problems,
             "dangerous": dangerous, "problems": problems, "verdict": v.to_dict()}

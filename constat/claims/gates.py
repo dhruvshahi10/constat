@@ -18,7 +18,9 @@ Order:
   9. contractual wording that the drafter introduced
 
 The outcome is one of ANSWER, HOLD_HUMAN, REFUSE. ANSWER still means "may be
-shown to the reviewer"; nothing in this module sends anything.
+shown to the reviewer"; nothing in this module sends anything. An ANSWER
+carries a computed confidence (`claims.confidence`) that orders review and
+never changes the outcome.
 """
 from __future__ import annotations
 
@@ -31,6 +33,7 @@ from typing import Optional
 from ..gates import CERT_PAT, CERT_VERB, LEGAL_PAT, _content_words
 from .match import Match, claim_bag, key_terms
 from .models import Audience, Claim, ClaimStatus, DifficultyClass
+from .confidence import compute as compute_confidence
 from .properties import families, property_terms
 from .scope import LABEL, effective_scope, scope_gaps
 
@@ -118,6 +121,7 @@ class Verdict:
     flags: list[str] = field(default_factory=list)
     gaps: list[str] = field(default_factory=list)
     reused: bool = False
+    confidence: Optional[dict] = None        # ANSWER only: {score, band, factors, basis}
 
     def to_dict(self) -> dict:
         d = self.__dict__.copy()
@@ -331,7 +335,8 @@ def gate(question: str, matches: list[Match], today: date, audience: Audience,
                      f"OWNER:{c.owner}", c, answer=answer)
 
     v = Verdict(outcome="ANSWER", difficulty=difficulty, answer=answer, claim_id=c.claim_id,
-                claim_version_hash=c.version_hash(), reused=reused)
+                claim_version_hash=c.version_hash(), reused=reused,
+                confidence=compute_confidence(c, coverage, reused, today).to_dict())
     if reused:
         v.flags.append("REUSED_APPROVED_ANSWER")
     if is_cert_q:
