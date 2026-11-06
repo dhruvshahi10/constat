@@ -448,18 +448,34 @@ function ReviewStep({
   const ownerOptions = React.useMemo(() => {
     const set = new Set<string>(NORTHWIND_OWNERS);
     for (const r of preview.rows) if (r.suggested_owner) set.add(r.suggested_owner);
+    for (const o of preview.owners ?? []) set.add(o);
     return [...set];
   }, [preview.rows]);
 
   const set = (ordinal: number, patch: Partial<Decision>) => setDecisions((d) => ({ ...d, [ordinal]: { ...d[ordinal], ...patch } }));
 
+  // One claim per cluster: rows that ask the same thing become one proposal.
   const tally = React.useMemo(() => {
     const t = { new_claim: 0, attach_answer: 0, skip: 0 };
-    for (const r of preview.rows) t[decisions[r.ordinal].action] += 1;
+    const newClusters = new Set<string>();
+    for (const r of preview.rows) {
+      const action = decisions[r.ordinal].action;
+      if (action === "new_claim") newClusters.add(r.cluster || `row-${r.ordinal}`);
+      else t[action] += 1;
+    }
+    t.new_claim = newClusters.size;
     return t;
   }, [preview.rows, decisions]);
 
-  const needsOwner = preview.rows.filter((r) => decisions[r.ordinal].action === "new_claim" && !decisions[r.ordinal].owner);
+  // A cluster needs one owner; any of its rows may carry it.
+  const ownedClusters = new Set(
+    preview.rows
+      .filter((r) => decisions[r.ordinal].action === "new_claim" && decisions[r.ordinal].owner)
+      .map((r) => r.cluster || `row-${r.ordinal}`),
+  );
+  const needsOwner = preview.rows.filter(
+    (r) => decisions[r.ordinal].action === "new_claim" && !ownedClusters.has(r.cluster || `row-${r.ordinal}`),
+  );
   const lowConfidence = preview.rows.filter((r) => r.confidence < LOW_CONFIDENCE).length;
   const avg = preview.rows.length ? preview.rows.reduce((n, r) => n + r.confidence, 0) / preview.rows.length : 0;
   const clusters = new Set(preview.rows.map((r) => r.cluster)).size;
@@ -540,7 +556,7 @@ function ReviewStep({
               const d = decisions[r.ordinal];
               const policy = rowPolicy(r);
               const locked = policy.locked;
-              const missing = d.action === "new_claim" && !d.owner;
+              const missing = d.action === "new_claim" && !d.owner && !ownedClusters.has(r.cluster || `row-${r.ordinal}`);
               return (
                 <TableRow
                   key={r.ordinal}

@@ -246,6 +246,8 @@ export interface ImportPreview {
   customer: string;
   rows: ImportRow[];
   counts: { new_claim: number; attach_answer: number; skip: number };
+  /** People who own claims today; the owner picker offers them. Live API only. */
+  owners?: string[];
 }
 
 export interface ImportCommitResult {

@@ -107,8 +107,11 @@ def test_queue_items_carry_customer_and_ranking_fields(client):
     review = [i for i in q["items"] if i["state"] == "REVIEW"][0]
     a = client.post(f"/v1/review/{review['id']}/approve", headers=H)
     assert a.status_code == 200 and a.json()["state"] == "APPROVED"
+    # an approved answer stays in the queue until it is sent, so the reviewer can send it from there
+    assert review["id"] in {i["id"] for i in client.get("/v1/review/queue", headers=H).json()["items"]}
     s = client.post(f"/v1/review/{review['id']}/send", headers=H)
     assert s.status_code == 200 and s.json()["state"] == "SENT"
+    assert review["id"] not in {i["id"] for i in client.get("/v1/review/queue", headers=H).json()["items"]}
     m = client.get("/v1/metrics", headers=H).json()
     assert m["claim_fresh_share"] is not None and "cost_per_100_usd" in m
 

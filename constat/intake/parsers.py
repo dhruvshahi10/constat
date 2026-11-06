@@ -49,6 +49,7 @@ class RawQuestion:
     domain: str = ""
     qid: str = ""
     row: Optional[int] = None          # 1-based source row where one exists
+    answer: str = ""                   # the response column, when the file is already answered
 
 
 @dataclass
@@ -132,7 +133,8 @@ def parse_xlsx(path: Path) -> Parsed:
         if not text:
             continue
         dom = _clean(ws.cell(row=r, column=lay.col_domain).value) if lay.col_domain else ""
-        out.append(RawQuestion(ordinal=len(out) + 1, text=text, domain=dom, qid=qid or f"R{r}", row=r))
+        ans = _clean(ws.cell(row=r, column=lay.col_response).value) if lay.col_response else ""
+        out.append(RawQuestion(ordinal=len(out) + 1, text=text, domain=dom, qid=qid or f"R{r}", row=r, answer=ans))
         if len(out) >= MAX_QUESTIONS:
             warnings.append(f"stopped at {MAX_QUESTIONS} questions")
             break
@@ -187,7 +189,8 @@ def parse_csv(data: bytes) -> Parsed:
                 continue
             qid = _clean(row[lay.col_id - 1]) if lay.col_id and lay.col_id - 1 < len(row) else ""
             dom = _clean(row[lay.col_domain - 1]) if lay.col_domain and lay.col_domain - 1 < len(row) else ""
-            out.append(RawQuestion(ordinal=len(out) + 1, text=t, domain=dom, qid=qid or f"R{r}", row=r))
+            ans = _clean(row[lay.col_response - 1]) if lay.col_response and lay.col_response - 1 < len(row) else ""
+            out.append(RawQuestion(ordinal=len(out) + 1, text=t, domain=dom, qid=qid or f"R{r}", row=r, answer=ans))
         return Parsed(source_kind="csv", questions=out, layout=lay)
     raise ValueError("no header row with a question column found")
 

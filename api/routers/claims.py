@@ -6,13 +6,20 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+import tempfile
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from constat.claims import Audience, Claim, ClaimStore
+from constat.claims import importer
+from constat.intake import parsers
 
 from ..auth import CallerPrincipal, current_principal, require
-from ..deps import get_claim_store
+from ..deps import get_claim_store, get_settings
+from ..settings import Settings
 
 router = APIRouter(prefix="/v1/claims", tags=["claims"])
 
@@ -91,6 +98,76 @@ def reject(proposal_id: str, body: DecisionBody, p: CallerPrincipal = Depends(re
     except (ValueError, KeyError) as e:
         raise _domain_error(e)
     return prop.to_dict()
+
+
+MAX_IMPORT = 6 * 1024 * 1024
+
+
+def _domain_owners(store: ClaimStore) -> dict[str, str]:
+    out: dict[str, list[str]] = {}
+    for c in store.list():
+        for t in c.topics:
+            out.setdefault(t.lower(), []).append(c.owner)
+    return {k: max(set(v), key=v.count) for k, v in out.items()}
+
+
+class CommitRow(BaseModel):
+    ordinal: int
+    action: str
+    owner: str | None = Field(default=None, max_length=200)
+
+
+class CommitBody(BaseModel):
+    rows: list[CommitRow] = Field(default_factory=list, max_length=2000)
+
+
+@router.post("/import", status_code=201)
+async def import_preview(file: UploadFile = File(...), customer: str = Form(""), audience: str = Form("nda"),
+                         p: CallerPrincipal = Depends(require("reviewer")),
+                         store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
+    """Preview: an answered questionnaire becomes proposed claims and reusable
+    answers. Nothing is written until the commit."""
+    if audience not in ("public", "nda", "internal"):
+        raise HTTPException(status_code=422, detail={"error": "audience must be public, nda or internal", "code": "INVALID"})
+    chunks, size = [], 0
+    while True:
+        chunk = await file.read(256 * 1024)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > MAX_IMPORT:
+            raise HTTPException(status_code=413, detail={"error": "file over 6MB", "code": "TOO_LARGE"})
+        chunks.append(chunk)
+    name = file.filename or "import"
+    if not name.lower().endswith((".xlsx", ".xlsm", ".csv")):
+        raise HTTPException(status_code=422, detail={"error": "import needs an xlsx or csv with a response column",
+                                                     "code": "UNPARSEABLE"})
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            parsed = await run_in_threadpool(parsers.parse, name, b"".join(chunks), Path(tmp))
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail={"error": str(e), "code": "UNPARSEABLE"})
+    if not any(q.answer for q in parsed.questions):
+        raise HTTPException(status_code=422, detail={"error": "no answered rows: the file has no filled response column",
+                                                     "code": "NO_ANSWERS"})
+    prev = await run_in_threadpool(
+        importer.preview, parsed.questions, store, filename=Path(name).name[:120],
+        customer=(customer or "unknown")[:200], audience=Audience(audience), actor=p.email, today=date.today(),
+        domain_owners=_domain_owners(store))
+    importer.PreviewStore(Path(settings.claim_store_path)).save(prev)
+    return prev.to_dict()
+
+
+@router.post("/import/{preview_id}/commit")
+def import_commit(preview_id: str, body: CommitBody, p: CallerPrincipal = Depends(require("reviewer")),
+                  store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
+    try:
+        prev = importer.PreviewStore(Path(settings.claim_store_path)).load(preview_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail={"error": "no such import preview", "code": "NOT_FOUND"})
+    res = importer.commit(prev, {r.ordinal: r.action for r in body.rows}, store, actor=p.email, today=date.today(),
+                          owners={r.ordinal: r.owner for r in body.rows if r.owner})
+    return res.__dict__
 
 
 @router.get("/{claim_id}")

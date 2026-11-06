@@ -71,7 +71,7 @@ def _REPO_FALLBACK():
 
 
 @router.get("/queue")
-def queue(state: str = "REVIEW,HELD", p: CallerPrincipal = Depends(require("reviewer")),
+def queue(state: str = "REVIEW,HELD,APPROVED", p: CallerPrincipal = Depends(require("reviewer")),
           repo: Repository = Depends(get_repo)):
     states = [State(s.strip()) for s in state.split(",") if s.strip()]
     items = repo.list("question_items", {"tenant": p.tenant, "state": states}, limit=5000)
