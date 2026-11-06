@@ -20,3 +20,5 @@ Produce one JSON object matching `constat/claims/models.py` (`Claim.from_dict`).
 11. **Product context**: `products` (`catalog`, `ai-features`, `mcp`), `data_classes` (`metadata`, `customer-data`, `prompts`) and `deployment` (`saas-multi-tenant`, `saas-single-tenant`, `self-hosted`, `hybrid`), from `constat/claims/scope.py`. Declare every product and data class the fact is true for and no others: a question naming a product or data class the claim does not cover is held with `PRODUCT_SCOPE_MISMATCH`.
 
 Output the JSON, then one line naming what you were unsure about.
+
+For a whole document, `POST /v1/claims/author` (or `constat.claims.author.author_document`) drafts one claim per fact with the quoted span as evidence and opens them as proposals; review each against these rules before a second person approves.

@@ -14,7 +14,7 @@ from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from constat.claims import Audience, Claim, ClaimStore
-from constat.claims import importer
+from constat.claims import author, importer
 from constat.intake import parsers
 
 from ..auth import CallerPrincipal, current_principal, require
@@ -168,6 +168,48 @@ def import_commit(preview_id: str, body: CommitBody, p: CallerPrincipal = Depend
     res = importer.commit(prev, {r.ordinal: r.action for r in body.rows}, store, actor=p.email, today=date.today(),
                           owners={r.ordinal: r.owner for r in body.rows if r.owner})
     return res.__dict__
+
+
+class AuthorBody(BaseModel):
+    source_id: str = Field(min_length=1, max_length=80)
+    version: str = Field(min_length=1, max_length=40)
+    text: str = Field(min_length=1, max_length=author.MAX_SOURCE_CHARS)
+    title: str = Field(default="", max_length=200)
+    url: str = Field(default="", max_length=500)
+    kind: str = "statement"
+    products: list[str] = Field(default_factory=list, max_length=8)
+    owner: str = Field(default="", max_length=200)
+    audience: str = "nda"
+
+
+def _author_extractor(settings: Settings) -> author.ClaimAuthor:
+    import os
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if settings.is_dev or not key:
+        return author.SentenceAuthor()
+    return author.HaikuAuthor(key)
+
+
+@router.post("/author", status_code=201)
+def author_claims(body: AuthorBody, p: CallerPrincipal = Depends(require("reviewer")),
+                  store: ClaimStore = Depends(get_claim_store), settings: Settings = Depends(get_settings)):
+    """A source document becomes draft claims, each with the quoted span it
+    came from, opened as proposals a second person approves. Never answers."""
+    if body.audience not in ("public", "nda", "internal"):
+        raise HTTPException(status_code=422, detail={"error": "audience must be public, nda or internal", "code": "INVALID"})
+    try:
+        doc = author.SourceDoc(source_id=body.source_id, version=body.version, text=body.text, title=body.title,
+                               url=body.url, kind=body.kind, products=body.products)
+    except ValueError as e:
+        raise _domain_error(e)
+    run = author.author_document(doc, _author_extractor(settings), store, actor=p.email, today=date.today(),
+                                 owner=body.owner, audience=Audience(body.audience))
+    if run.failed:
+        raise HTTPException(status_code=422, detail={
+            "error": "the source was not drafted: " + ("; ".join(run.quarantine) or
+                                                      "; ".join(s["reason"] for s in run.skipped) or "extractor failed"),
+            "code": "QUARANTINED" if run.quarantine else "AUTHOR_FAILED"})
+    return run.to_dict()
 
 
 @router.get("/{claim_id}")

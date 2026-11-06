@@ -11,6 +11,7 @@ Confidence here is computed, never taken from a model. The matcher ranks;
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
@@ -36,8 +37,14 @@ def _stem(t: str) -> str:
     return t
 
 
+# "REST APIs" is an interface, not "at rest": left alone, a claim about an API
+# covered half of an encryption-at-rest question (found by the authored corpus)
+_REST_API = re.compile(r"\bREST(?:ful)?(?=[\s-]*(?:APIs?|endpoints?|interfaces?|services?|calls?)\b)", re.I)
+
+
 def key_terms(text: str) -> set[str]:
-    out = {_stem(t.rstrip("./-?")) for t in tokens(text or "")}
+    text = _REST_API.sub("restapi", text or "")
+    out = {_stem(t.rstrip("./-?")) for t in tokens(text)}
     return {t for t in out if t and len(t) > 2 and t not in GENERIC}
 
 

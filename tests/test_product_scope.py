@@ -103,6 +103,13 @@ def test_generic_question_prefers_the_broad_claim_on_a_tie(matcher):
     assert top.claim.claim_id == "crypto.at_rest"
 
 
+def test_rest_api_is_not_at_rest():
+    from constat.claims.match import key_terms
+    assert "rest" not in key_terms("The server fetches metadata from Atlan's REST APIs.")
+    assert "rest" not in key_terms("A RESTful endpoint serves the catalog.")
+    assert "rest" in key_terms("Is data encrypted at rest?")
+
+
 # model, hash, hygiene ------------------------------------------------------
 def test_round_trip_and_legacy_hash_is_unchanged():
     legacy = mk()

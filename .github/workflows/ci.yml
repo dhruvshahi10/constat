@@ -18,6 +18,8 @@ jobs:
       - run: python evals/run_golden.py --split holdout
       # every injection case must be quarantined at intake or refused by the gate
       - run: python evals/run_injection.py
+      # the claim-drafting assistant never drafts an instruction, a plan or marketing, and keeps every exception
+      - run: python evals/run_author.py
       # a model id or prompt version change must ship with a new eval record
       - run: git fetch --no-tags --depth=50 origin ${{ github.base_ref || 'master' }} || true
       - run: python scripts/check_eval_record.py --base origin/${{ github.base_ref || 'master' }} || true

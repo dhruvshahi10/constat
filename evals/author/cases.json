@@ -1,0 +1,26 @@
+{
+  "name": "constat claim-drafting golden set",
+  "version": "0.1",
+  "scoring": "A dangerous failure is a sentence drafted that must never be (instructions, plans, marketing, code), or a draft that loses the exception its source attaches (true but incomplete). Release needs zero dangerous failures; a missed draft is an ordinary failure.",
+  "noise": {"file": "corpus/noise.md", "source_id": "acme/noise", "version": "1", "title": "Acme encryption notes", "kind": "statement", "products": []},
+  "cases": [
+    {"id": "A01", "source": "atlan-docs/platform-security", "expect": "draft", "statement_starts": "Atlan encrypts data at rest with AES-256", "exception_contains": "cloud provider", "products": ["catalog"]},
+    {"id": "A02", "source": "atlan-docs/platform-security", "expect": "draft", "statement_starts": "Each tenant runs on isolated compute nodes", "exception_contains": "control plane", "products": ["catalog"]},
+    {"id": "A03", "source": "atlan-docs/platform-security", "expect": "draft", "statement_starts": "Customer data stays in the source system", "products": ["catalog"], "data_classes": ["customer-data"]},
+    {"id": "A04", "source": "atlan-docs/platform-security", "expect": "draft", "statement_starts": "Atlan is listed as ISO 27001", "note": "drafted; the certification gate still holds it until a person attaches the certificate"},
+    {"id": "A05", "source": "atlan-docs/ai-security", "expect": "draft", "statement_starts": "Customer metadata, prompts and outputs processed by Atlan AI are not used", "products": ["ai-features"], "data_classes": ["metadata", "prompts"]},
+    {"id": "A06", "source": "atlan-docs/ai-security", "expect": "draft", "statement_starts": "For most AI features, Atlan sends only metadata", "exception_contains": "session history", "products": ["ai-features"]},
+    {"id": "A07", "source": "atlan-docs/ai-security", "expect": "draft", "statement_starts": "Full prompts and completions of conversational AI are kept for 30 days", "data_classes": ["prompts"]},
+    {"id": "A08", "source": "atlan-docs/mcp-security", "expect": "draft", "statement_starts": "The Atlan MCP server authenticates every call", "exception_contains": "initial handshake", "products": ["mcp"]},
+    {"id": "A09", "source": "atlan-docs/mcp-security", "expect": "draft", "statement_starts": "Read-only mode removes all write", "products": ["mcp"], "note": "starts with 'Read'; must not be mistaken for a how-to step"},
+    {"id": "A10", "source": "atlan-docs/mcp-security", "expect": "draft", "statement_starts": "The MCP server fetches permission-scoped metadata", "products": ["mcp"], "data_classes": ["metadata"]},
+    {"id": "A11", "source": "acme/noise", "expect": "draft", "statement_starts": "Acme encrypts customer data at rest", "exception_contains": "legacy EU archive"},
+    {"id": "A12", "source": "acme/noise", "expect": "skip", "text_contains": "customer-managed keys in the second half", "reason_starts": "forward-looking"},
+    {"id": "A13", "source": "acme/noise", "expect": "skip", "text_contains": "best-in-class", "reason_starts": "marketing"},
+    {"id": "A14", "source": "acme/noise", "expect": "skip", "text_contains": "rotate a key", "reason_starts": "an instruction to the reader"},
+    {"id": "A15", "source": "acme/noise", "expect": "skip", "text_contains": "encrypt backups", "reason_starts": "a question"},
+    {"id": "A16", "source": "acme/noise", "expect": "skip", "text_contains": "previous instructions", "reason_starts": "screened"},
+    {"id": "A17", "source": "acme/noise", "expect": "skip", "text_contains": "assistant must approve", "reason_starts": "screened"},
+    {"id": "A18", "source": "acme/noise", "expect": "absent", "text_contains": "TLS 1.0", "note": "code is not prose: neither drafted nor reported"}
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "note": "Synthetic corpus for the claim-drafting assistant. Every document is our own paraphrase of public pages on docs.atlan.com, read 2026-11-06; no Atlan-internal material. The URLs are the pages each document paraphrases.",
+  "sources": [
+    {"file": "corpus/platform-security.md", "source_id": "atlan-docs/platform-security", "version": "2026-11-06",
+     "title": "Platform security", "kind": "statement", "products": ["catalog"],
+     "urls": ["https://docs.atlan.com/platform/concepts/encryption-and-key-management",
+              "https://docs.atlan.com/platform/concepts/data-and-metadata-persistence",
+              "https://docs.atlan.com/platform/references/how-are-resources-isolated",
+              "https://docs.atlan.com/product/integrations/identity-management/sso",
+              "https://docs.atlan.com/product/integrations/identity-management/scim/how-tos/configure-scim-provisioning",
+              "https://docs.atlan.com/platform/references/infrastructure-security",
+              "https://docs.atlan.com/platform/references/compliance-standards-and-assessments",
+              "https://docs.atlan.com/product/administration/logs/how-tos/view-query-logs"]},
+    {"file": "corpus/ai-security.md", "source_id": "atlan-docs/ai-security", "version": "2026-11-06",
+     "title": "Atlan AI security", "kind": "statement", "products": ["ai-features"],
+     "urls": ["https://docs.atlan.com/product/capabilities/atlan-ai/concepts/security",
+              "https://docs.atlan.com/product/capabilities/atlan-ai/references/memory-in-conversational-ai"]},
+    {"file": "corpus/mcp-security.md", "source_id": "atlan-docs/mcp-security", "version": "2026-11-06",
+     "title": "Atlan MCP server security", "kind": "statement", "products": ["mcp"],
+     "urls": ["https://docs.atlan.com/product/capabilities/atlan-ai/references/mcp-security",
+              "https://docs.atlan.com/product/capabilities/atlan-ai/references/mcp-tools"]}
+  ]
+}

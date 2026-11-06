@@ -9,8 +9,10 @@ import argparse
 import subprocess
 import sys
 
-WATCHED = ("constat/claims/drafter.py", "constat/intake/normalise.py", "constat/drafter.py")
-MARKERS = ("CLAIM_PROMPT_VERSION", "NORMALISER_PROMPT_VERSION", "PROMPT_VERSION", "model_id =", "claude-")
+WATCHED = ("constat/claims/drafter.py", "constat/intake/normalise.py", "constat/drafter.py",
+           "constat/claims/author.py")
+MARKERS = ("CLAIM_PROMPT_VERSION", "NORMALISER_PROMPT_VERSION", "AUTHOR_PROMPT_VERSION", "PROMPT_VERSION",
+           "model_id =", "claude-")
 
 
 def changed(base: str) -> list[str]:
