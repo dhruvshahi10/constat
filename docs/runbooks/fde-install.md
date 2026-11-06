@@ -101,7 +101,13 @@ docker buildx build --platform linux/amd64,linux/arm64 -f apps/atlan-app/Dockerf
 
 Push to the tenant's Harbor registry and release through the partnership process. Local check: `docker run -e ATLAN_WORKFLOW_HOST=localhost -e ATLAN_WORKFLOW_PORT=7233 -p 8000:8000 <image>`.
 
-## 9. Smoke test (ten minutes)
+## 9. Smoke test (two minutes, automated)
+
+```bash
+python scripts/smoke.py --base https://<api host> --token "$CONSTAT_TOKEN"
+```
+
+It needs only Python and prints one PASS or FAIL line per check, exiting 0 only when all twelve pass. It writes one approved and sent answer under customer "Smoke", so run it on the fresh install before real questionnaires arrive. The checks are the manual steps below, plus one: every drafted answer carries a computed confidence. If the script cannot reach the host, walk the steps by hand:
 
 1. Upload `data/questionnaires/acme_security_questionnaire.xlsx` as customer "Smoke" through the inbox.
 2. Expect: items in REVIEW, HELD and REFUSED; zero SENT; the legal question held with route LEGAL.
