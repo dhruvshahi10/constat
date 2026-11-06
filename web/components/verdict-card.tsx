@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Verdict } from "@/lib/api";
+import type { Confidence, Verdict } from "@/lib/api";
 import { DifficultyBadge, FlagChip } from "@/components/badges";
 
 const HEAD = {
@@ -29,6 +29,7 @@ export function VerdictCard({ verdict, question, className, compact }: { verdict
         <span className={cn("font-heading font-semibold", compact ? "text-sm" : "text-base", h.tone)}>{h.label}</span>
         <span className="font-mono text-[10px] tracking-[0.14em] uppercase opacity-70">{verdict.outcome.replace("_", " ")}</span>
         <DifficultyBadge difficulty={verdict.difficulty} className="ml-auto" />
+        {verdict.outcome === "ANSWER" && verdict.confidence ? <ConfidencePill confidence={verdict.confidence} /> : null}
         {verdict.reused ? <span className="eyebrow">verbatim reuse</span> : null}
       </header>
 
@@ -37,6 +38,19 @@ export function VerdictCard({ verdict, question, className, compact }: { verdict
         {!compact ? <p className="text-xs text-muted-foreground">{h.sub}</p> : null}
 
         {verdict.outcome === "ANSWER" && verdict.answer ? <p className="text-sm leading-relaxed">{verdict.answer}</p> : null}
+
+        {verdict.outcome === "ANSWER" && verdict.confidence ? (
+          <details className="group text-xs text-muted-foreground" data-testid="confidence-basis">
+            <summary className="cursor-pointer select-none font-mono tracking-wider uppercase hover:text-foreground">
+              Why {verdict.confidence.band} confidence
+            </summary>
+            <ul className="mt-1.5 space-y-0.5 pl-1">
+              {verdict.confidence.basis.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
 
         {verdict.gaps.length ? (
           <ul className="space-y-1 text-sm">
@@ -80,5 +94,21 @@ export function VerdictCard({ verdict, question, className, compact }: { verdict
         ) : null}
       </div>
     </section>
+  );
+}
+
+const BAND_TONE = { high: "text-status-ok", medium: "text-status-info", low: "text-status-warn" } as const;
+
+/** Computed from the claim, the match and its evidence; it orders reading and never decides release. */
+function ConfidencePill({ confidence }: { confidence: Confidence }) {
+  return (
+    <span
+      className={cn("font-mono text-[10px] tracking-wider uppercase tabular-nums", BAND_TONE[confidence.band])}
+      title="Computed from relevance, evidence, freshness and provenance. It orders review; the gates decide release."
+      data-testid="confidence-pill"
+      data-band={confidence.band}
+    >
+      {confidence.band} confidence {confidence.score.toFixed(2)}
+    </span>
   );
 }

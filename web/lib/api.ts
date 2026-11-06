@@ -79,6 +79,20 @@ export interface EvidenceRef {
   checked_on: string | null; // ISO date
 }
 
+export type ConfidenceBand = "high" | "medium" | "low";
+
+/** Computed by the engine from the facts the gates read; never a model's opinion, never an outcome. */
+export interface Confidence {
+  score: number; // 0..1
+  band: ConfidenceBand;
+  factors: { relevance: number; evidence: number; freshness: number; provenance: number };
+  basis: string[]; // one plain sentence per factor
+}
+
+/** The closed vocabularies in constat/claims/scope.py. */
+export type Product = "catalog" | "ai-features" | "mcp";
+export type DataClass = "metadata" | "customer-data" | "prompts";
+
 export interface Verdict {
   outcome: Outcome;
   difficulty: Difficulty;
@@ -89,6 +103,7 @@ export interface Verdict {
   flags: string[]; // gate flags, e.g. EXCEPTION_DROPPED, NEW_VALUE_INTRODUCED
   gaps: string[]; // plain sentences describing what is missing
   reused: boolean;
+  confidence?: Confidence | null; // ANSWER only
 }
 
 export interface QuestionItem {
@@ -140,6 +155,9 @@ export interface Claim {
   version_hash: string;
   last_verified: string; // ISO date
   approved_answers: number;
+  products?: Product[]; // empty: the claim's own text decides
+  data_classes?: DataClass[];
+  deployment?: string;
 }
 
 export interface ClaimProposal {
@@ -238,6 +256,8 @@ export interface ImportRow {
   action: "new_claim" | "attach_answer" | "skip";
   suggested_owner: string | null;
   reason: string;
+  products?: Product[]; // suggested from the question and answer
+  data_classes?: DataClass[];
 }
 
 export interface ImportPreview {

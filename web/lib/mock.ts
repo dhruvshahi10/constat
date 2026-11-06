@@ -7,6 +7,7 @@ import type {
   Api,
   Claim,
   ClaimProposal,
+  Confidence,
   DegradationState,
   EvalRecord,
   FreshnessGroup,
@@ -220,7 +221,7 @@ export const questionnaires: Questionnaire[] = [
 ];
 
 function v(partial: Partial<Verdict> & Pick<Verdict, "outcome" | "difficulty">): Verdict {
-  return {
+  const out: Verdict = {
     answer: null,
     claim_id: null,
     claim_version_hash: null,
@@ -229,6 +230,25 @@ function v(partial: Partial<Verdict> & Pick<Verdict, "outcome" | "difficulty">):
     gaps: [],
     reused: false,
     ...partial,
+  };
+  // the engine computes confidence for every ANSWER and for nothing else; the mock mirrors its shape
+  if (out.outcome === "ANSWER" && out.confidence === undefined) out.confidence = mockConfidence(out.reused);
+  return out;
+}
+
+function mockConfidence(reused: boolean): Confidence {
+  const provenance = reused ? 1 : 0.7;
+  const score = Math.round((0.4 * 1 + 0.25 * 1 + 0.15 * 1 + 0.2 * provenance) * 1000) / 1000;
+  return {
+    score,
+    band: score >= 0.85 ? "high" : score >= 0.7 ? "medium" : "low",
+    factors: { relevance: 1, evidence: 1, freshness: 1, provenance },
+    basis: [
+      "the claim covers 100% of the question's subject terms",
+      "evidence is machine-checked (a Vanta test or a check within 90 days)",
+      "the claim is valid for 180 more days",
+      reused ? "a person approved this exact answer before" : "drafted from the claim; no person has approved this wording yet",
+    ],
   };
 }
 

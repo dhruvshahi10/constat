@@ -62,10 +62,14 @@ test("the Ask bar answers or refuses in place", async ({ page }) => {
   await ask.fill("Is customer data encrypted at rest?");
   await ask.press("Enter");
   await expect(page.getByTestId("verdict-card")).toHaveAttribute("data-outcome", "ANSWER");
+  // every answer carries its computed confidence, with the reasons one click away
+  await expect(page.getByTestId("confidence-pill")).toHaveAttribute("data-band", /^(high|medium|low)$/);
+  await expect(page.getByTestId("confidence-basis")).toContainText("confidence");
   await page.keyboard.press("Escape");
   await ask.fill("Do you guarantee 99.99% uptime with service credits?");
   await ask.press("Enter");
   await expect(page.getByTestId("verdict-card")).toHaveAttribute("data-outcome", "HOLD_HUMAN");
+  await expect(page.getByTestId("confidence-pill")).toHaveCount(0);
 });
 
 test("the command palette opens and jumps", async ({ page }) => {

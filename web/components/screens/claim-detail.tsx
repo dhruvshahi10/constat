@@ -6,7 +6,7 @@ import { api, type Claim, type ClaimStatus, type EvidenceKind } from "@/lib/api"
 import { useAsync } from "@/lib/use-api";
 import { useEmbed } from "@/lib/embed";
 import { cn } from "@/lib/utils";
-import { ExceptionChip } from "@/components/badges";
+import { ExceptionChip, FlagChip } from "@/components/badges";
 import { EmptyState, ErrorState } from "@/components/page-header";
 import { DetailSkeleton } from "@/components/skeletons";
 import { SummaryStrip, type SummaryStat } from "@/components/summary-strip";
@@ -140,6 +140,16 @@ export function ClaimDetail({ id }: { id: string }) {
                   Scope
                 </h2>
                 <p className="px-3 py-2.5 text-sm leading-relaxed">{claim.scope}</p>
+                {claim.products?.length || claim.data_classes?.length ? (
+                  <div className="flex flex-wrap gap-1.5 border-t px-3 py-2" data-testid="claim-product-scope">
+                    {(claim.products ?? []).map((p) => (
+                      <FlagChip key={p} flag={p} />
+                    ))}
+                    {(claim.data_classes ?? []).map((d) => (
+                      <FlagChip key={d} flag={d} className="text-muted-foreground" />
+                    ))}
+                  </div>
+                ) : null}
               </section>
 
               <section aria-labelledby="claim-exceptions" className="rounded-md border bg-card">

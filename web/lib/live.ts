@@ -7,6 +7,8 @@ import type {
   Audience,
   Claim,
   ClaimProposal,
+  Confidence,
+  DataClass,
   DegradationState,
   Difficulty,
   EvalRecord,
@@ -15,6 +17,7 @@ import type {
   ImportPreview,
   ItemState,
   Metrics,
+  Product,
   QuestionDetail,
   QuestionItem,
   Questionnaire,
@@ -45,6 +48,21 @@ function mapVerdict(v: unknown): Verdict | null {
     flags: Array.isArray(j.flags) ? (j.flags as string[]) : [],
     gaps: Array.isArray(j.gaps) ? (j.gaps as string[]) : [],
     reused: Boolean(j.reused),
+    confidence: mapConfidence(j.confidence),
+  };
+}
+
+function mapConfidence(v: unknown): Confidence | null {
+  if (!v || typeof v !== "object") return null;
+  const j = v as Json;
+  const f = (j.factors as Json | undefined) ?? {};
+  const band = s(j.band);
+  if (band !== "high" && band !== "medium" && band !== "low") return null;
+  return {
+    score: n(j.score),
+    band,
+    factors: { relevance: n(f.relevance), evidence: n(f.evidence), freshness: n(f.freshness), provenance: n(f.provenance) },
+    basis: Array.isArray(j.basis) ? (j.basis as unknown[]).map((b) => s(b)).filter(Boolean) : [],
   };
 }
 
@@ -114,6 +132,9 @@ function mapClaim(j: Json): Claim {
     version_hash: s(j.version_hash),
     last_verified: lastVerified(j),
     approved_answers: Array.isArray(j.approved_answers) ? (j.approved_answers as unknown[]).length : 0,
+    products: Array.isArray(j.products) ? (j.products as Product[]) : [],
+    data_classes: Array.isArray(j.data_classes) ? (j.data_classes as DataClass[]) : [],
+    deployment: s(j.deployment),
   };
 }
 

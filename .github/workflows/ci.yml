@@ -23,3 +23,24 @@ jobs:
       # a model id or prompt version change must ship with a new eval record
       - run: git fetch --no-tags --depth=50 origin ${{ github.base_ref || 'master' }} || true
       - run: python scripts/check_eval_record.py --base origin/${{ github.base_ref || 'master' }} || true
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      # eslint plus the copy gate (no em or en dashes in shipped copy)
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # Playwright builds the production app and runs smoke, CSP, handshake and both themes at 1440 and 390
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
