@@ -10,7 +10,7 @@ Constat drafts answers to customer security questionnaires from a claim store, g
 
 | Check | Result |
 | --- | --- |
-| Test suite | 348 tests passing |
+| Test suite | 357 tests passing, including the Postgres path against a real Postgres |
 | Golden set (`evals/golden`) | 30 cases, 0 dangerous failures, weighted 1.0 |
 | Injection suite (`evals/injection`) | 40 cases, all quarantined or refused |
 | Gate branch coverage | 98% |
@@ -36,6 +36,8 @@ metrics by difficulty class · degradation · automation ladder · trust preview
 **Claims** (`constat/claims/`): statement, a person as owner, evidence refs (Vanta test, policy, certificate), scope, a list of exceptions, audience, validity window, content-hash version, approved answers. Stores: file (local), Atlan glossary plus custom metadata through pyatlan.
 
 **Gates** (`constat/claims/gates.py`), in order: injection, legal, no covering claim, claim status and freshness and audience, certification evidence class, relevance, parameter missing, completeness (every exception appears), absolutes, new values, contractual wording. Each verdict carries a difficulty class: reused, covered, parameter missing, novel, contractual.
+
+**Import.** `POST /v1/claims/import` turns a questionnaire already answered and sent into proposed claims and reusable answers; a person commits, and every new claim is a draft a second person approves.
 
 **Hard limits** that never automate: new contractual commitments, first-time questions, disclosing sensitive internals, publishing to the public trust centre, correcting or declining a customer live.
 
@@ -75,3 +77,4 @@ scripts/   seed_demo, atlan_setup, principals, load_test, check_eval_record     
 - Docx questionnaires have no row identity, so export is a new file.
 - The regex gates see canonical text (NFKC, zero-width stripped, number words as digits) but remain lexical; they catch fabrication, omission, absolutes and evasion by spacing or homoglyphs, not every paraphrase. Every ANSWER still goes to a person.
 - The Vanta response shape and the App Framework SDK names are taken from public docs and are not yet verified against a live tenant.
+- No model-evaluation record exists yet for Claude Haiku 4.5: it needs an Anthropic key (`evals/run_live.py`). Until the first record is committed, the CI eval-record gate is advisory.

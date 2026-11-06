@@ -12,7 +12,7 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest tests/ -q
       # the gates decide release; their branches must be covered
-      - run: python -m pytest tests/test_claim_gates.py tests/test_golden.py tests/test_review.py tests/test_pipeline2.py -q --cov=constat/claims/gates.py --cov-branch --cov-fail-under=95
+      - run: python -m pytest tests/test_claim_gates.py tests/test_golden.py tests/test_review.py tests/test_pipeline2.py -q --cov=constat.claims.gates --cov-branch --cov-fail-under=95
       # the golden set is the release gate for the claims layer: zero dangerous failures
       - run: python evals/run_golden.py --split dev
       - run: python evals/run_golden.py --split holdout

@@ -14,3 +14,4 @@ uvicorn[standard]==0.54.0  # ASGI server
 PyJWT==2.15.1           # Atlan JWT verification
 python-multipart==0.0.32  # questionnaire uploads
 mcp==2.3.0                   # Constat MCP server (mcp_server/)
+psycopg[binary]==3.3.8   # Postgres sidecar (Supabase) for hosted deployments

@@ -1,16 +1,46 @@
+# Render blueprint for the Constat API (api/). The web app deploys to Vercel
+# from web/; claims live in the Atlan glossary or the file store on the disk.
+# The legacy v0 hosted demo blueprint is kept at infra/render.legacy.yaml.
 services:
   - type: web
-    name: constat
+    name: constat-api
     runtime: docker
+    dockerfilePath: ./infra/Dockerfile.api
     plan: starter
-    numInstances: 1  # global run queue + SQLite are single-process by design
+    numInstances: 1          # SSE stream caps and the file claim store are per process
     healthCheckPath: /healthz
     disk:
       name: constat-data
       mountPath: /data
       sizeGB: 1
     envVars:
-      - key: GEMINI_API_KEY
+      - key: CONSTAT_ENV
+        value: prod
+      - key: CONSTAT_TENANT
         sync: false
-      - key: CONSTAT_DATA
-        value: /data
+      - key: DATABASE_URL            # Supabase Postgres connection string
+        sync: false
+      - key: CLAIM_STORE
+        value: file                  # set to atlan on an Atlan tenant
+      - key: CLAIM_STORE_PATH
+        value: /data/claims
+      - key: CONSTAT_CORS_ORIGINS    # the Vercel origin of web/
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CONSTAT_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: ATLAN_BASE_URL
+        sync: false
+      - key: ATLAN_API_KEY
+        sync: false
+      - key: ATLAN_JWKS_URL
+        sync: false
+      - key: ATLAN_ISSUER
+        sync: false
+      - key: VANTA_WEBHOOK_SECRET
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: SLACK_SIGNING_SECRET
+        sync: false
